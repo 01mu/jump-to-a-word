@@ -1,0 +1,76 @@
+# Object files
+*.o
+*.obj
+*.lo
+*.la
+*.al
+
+# Executables and libraries
+*.exe
+*.out
+*.app
+*.so
+*.dylib
+*.a
+*.lib
+*.dll
+
+# Debug and profiling files
+*.gcda
+*.gcno
+*.gcov
+*.prof
+*.profraw
+
+# Build directories
+/build/
+/bin/
+/lib/
+/obj/
+
+# Dependencies
+/deps/
+/vendor/
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+/cmake_install.cmake
+Makefile
+*.make
+
+# Code editor files
+.vscode/
+.idea/
+*.swp
+*~
+*.sublime-project
+*.sublime-workspace
+
+# Logs and temp files
+*.log
+*.tmp
+*.bak
+*.pid
+*.seed
+
+# Generated documentation
+/doc/
+/docs/
+/doxygen/
+
+# Package manager files
+node_modules/
+*.tar.gz
+
+# Coverage reports
+/coverage/
+/*.lcov
+/coverage.json
+
+# Static analysis reports
+/clang-tidy/
+/clang-analyzer/
+
+.cache
+*.d
