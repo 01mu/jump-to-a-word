@@ -28,11 +28,13 @@
 
 static void mark_text(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
-        Word *word = &g_array_index(sj->words, Word, i);
+        Word word = g_array_index(sj->words, Word, i);
 
-        clear_indicator_for_range(sj->sci, INDICATOR_TAG, word->starting, word->word->len);
-        clear_indicator_for_range(sj->sci, INDICATOR_HIGHLIGHT, word->starting, word->word->len);
-        clear_indicator_for_range(sj->sci, INDICATOR_TEXT, word->starting, word->word->len);
+        clear_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting, word.word->len);
+        clear_indicator_for_range(sj->sci, INDICATOR_HIGHLIGHT, word.starting, word.word->len);
+        clear_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting, word.word->len);
+
+        g_string_free(word.word, TRUE);
     }
 
     g_array_set_size(sj->words, 0);
