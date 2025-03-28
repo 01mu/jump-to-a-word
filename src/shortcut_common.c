@@ -341,9 +341,9 @@ void shortcut_cancel(ShortcutJump *sj) {
 }
 
 /**
- * @brief
+ * @brief Display message for completed shortcut jump and free memory.
  *
- *  @param ShortcutJump *sj: The plugin object
+ * @param ShortcutJump *sj: The plugin object
  */
 void shortcut_replace_complete(ShortcutJump *sj) {
     shortcut_end(sj, FALSE);

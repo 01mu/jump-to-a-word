@@ -26,7 +26,16 @@
 #include "util.h"
 #include "values.h"
 
-void shortcut_char_replacing_cancel(ShortcutJump *sj);
+/**
+ * @brief Display message for canceled shortcut char replacement and free memory.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
+void shortcut_char_replacing_cancel(ShortcutJump *sj) {
+    annotation_clear(sj->sci, sj->eol_message_line);
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Shortcut replacement canceled"));
+}
 
 /**
  * @brief Handles click event for shortcut char jump. If the search char has not been initialized we run the search
@@ -106,17 +115,6 @@ void shortcut_char_init(ShortcutJump *sj) {
 
     set_key_press_action(sj, on_key_press_shortcut_char);
     set_click_action(sj, on_click_event_shortcut_char);
-}
-
-/**
- * @brief
- *
- *  @param ShortcutJump *sj: The plugin object
- */
-void shortcut_char_replacing_cancel(ShortcutJump *sj) {
-    annotation_clear(sj->sci, sj->eol_message_line);
-    shortcut_end(sj, FALSE);
-    ui_set_statusbar(TRUE, _("Shortcut replacement canceled"));
 }
 
 /**
