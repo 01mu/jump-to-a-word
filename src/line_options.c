@@ -140,8 +140,8 @@ static void tree_view_move_focus(GtkTreeView *view, GtkMovementStep step, gint a
 /**
  * @brief Stores the listings for line options.
  *
- * ShortcutJump *sj: The plugin object
- * GtkListStore *store: The store
+ * @param ShortcutJump *sj: The plugin object
+ * @param GtkListStore *store: The store
  */
 static void fill_store_line(ShortcutJump *sj, GtkListStore *store) {
     for (gint i = 0; i < LA_COUNT; i++) {
@@ -161,8 +161,8 @@ static void fill_store_line(ShortcutJump *sj, GtkListStore *store) {
 /**
  * @brief Stores the listings for text options.
  *
- * ShortcutJump *sj: The plugin object
- * GtkListStore *store: The store
+ * @param ShortcutJump *sj: The plugin object
+ * @param GtkListStore *store: The store
  */
 static void fill_store_text(ShortcutJump *sj, GtkListStore *store) {
     for (gint i = 0; i < TX_COUNT; i++) {
@@ -456,7 +456,7 @@ static void on_panel_show(GtkWidget *widget, gpointer dummy) {
 /**
  * @brief Creates the panel for displaying the line or text options window (UI from the Commander plugin).
  *
- * ShortcutJump *sj: The plugin object
+ * @param ShortcutJump *sj: The plugin object
  */
 static void create_panel(ShortcutJump *sj) {
     GtkWidget *frame;
