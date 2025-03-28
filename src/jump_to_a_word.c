@@ -20,6 +20,7 @@
 
 #include "jump_to_a_word.h"
 #include "line_options.h"
+#include "preferences.h"
 #include "previous_cursor.h"
 #include "replace_instant.h"
 #include "search_substring.h"
@@ -31,7 +32,10 @@
 #include "shortcut_word.h"
 #include "util.h"
 
-struct {
+/**
+ * @brief Line settings used in the plugin configuration and line options windows.
+ */
+const struct {
     gchar *label;
     LineAfter type;
 } line_conf[] = {{"Do nothing", LA_DO_NOTHING},
@@ -42,39 +46,16 @@ struct {
                  {"Jump to character (shortcut)", LA_JUMP_TO_CHARACTER_SHORTCUT},
                  {"Jump to word (search)", LA_JUMP_TO_WORD_SEARCH}};
 
-struct {
+/**
+ * @brief Text settings used in the plugin configuration and text options windows.
+ */
+const struct {
     gchar *label;
     TextAfter type;
 } text_conf[] = {{"Do nothing", TX_DO_NOTHING},
                  {"Select text", TX_SELECT_TEXT},
                  {"Select to text", TX_SELECT_TO_TEXT},
                  {"Select text range", TX_SELECT_TEXT_RANGE}};
-
-struct {
-    GtkWidget *panel;
-    GtkWidget *entry;
-    GtkWidget *view;
-    GtkListStore *store;
-    GtkTreeModel *sort;
-    GtkTreePath *last_path;
-} plugin_data = {NULL, NULL, NULL, NULL, NULL, NULL};
-
-GeanyData *geany_data;
-ShortcutJump *sj_global;
-
-void set_key_press_action(ShortcutJump *sj, KeyPressCallback function) {
-    sj->kp_handler_id = g_signal_connect(sj->sci, "key-press-event", G_CALLBACK(function), sj);
-}
-
-void set_click_action(ShortcutJump *sj, ClickCallback function) {
-    sj->click_handler_id = g_signal_connect(geany_data->main_widgets->window, "event", G_CALLBACK(function), sj);
-}
-
-void block_key_press_action(ShortcutJump *sj) { g_signal_handler_block(sj->sci, sj->kp_handler_id); }
-
-void block_click_action(ShortcutJump *sj) {
-    g_signal_handler_block(geany_data->main_widgets->window, sj->click_handler_id);
-}
 
 /**
  * @brief Provides a callback for either saving or closing a document, or quitting. This is necessary for shortcut
@@ -86,13 +67,16 @@ void block_click_action(ShortcutJump *sj) {
  * @param gpointer user_data: (unused)
  */
 static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
-    if (sj_global->current_mode == JM_SHORTCUT || sj_global->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
-        sj_global->current_mode == JM_LINE) {
-        shortcut_cancel(sj_global);
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
+        sj->current_mode == JM_LINE) {
+        shortcut_cancel(sj);
     }
 
-    if (sj_global->current_mode == JM_SEARCH || sj_global->current_mode == JM_REPLACE_SEARCH) {
-        search_cancel(sj_global);
+    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
+        sj->current_mode == JM_REPLACE_SUBSTRING) {
+        search_cancel(sj);
     }
 }
 
@@ -107,50 +91,45 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
  * @param gpointer user_data: (unused)
  */
 static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_data) {
-    if (sj_global->current_mode == JM_SHORTCUT || sj_global->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
-        sj_global->current_mode == JM_LINE) {
-        shortcut_end(sj_global, FALSE);
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
+        sj->current_mode == JM_LINE) {
+        shortcut_end(sj, FALSE);
         ui_set_statusbar(TRUE, _("Clearing jump indicators"));
     }
 
-    if (sj_global->current_mode == JM_SEARCH || sj_global->current_mode == JM_REPLACE_SEARCH) {
-        search_cancel(sj_global);
+    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
+        sj->current_mode == JM_REPLACE_SUBSTRING) {
+        search_cancel(sj);
     }
 }
 
 /**
- * @brief Provides a callback for when the editor is modified.
+ * @brief Provides a callback for when the editor is modified. Checks if an additional bracket was added, either by
+ * Geany or the Auto-close plugin and marks it for deletion during a character jump or substring search.
  *
  * @param GObject *obj: (unused)
- * @param GeanyEditor *editor: Click event
+ * @param GeanyEditor *editor:(unused)
  * @param SCNotification *nt: Notification
- * @param gpointer user_data: (unused)
+ * @param gpointer user_data: The plugin object
  *
  * @return gboolean: False if nothing was triggered
  */
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, SCNotification *nt, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
     if (nt->nmhdr.code == SCN_MODIFYATTEMPTRO) {
-        ui_set_statusbar(TRUE, _("Mod attempt while read-only"));
+        // ui_set_statusbar(TRUE, _("Mod attempt while read-only"));
         return TRUE;
     }
 
-    if (nt->nmhdr.code == SCN_MODIFIED) {
-        gboolean in_mode =
-            sj_global->current_mode == JM_REPLACE_SEARCH || sj_global->current_mode == JM_SHORTCUT_CHAR_REPLACING;
-        if (in_mode && sj_global->search_change_made) {
-            if (nt->modificationType & (SC_PERFORMED_UNDO) || nt->modificationType & (SC_PERFORMED_REDO)) {
-                search_replace_complete(sj_global);
-                return TRUE;
-            }
-        }
-    }
-
     if (nt->modificationType & (SC_MOD_INSERTTEXT)) {
-        if (sj_global->current_mode == JM_SHORTCUT_CHAR_WAITING || sj_global->current_mode == JM_SUBSTRING) {
+        if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING || sj->current_mode == JM_SUBSTRING) {
             if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
                 strcmp(nt->text, "\'") == 0 || strcmp(nt->text, "\"") == 0 || strcmp(nt->text, "`") == 0 ||
                 strcmp(nt->text, ")") == 0) {
-                sj_global->delete_added_bracket = TRUE;
+                sj->delete_added_bracket = TRUE;
                 return TRUE;
             }
         }
@@ -173,98 +152,10 @@ static void configure_color_from_int(GdkColor *color, guint32 val) {
 }
 
 /**
- * @brief Get the int value from GTK color type. Used when updaing the settings file. The color is in BGR.
+ * @brief Sets the items that fill the menu bar listing.
  *
- * @param const GdkColor *color: GTK color struct
-
- * @return guint32 val: Integer value of the color
+ * @param ShortcutJump *sj: The plugin object
  */
-static guint32 configure_color_to_int(const GdkColor *color) {
-    return (((color->blue / 0x101) << 16) | ((color->green / 0x101) << 8) | ((color->red / 0x101) << 0));
-}
-
-void update_settings(SettingSource source) {
-#define UPDATE_BOOL(name, name_str, category)                                                                          \
-    G_STMT_START {                                                                                                     \
-        if (source == SOURCE_SETTINGS_CHANGE) {                                                                        \
-            sj_global->config_settings->name =                                                                         \
-                gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(sj_global->config_widgets->name));                      \
-        }                                                                                                              \
-                                                                                                                       \
-        g_key_file_set_boolean(config, category, name_str, sj_global->config_settings->name);                          \
-    }                                                                                                                  \
-    G_STMT_END
-
-#define UPDATE_INTEGER(name, name_str, category)                                                                       \
-    G_STMT_START {                                                                                                     \
-        if (source == SOURCE_SETTINGS_CHANGE) {                                                                        \
-            sj_global->config_settings->name =                                                                         \
-                gtk_combo_box_get_active(GTK_COMBO_BOX(sj_global->config_widgets->name));                              \
-        }                                                                                                              \
-                                                                                                                       \
-        g_key_file_set_integer(config, category, name_str, sj_global->config_settings->name);                          \
-    }                                                                                                                  \
-    G_STMT_END
-
-#define UPDATE_COLOR(name, name_str, gdk)                                                                              \
-    G_STMT_START {                                                                                                     \
-        G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                                                               \
-        if (source == SOURCE_SETTINGS_CHANGE) {                                                                        \
-            gtk_color_button_get_color(GTK_COLOR_BUTTON(sj_global->config_widgets->name),                              \
-                                       &sj_global->gdk_colors->gdk);                                                   \
-            sj_global->config_settings->name = configure_color_to_int(&sj_global->gdk_colors->gdk);                    \
-        }                                                                                                              \
-                                                                                                                       \
-        g_key_file_set_integer(config, "colors", name_str, sj_global->config_settings->name);                          \
-        G_GNUC_END_IGNORE_DEPRECATIONS                                                                                 \
-    }                                                                                                                  \
-    G_STMT_END
-
-    GKeyFile *config = g_key_file_new();
-    gchar *config_dir = g_path_get_dirname(sj_global->config_file);
-    gchar *data;
-
-    g_key_file_load_from_file(config, sj_global->config_file, G_KEY_FILE_NONE, NULL);
-
-    UPDATE_BOOL(show_annotations, "show_annotations", "general");
-    UPDATE_BOOL(use_selected_word_or_char, "use_selected_word_or_char", "general");
-    UPDATE_BOOL(wait_for_enter, "wait_for_enter", "general");
-    UPDATE_BOOL(only_tag_current_line, "only_tag_current_line", "general");
-    UPDATE_BOOL(move_marker_to_line, "move_marker_to_line", "general");
-    UPDATE_BOOL(cancel_on_mouse_move, "cancel_on_mouse_move", "general");
-    UPDATE_BOOL(search_from_selection, "search_from_selection", "general");
-    UPDATE_BOOL(search_selection_if_line, "search_selection_if_line", "general");
-
-    UPDATE_BOOL(shortcut_all_caps, "shortcut_all_caps", "shortcut");
-    UPDATE_BOOL(shortcuts_include_single_char, "shortcuts_include_single_char", "shortcut");
-    UPDATE_BOOL(hide_word_shortcut_jump, "hide_word_shortcut_jump", "shortcut");
-    UPDATE_BOOL(center_shortcut, "center_shortcut", "shortcut");
-
-    UPDATE_BOOL(search_start_from_beginning, "search_start_from_beginning", "search");
-    UPDATE_BOOL(search_case_sensitive, "search_case_sensitive", "search");
-    UPDATE_BOOL(match_whole_word, "match_whole_word", "search");
-    UPDATE_BOOL(wrap_search, "wrap_search", "search");
-
-    UPDATE_INTEGER(text_after, "text_after", "text_after");
-    UPDATE_INTEGER(line_after, "line_after", "line_after");
-
-    UPDATE_COLOR(text_color, "text_color", text_color_gdk);
-    UPDATE_COLOR(search_annotation_bg_color, "search_annotation_bg_color", search_annotation_bg_color_gdk);
-    UPDATE_COLOR(tag_color, "tag_color", tag_color_gdk);
-    UPDATE_COLOR(highlight_color, "highlight_color", highlight_color_gdk);
-
-    if (!g_file_test(config_dir, G_FILE_TEST_IS_DIR) && utils_mkdir(config_dir, TRUE) != 0) {
-        dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("Plugin configuration directory could not be created."));
-    } else {
-        data = g_key_file_to_data(config, NULL, NULL);
-        utils_write_file(sj_global->config_file, data);
-        g_free(data);
-    }
-
-    g_free(config_dir);
-    g_key_file_free(config);
-}
-
 static void setup_menu(ShortcutJump *sj) {
 #define SET_MENU_ITEM(description, callback, data)                                                                     \
     G_STMT_START {                                                                                                     \
@@ -304,16 +195,22 @@ static void setup_menu(ShortcutJump *sj) {
     SET_MENU_ITEM("Open Line Options Window", open_line_options_cb, sj);
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(sj->main_menu_item), submenu);
-    gtk_container_add(GTK_CONTAINER(geany_data->main_widgets->tools_menu), sj->main_menu_item);
+    gtk_container_add(GTK_CONTAINER(sj->geany_data->main_widgets->tools_menu), sj->main_menu_item);
 }
 
+/**
+ * @brief Sets the keybindings.
+ *
+ * @param GeanyPlugin *plugin: The plugin
+ * @param ShortcutJump *sj: The plugin object
+ */
 static void setup_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 #define SET_KEYBINDING(description, name, callback, w, data)                                                           \
     G_STMT_START { keybindings_set_item_full(key_group, w, 0, 0, name, _(description), NULL, callback, data, NULL); }  \
     G_STMT_END
 
-    GeanyKeyGroup *key_group;
-    key_group = plugin_set_key_group(plugin, "jump-to-a-word", KB_COUNT, NULL);
+    GeanyKeyGroup *key_group = plugin_set_key_group(plugin, "jump-to-a-word", KB_COUNT, NULL);
+
     SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shortcut_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj);
     SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shortcut_char_kb,
                    KB_JUMP_TO_A_CHAR_SHORTCUT, sj);
@@ -327,6 +224,15 @@ static void setup_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_KEYBINDING("Open line options window", "open_line_options", open_line_options_kb, KB_OPEN_LINE_OPTIONS, sj);
 }
 
+/**
+ * @brief Sets the configuration settings from the file
+ *
+ * @param GeanyPlugin *plugin: The plugin
+ * @param gpointer pdata: (unused)
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gboolean: TRUE
+ */
 static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, ShortcutJump *sj) {
 #define SET_SETTING_BOOL(name, name_str, category, default)                                                            \
     G_STMT_START { sj->config_settings->name = utils_get_setting_boolean(config, category, name_str, default); }       \
@@ -342,7 +248,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
 
     GKeyFile *config = g_key_file_new();
 
-    sj->config_file = g_strconcat(geany_data->app->configdir, G_DIR_SEPARATOR_S, "plugins", G_DIR_SEPARATOR_S,
+    sj->config_file = g_strconcat(sj->geany_data->app->configdir, G_DIR_SEPARATOR_S, "plugins", G_DIR_SEPARATOR_S,
                                   "jump-to-a-word", G_DIR_SEPARATOR_S, "jump-to-a-word.conf", NULL);
 
     g_key_file_load_from_file(config, sj->config_file, G_KEY_FILE_NONE, NULL);
@@ -388,23 +294,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
  * @return gboolean: True
  */
 static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
-    ShortcutJump *sj = g_new0(ShortcutJump, 1);
-
-    geany_data = plugin->geany_data;
-
-    sj->config_settings = g_new0(Settings, 1);
-    sj->config_widgets = g_new0(Widgets, 1);
-    sj->gdk_colors = g_new0(Colors, 1);
-
-    sj->sci = NULL;
-    sj->in_selection = FALSE;
-    sj->selection_is_a_word = FALSE;
-    sj->line_range_set = FALSE;
-    sj->previous_cursor_pos = -1;
-    sj->delete_added_bracket = FALSE;
-    sj->current_mode = JM_NONE;
-
-    sj_global = sj;
+    ShortcutJump *sj = (ShortcutJump *)pdata;
 
     setup_menu(sj);
     setup_keybindings(plugin, sj);
@@ -420,30 +310,43 @@ static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
  * @param GeanyPlugin *plugin: (unused)
  */
 static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
-    if (sj_global->current_mode == JM_SHORTCUT) {
-        shortcut_cancel(sj_global);
+    ShortcutJump *sj = (ShortcutJump *)pdata;
+
+    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
+        sj->current_mode == JM_LINE) {
+        shortcut_cancel(sj);
     }
 
-    if (sj_global->current_mode == JM_SEARCH || sj_global->current_mode == JM_REPLACE_SEARCH) {
-        search_cancel(sj_global);
+    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+        shortcut_char_waiting_cancel(sj);
     }
 
-    if (plugin_data.panel) {
-        gtk_widget_destroy(plugin_data.panel);
+    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        shortcut_char_replacing_cancel(sj);
     }
 
-    if (plugin_data.last_path) {
-        gtk_tree_path_free(plugin_data.last_path);
+    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
+        sj->current_mode == JM_REPLACE_SUBSTRING) {
+        search_cancel(sj);
     }
 
-    g_free(sj_global->config_settings);
-    g_free(sj_global->config_widgets);
-    g_free(sj_global->gdk_colors);
-    g_free(sj_global->config_file);
+    if (sj->tl_window->panel) {
+        gtk_widget_destroy(sj->tl_window->panel);
+    }
 
-    gtk_widget_destroy(sj_global->main_menu_item);
+    if (sj->tl_window->last_path) {
+        gtk_tree_path_free(sj->tl_window->last_path);
+    }
 
-    g_free(sj_global);
+    g_free(sj->config_settings);
+    g_free(sj->config_widgets);
+    g_free(sj->gdk_colors);
+    g_free(sj->tl_window);
+    g_free(sj->config_file);
+
+    gtk_widget_destroy(sj->main_menu_item);
+
+    g_free(sj);
 }
 
 /**
@@ -454,26 +357,36 @@ static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
  * @param gpointer user_data: (unused)
  */
 static void configure_response_cb(GtkDialog *dialog, gint response, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
     if (response == GTK_RESPONSE_OK || response == GTK_RESPONSE_APPLY) {
-        update_settings(SOURCE_SETTINGS_CHANGE);
+        update_settings(SOURCE_SETTINGS_CHANGE, sj);
     }
 }
 
-static void ao_configure_markword_toggled_cb(GtkToggleButton *togglebutton, gpointer data) {
+/**
+ * @brief Toggles availability of "Even if it only exists on a single line".
+ *
+ * @param GtkToggleButton *toggle_button: The button that triggers the toggle
+ * @param gpointer data: The dialog
+ */
+static void single_line_toggle_cb(GtkToggleButton *toggle_button, gpointer data) {
     gtk_widget_set_sensitive(g_object_get_data(G_OBJECT(data), "search_selection_if_line"),
-                             gtk_toggle_button_get_active(togglebutton));
+                             gtk_toggle_button_get_active(toggle_button));
 }
 
 /**
  * @brief Creates and displays the configuration menu.
  *
- * @param GeanyPlugin *plugin: (unused)
+ * @param GeanyPlugin *plugin: The plugin
  * @param GtkDialog *dialog: Set dialog for menu
- * @param gpointer pdata: (unused)
+ * @param gpointer pdata: The plugin object
  *
  * @return GtkWidget *: Pointer to configuration menu container
  */
 static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pdata) {
+    ShortcutJump *sj = (ShortcutJump *)pdata;
+
 #define HORIZONTAL_FRAME()                                                                                             \
     G_STMT_START {                                                                                                     \
         hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);                                                             \
@@ -506,21 +419,19 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
 #define WIDGET_CONF_BOOL(name, description)                                                                            \
     G_STMT_START {                                                                                                     \
-        sj_global->config_widgets->name = gtk_check_button_new_with_label(description);                                \
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj_global->config_widgets->name),                               \
-                                     sj_global->config_settings->name);                                                \
-        gtk_box_pack_start(GTK_BOX(container), sj_global->config_widgets->name, FALSE, FALSE, 1);                      \
+        sj->config_widgets->name = gtk_check_button_new_with_label(description);                                       \
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj->config_widgets->name), sj->config_settings->name);          \
+        gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->name, FALSE, FALSE, 1);                             \
     }                                                                                                                  \
     G_STMT_END
 
 #define WIDGET_COLOR(type, type_gdk)                                                                                   \
     G_STMT_START {                                                                                                     \
         G_GNUC_BEGIN_IGNORE_DEPRECATIONS                                                                               \
-        sj_global->config_widgets->type = gtk_color_button_new();                                                      \
-        configure_color_from_int(&sj_global->gdk_colors->type_gdk, sj_global->config_settings->type);                  \
-        gtk_color_button_set_color(GTK_COLOR_BUTTON(sj_global->config_widgets->type),                                  \
-                                   &sj_global->gdk_colors->type_gdk);                                                  \
-        gtk_box_pack_start(GTK_BOX(container), sj_global->config_widgets->type, FALSE, FALSE, 1);                      \
+        sj->config_widgets->type = gtk_color_button_new();                                                             \
+        configure_color_from_int(&sj->gdk_colors->type_gdk, sj->config_settings->type);                                \
+        gtk_color_button_set_color(GTK_COLOR_BUTTON(sj->config_widgets->type), &sj->gdk_colors->type_gdk);             \
+        gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->type, FALSE, FALSE, 1);                             \
         gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 1);                                                       \
         G_GNUC_END_IGNORE_DEPRECATIONS                                                                                 \
     }                                                                                                                  \
@@ -551,25 +462,23 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_CONF_BOOL(move_marker_to_line, _("Set marker to current line after jump"));
     WIDGET_CONF_BOOL(cancel_on_mouse_move, _("Cancel jump on mouse movement"));
 
-    sj_global->config_widgets->search_from_selection =
+    sj->config_widgets->search_from_selection =
         gtk_check_button_new_with_label("Search or replace within current selection");
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj_global->config_widgets->search_from_selection),
-                                 sj_global->config_settings->search_from_selection);
-    g_signal_connect(sj_global->config_widgets->search_from_selection, "toggled",
-                     G_CALLBACK(ao_configure_markword_toggled_cb), dialog);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj->config_widgets->search_from_selection),
+                                 sj->config_settings->search_from_selection);
+    g_signal_connect(sj->config_widgets->search_from_selection, "toggled", G_CALLBACK(single_line_toggle_cb), dialog);
 
-    sj_global->config_widgets->search_selection_if_line =
+    sj->config_widgets->search_selection_if_line =
         gtk_check_button_new_with_label("Even if it only exists on a single line");
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj_global->config_widgets->search_selection_if_line),
-                                 sj_global->config_settings->search_selection_if_line);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj->config_widgets->search_selection_if_line),
+                                 sj->config_settings->search_selection_if_line);
 
-    g_object_set_data(G_OBJECT(dialog), "search_selection_if_line",
-                      sj_global->config_widgets->search_selection_if_line);
-    ao_configure_markword_toggled_cb(GTK_TOGGLE_BUTTON(sj_global->config_widgets->search_from_selection), dialog);
+    g_object_set_data(G_OBJECT(dialog), "search_selection_if_line", sj->config_widgets->search_selection_if_line);
+    single_line_toggle_cb(GTK_TOGGLE_BUTTON(sj->config_widgets->search_from_selection), dialog);
 
     frame = gtk_frame_new(NULL);
-    gtk_frame_set_label_widget(GTK_FRAME(frame), sj_global->config_widgets->search_from_selection);
-    gtk_container_add(GTK_CONTAINER(frame), sj_global->config_widgets->search_selection_if_line);
+    gtk_frame_set_label_widget(GTK_FRAME(frame), sj->config_widgets->search_from_selection);
+    gtk_container_add(GTK_CONTAINER(frame), sj->config_widgets->search_selection_if_line);
     gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 1);
 
     WIDGET_FRAME(_("Jumping to a word, character, or line using shortcuts"), GTK_ORIENTATION_VERTICAL);
@@ -585,28 +494,24 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_CONF_BOOL(search_start_from_beginning, _("Match from start of word"));
 
     WIDGET_FRAME(_("After jumping to a word, character, or substring"), GTK_ORIENTATION_VERTICAL);
-    sj_global->config_widgets->text_after = gtk_combo_box_text_new();
+    sj->config_widgets->text_after = gtk_combo_box_text_new();
 
     for (gint i = 0; i < TX_COUNT; i++) {
-        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(sj_global->config_widgets->text_after),
-                                       _(text_conf[i].label));
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(sj->config_widgets->text_after), _(text_conf[i].label));
     }
 
-    gtk_box_pack_start(GTK_BOX(container), sj_global->config_widgets->text_after, FALSE, FALSE, 1);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(sj_global->config_widgets->text_after),
-                             sj_global->config_settings->text_after);
+    gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->text_after, FALSE, FALSE, 1);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(sj->config_widgets->text_after), sj->config_settings->text_after);
 
     WIDGET_FRAME(_("After jumping to a line"), GTK_ORIENTATION_VERTICAL);
-    sj_global->config_widgets->line_after = gtk_combo_box_text_new();
+    sj->config_widgets->line_after = gtk_combo_box_text_new();
 
     for (gint i = 0; i < LA_COUNT; i++) {
-        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(sj_global->config_widgets->line_after),
-                                       _(line_conf[i].label));
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(sj->config_widgets->line_after), _(line_conf[i].label));
     }
 
-    gtk_box_pack_start(GTK_BOX(container), sj_global->config_widgets->line_after, FALSE, FALSE, 1);
-    gtk_combo_box_set_active(GTK_COMBO_BOX(sj_global->config_widgets->line_after),
-                             sj_global->config_settings->line_after);
+    gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->line_after, FALSE, FALSE, 1);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(sj->config_widgets->line_after), sj->config_settings->line_after);
 
     HORIZONTAL_FRAME();
     WIDGET_FRAME_COLOR("Text color", GTK_ORIENTATION_VERTICAL);
@@ -621,9 +526,57 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_COLOR(highlight_color, highlight_color_gdk);
 
     gtk_widget_show_all(scrollbox);
-    g_signal_connect(dialog, "response", G_CALLBACK(configure_response_cb), NULL);
+    g_signal_connect(dialog, "response", G_CALLBACK(configure_response_cb), sj);
 
     return scrollbox;
+}
+
+/**
+ * @brief The plugin's callbacks.
+ */
+static PluginCallback callbacks[] = {{"document-before-save", (GCallback)&on_cancel, TRUE, NULL},
+                                     {"document-before-save-as", (GCallback)&on_cancel, TRUE, NULL},
+                                     {"document-activate", (GCallback)&on_cancel, TRUE, NULL},
+                                     {"document-close", (GCallback)&on_cancel, TRUE, NULL},
+                                     {"document-reload", (GCallback)&on_document_reload, TRUE, NULL},
+                                     {"editor-notify", (GCallback)&on_editor_notify, TRUE, NULL},
+                                     {NULL, NULL, FALSE, NULL}};
+
+void help() { utils_open_browser("https://www.github.com/01mu/jump-to-a-word"); }
+
+/**
+ * @brief Inits the plugin object that persits throughout the plugin's lifetime.
+ *
+ * @param GeanyPlugin *plugin: The plugin
+ *
+ * @return ShortcutJump *: The plugin object
+ */
+ShortcutJump *init_data(GeanyPlugin *plugin) {
+    ShortcutJump *sj = g_new0(ShortcutJump, 1);
+
+    sj->geany_data = plugin->geany_data;
+
+    sj->config_settings = g_new0(Settings, 1);
+    sj->config_widgets = g_new0(Widgets, 1);
+    sj->gdk_colors = g_new0(Colors, 1);
+    sj->tl_window = g_new0(TextLineWindow, 1);
+
+    sj->tl_window->panel = NULL;
+    sj->tl_window->entry = NULL;
+    sj->tl_window->view = NULL;
+    sj->tl_window->store = NULL;
+    sj->tl_window->sort = NULL;
+    sj->tl_window->last_path = NULL;
+
+    sj->sci = NULL;
+    sj->in_selection = FALSE;
+    sj->selection_is_a_word = FALSE;
+    sj->line_range_set = FALSE;
+    sj->previous_cursor_pos = -1;
+    sj->delete_added_bracket = FALSE;
+    sj->current_mode = JM_NONE;
+
+    return sj;
 }
 
 /**
@@ -631,19 +584,10 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
  *
  * @param GeanyPlugin *plugin: The plugin
  */
-static PluginCallback callbacks[] = {{"document-before-save", (GCallback)&on_cancel, TRUE, NULL},
-                                     {"document-before-save-as", (GCallback)&on_cancel, TRUE, NULL},
-                                     {"document-activate", (GCallback)&on_cancel, TRUE, NULL},
-                                     {"document-close", (GCallback)&on_cancel, TRUE, NULL},
-                                     {"geany-before-quit", (GCallback)&on_cancel, TRUE, NULL},
-                                     {"document-reload", (GCallback)&on_document_reload, TRUE, NULL},
-                                     {"editor-notify", (GCallback)&on_editor_notify, TRUE, NULL},
-                                     {NULL, NULL, FALSE, NULL}};
-
-void help() { utils_open_browser("https://www.github.com/01mu/jump-to-a-word"); }
-
 G_MODULE_EXPORT
 void geany_load_module(GeanyPlugin *plugin) {
+    ShortcutJump *sj = init_data(plugin);
+
     plugin->info->name = "Jump to a Word";
     plugin->info->description = "Move the cursor to a word in Geany";
     plugin->info->version = "1.0";
@@ -655,5 +599,5 @@ void geany_load_module(GeanyPlugin *plugin) {
     plugin->funcs->callbacks = callbacks;
     plugin->funcs->help = help;
 
-    GEANY_PLUGIN_REGISTER(plugin, 225);
+    GEANY_PLUGIN_REGISTER_FULL(plugin, 225, sj, NULL);
 }

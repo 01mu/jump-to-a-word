@@ -15,3 +15,12 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
+#ifndef PREFERENCES_H
+#define PREFERENCES_H
+
+#include "jump_to_a_word.h"
+
+void update_settings(SettingSource source, ShortcutJump *sj);
+
+#endif

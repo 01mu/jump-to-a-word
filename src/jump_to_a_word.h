@@ -159,9 +159,20 @@ typedef struct {
 } Colors;
 
 typedef struct {
+    GtkWidget *panel;
+    GtkWidget *entry;
+    GtkWidget *view;
+    GtkListStore *store;
+    GtkTreeModel *sort;
+    GtkTreePath *last_path;
+} TextLineWindow;
+
+typedef struct {
     Settings *config_settings;
     Widgets *config_widgets;
     Colors *gdk_colors;
+
+    TextLineWindow *tl_window;
 
     ScintillaObject *sci; // scintilla object
     GtkWidget *main_menu_item;
@@ -231,11 +242,5 @@ set the cursor position after clicking somewhere on the screen to cancel a short
     gboolean option_mod;
     JumpMode current_mode;
 } ShortcutJump;
-
-void update_settings(SettingSource source);
-void set_key_press_action(ShortcutJump *sj, KeyPressCallback function);
-void set_click_action(ShortcutJump *sj, ClickCallback function);
-void block_key_press_action(ShortcutJump *sj);
-void block_click_action(ShortcutJump *sj);
 
 #endif

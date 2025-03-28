@@ -173,3 +173,17 @@ void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
 }
 
 gint save_cursor_position(ShortcutJump *sj) { return scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0); }
+
+void set_key_press_action(ShortcutJump *sj, KeyPressCallback function) {
+    sj->kp_handler_id = g_signal_connect(sj->sci, "key-press-event", G_CALLBACK(function), sj);
+}
+
+void set_click_action(ShortcutJump *sj, ClickCallback function) {
+    sj->click_handler_id = g_signal_connect(sj->geany_data->main_widgets->window, "event", G_CALLBACK(function), sj);
+}
+
+void block_key_press_action(ShortcutJump *sj) { g_signal_handler_block(sj->sci, sj->kp_handler_id); }
+
+void block_click_action(ShortcutJump *sj) {
+    g_signal_handler_block(sj->geany_data->main_widgets->window, sj->click_handler_id);
+}
