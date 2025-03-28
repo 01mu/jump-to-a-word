@@ -18,7 +18,6 @@
 
 #include <plugindata.h>
 
-#include "Scintilla.h"
 #include "jump_to_a_word.h"
 #include "keybindings.h"
 #include "line_options.h"
@@ -38,7 +37,8 @@ void annotation_clear(ScintillaObject *sci, gint eol_message_line) {
 
 /**
  * @brief Sets the values for the annotation display. SCI_ALLOCATEEXTENDEDSTYLES is needed so the defined annotation
- * styles do not conflict with others in the current editor.
+ * styles do not conflict with others in the current editor. Adjusts eol_message_line based on how many lfs were
+ * added in order to preverse the cursor position.
  *
  * @param ShortcutJump *sj: The plugin object
  */
@@ -50,8 +50,6 @@ void annotation_show(ShortcutJump *sj) {
         gint lfa = get_lfs(sj, cl);
         gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos + lfa, 0);
         gint lfs_added = get_lfs(sj, current_line);
-
-        ui_set_statusbar(TRUE, _("%i"), lfs_added);
 
         sj->eol_message_line =
             scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos + lfs_added, 0);
@@ -73,7 +71,7 @@ void annotation_show(ShortcutJump *sj) {
 }
 
 /**
- * @brief Sets the end of line annotation message for a search if the setting is enabled.
+ * @brief Sets the end of line annotation message for a search.
  *
  * @param ShortcutJump *sj: The plugin object
  */
@@ -89,7 +87,7 @@ void annotation_display_search(ShortcutJump *sj) {
 }
 
 /**
- * @brief Sets the end of line annotation message for a search if the setting is enabled.
+ * @brief Sets the end of line annotation message for a word search.
  *
  * @param ShortcutJump *sj: The plugin object
  */
@@ -104,6 +102,11 @@ void annotation_display_substring(ShortcutJump *sj) {
     }
 }
 
+/**
+ * @brief Sets the end of line annotation message for while searching for a character.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 void annotation_display_char_search(ShortcutJump *sj) {
     if (sj->config_settings->show_annotations) {
         gchar *s = "%i occurance%s";
@@ -115,7 +118,7 @@ void annotation_display_char_search(ShortcutJump *sj) {
 }
 
 /**
- * @brief Sets the end of line annotation message for a word replacement if the setting is enabled.
+ * @brief Sets the end of line annotation message for a word replacement.
  *
  * @param ShortcutJump *sj: The plugin object
  */
@@ -129,6 +132,11 @@ void annotation_display_replace(ShortcutJump *sj) {
     }
 }
 
+/**
+ * @brief Sets the end of line annotation message while replacing a substring.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 void annotation_display_replace_substring(ShortcutJump *sj) {
     if (sj->config_settings->show_annotations) {
         gchar *s = "Replacing selection (%i substring%s";
@@ -138,6 +146,12 @@ void annotation_display_replace_substring(ShortcutJump *sj) {
         annotation_show(sj);
     }
 }
+
+/**
+ * @brief Sets the end of line annotation message while replacing a character.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 
 void annotation_display_replace_char(ShortcutJump *sj) {
     if (sj->config_settings->show_annotations) {
@@ -150,7 +164,7 @@ void annotation_display_replace_char(ShortcutJump *sj) {
 }
 
 /**
- * @brief Sets the end of line annotation message for a character shortcut jump if the setting is enabled.
+ * @brief Sets the end of line annotation message for a character shortcut jump.
  *
  * @param ShortcutJump *sj: The plugin object
  */
