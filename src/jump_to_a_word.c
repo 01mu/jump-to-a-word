@@ -23,6 +23,7 @@
 #include "preferences.h"
 #include "previous_cursor.h"
 #include "replace_instant.h"
+#include "search_common.h"
 #include "search_substring.h"
 #include "search_word.h"
 #include "selection.h"
@@ -74,17 +75,28 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
         shortcut_cancel(sj);
     }
 
-    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
-        sj->current_mode == JM_REPLACE_SUBSTRING) {
+    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        shortcut_char_replacing_complete(sj);
+    }
+
+    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+        shortcut_char_waiting_cancel(sj);
+    }
+
+    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
+        search_replace_complete(sj);
+    }
+
+    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_SUBSTRING) {
         search_cancel(sj);
     }
 }
 
 /**
  * @brief Provides a callback for when a reload is triggered either from a manual reload or from the file being
- * edited from an outside program. In shortcut mode we end the jump and clear the cache instead of canceling. This
- * is necessary because we don't want to reinsert the cached text at a certain location if we don't know what edits
- * were made from the other program.
+ * edited from an outside program. In shortcut mode we end the jump and free memory instead of canceling. This is
+ * necessary because we don't want to reinsert the cached text at a certain location if we don't know what edits were
+ * made from the other program.
  *
  * @param GObject *obj: (unused)
  * @param GeanyDocument *doc: (unused)
@@ -93,10 +105,13 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
 static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
+    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+        shortcut_char_waiting_cancel(sj);
+    }
+
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
-        sj->current_mode == JM_LINE) {
+        sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_LINE) {
         shortcut_end(sj, FALSE);
-        ui_set_statusbar(TRUE, _("Clearing jump indicators"));
     }
 
     if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
@@ -114,13 +129,12 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
  * @param SCNotification *nt: Notification
  * @param gpointer user_data: The plugin object
  *
- * @return gboolean: False if nothing was triggered
+ * @return gboolean: FALSE if nothing was triggered
  */
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (nt->nmhdr.code == SCN_MODIFYATTEMPTRO) {
-        // ui_set_statusbar(TRUE, _("Mod attempt while read-only"));
         return TRUE;
     }
 
@@ -152,11 +166,12 @@ static void configure_color_from_int(GdkColor *color, guint32 val) {
 }
 
 /**
- * @brief Sets the items that fill the menu bar listing.
+ * @brief Sets the items that fill the menu bar listing as well as their keybindings.
  *
+ * @param GeanyPlugin *plugin: Geany plugin
  * @param ShortcutJump *sj: The plugin object
  */
-static void setup_menu(ShortcutJump *sj) {
+static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 #define SET_MENU_ITEM(description, callback, data)                                                                     \
     G_STMT_START {                                                                                                     \
         item = gtk_menu_item_new_with_mnemonic(_(description));                                                        \
@@ -174,6 +189,12 @@ static void setup_menu(ShortcutJump *sj) {
     }                                                                                                                  \
     G_STMT_END
 
+#define SET_KEYBINDING(description, name, callback, w, data, menu)                                                     \
+    G_STMT_START { keybindings_set_item_full(key_group, w, 0, 0, name, _(description), menu, callback, data, NULL); }  \
+    G_STMT_END
+
+    GeanyKeyGroup *key_group = plugin_set_key_group(plugin, "jump-to-a-word", KB_COUNT, NULL);
+
     GtkWidget *submenu = gtk_menu_new();
     GtkWidget *item;
 
@@ -183,45 +204,43 @@ static void setup_menu(ShortcutJump *sj) {
     gtk_widget_show(sj->main_menu_item);
 
     SET_MENU_ITEM("Jump to Word (Shortcut)", shortcut_cb, sj);
+    SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shortcut_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj,
+                   item);
+
     SET_MENU_ITEM("Jump to Character (Shortcut)", shortcut_char_cb, sj);
+    SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shortcut_char_kb,
+                   KB_JUMP_TO_A_CHAR_SHORTCUT, sj, item);
+
     SET_MENU_ITEM("Jump to Line (Shortcut)", jump_to_line_cb, sj);
+    SET_KEYBINDING("Jump to line (shortcut)", "jump_to_a_line", jump_to_line_kb, KB_JUMP_TO_LINE, sj, item);
+
     SET_MENU_ITEM("Jump to Word (Search)", search_cb, sj);
+    SET_KEYBINDING("Jump to word (search)", "jump_to_a_word_search", search_kb, KB_JUMP_TO_A_WORD_SEARCH, sj, item);
+
     SET_MENU_ITEM("Jump to Substring (Search)", substring_cb, sj);
-    SET_MENU_ITEM("Jump to Previous Caret Position", jump_to_previous_cursor_cb, sj);
+    SET_KEYBINDING("Jump to substring (search)", "jump_to_a_substring", substring_kb, KB_JUMP_TO_A_SUBSTRING, sj, item);
+
+    SET_MENU_ITEM("Jump to Previous Cursor Position", jump_to_previous_cursor_cb, sj);
+    SET_KEYBINDING("Jump to previous cursor position", "jump_to_previous_cursor", jump_to_previous_cursor_kb,
+                   KB_JUMP_TO_PREVIOUS_CARET, sj, item);
+
     SET_MENU_SEPERATOR();
+
     SET_MENU_ITEM("Replace Selected Text", replace_search_cb, sj);
+    SET_KEYBINDING("Replace selected text", "replace_search", replace_search_kb, KB_REPLACE_SEARCH, sj, item);
+
     SET_MENU_SEPERATOR();
+
     SET_MENU_ITEM("Open Text Options Window", open_text_options_cb, sj);
+    SET_KEYBINDING("Open text options window", "open_text_options", open_text_options_kb, KB_OPEN_TEXT_OPTIONS, sj,
+                   item);
+
     SET_MENU_ITEM("Open Line Options Window", open_line_options_cb, sj);
+    SET_KEYBINDING("Open line options window", "open_line_options", open_line_options_kb, KB_OPEN_LINE_OPTIONS, sj,
+                   item);
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(sj->main_menu_item), submenu);
     gtk_container_add(GTK_CONTAINER(sj->geany_data->main_widgets->tools_menu), sj->main_menu_item);
-}
-
-/**
- * @brief Sets the keybindings.
- *
- * @param GeanyPlugin *plugin: The plugin
- * @param ShortcutJump *sj: The plugin object
- */
-static void setup_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
-#define SET_KEYBINDING(description, name, callback, w, data)                                                           \
-    G_STMT_START { keybindings_set_item_full(key_group, w, 0, 0, name, _(description), NULL, callback, data, NULL); }  \
-    G_STMT_END
-
-    GeanyKeyGroup *key_group = plugin_set_key_group(plugin, "jump-to-a-word", KB_COUNT, NULL);
-
-    SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shortcut_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj);
-    SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shortcut_char_kb,
-                   KB_JUMP_TO_A_CHAR_SHORTCUT, sj);
-    SET_KEYBINDING("Jump to line (shortcut)", "jump_to_a_line", jump_to_line_kb, KB_JUMP_TO_LINE, sj);
-    SET_KEYBINDING("Jump to word (search)", "jump_to_a_word_search", search_kb, KB_JUMP_TO_A_WORD_SEARCH, sj);
-    SET_KEYBINDING("Jump to substring (search)", "jump_to_a_substring", substring_kb, KB_JUMP_TO_A_SUBSTRING, sj);
-    SET_KEYBINDING("Jump to previous cursor position", "jump_to_previous_cursor", jump_to_previous_cursor_kb,
-                   KB_JUMP_TO_PREVIOUS_CARET, sj);
-    SET_KEYBINDING("Replace selected text", "replace_search", replace_search_kb, KB_REPLACE_SEARCH, sj);
-    SET_KEYBINDING("Open text options window", "open_text_options", open_text_options_kb, KB_OPEN_TEXT_OPTIONS, sj);
-    SET_KEYBINDING("Open line options window", "open_line_options", open_line_options_kb, KB_OPEN_LINE_OPTIONS, sj);
 }
 
 /**
@@ -291,13 +310,12 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
  * @param GeanyPlugin *plugin: Geany plugin
  * @param gpointer pdata: (unused)
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
     ShortcutJump *sj = (ShortcutJump *)pdata;
 
-    setup_menu(sj);
-    setup_keybindings(plugin, sj);
+    setup_menu_and_keybindings(plugin, sj);
     setup_config_settings(plugin, pdata, sj);
 
     return TRUE;
@@ -536,8 +554,6 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
  */
 static PluginCallback callbacks[] = {{"document-before-save", (GCallback)&on_cancel, TRUE, NULL},
                                      {"document-before-save-as", (GCallback)&on_cancel, TRUE, NULL},
-                                     {"document-activate", (GCallback)&on_cancel, TRUE, NULL},
-                                     {"document-close", (GCallback)&on_cancel, TRUE, NULL},
                                      {"document-reload", (GCallback)&on_document_reload, TRUE, NULL},
                                      {"editor-notify", (GCallback)&on_editor_notify, TRUE, NULL},
                                      {NULL, NULL, FALSE, NULL}};
