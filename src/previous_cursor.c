@@ -60,11 +60,12 @@ static void previous_cursor_init(ShortcutJump *sj) {
 /**
  * @brief Provides a menu callback for jumping to a previous cursor.
  *
- * @param GtkMenuItem *menuitem: (unused)
+ * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
  */
-void jump_to_previous_cursor_cb(GtkMenuItem *menuitem, gpointer user_data) {
+void jump_to_previous_cursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
+
     sj->sci = get_scintilla_object();
 
     if (sj->current_mode == JM_NONE) {
@@ -83,6 +84,7 @@ void jump_to_previous_cursor_cb(GtkMenuItem *menuitem, gpointer user_data) {
  */
 gboolean jump_to_previous_cursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
+
     sj->sci = get_scintilla_object();
 
     if (sj->current_mode == JM_NONE) {
