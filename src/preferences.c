@@ -32,7 +32,7 @@ static guint32 configure_color_to_int(const GdkColor *color) {
 }
 
 /**
- * @brief Updates the settings. This can either be triggered from the main configuration window or when changing
+ * @brief Updates the settings file. This can either be triggered from the main configuration window or when changing
  * the line or text action from their menus.
  *
  * @param SettingSource source: Either from configration or from a line or text action change
