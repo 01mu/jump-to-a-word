@@ -117,6 +117,7 @@ typedef struct {
     gboolean match_whole_word;
     gboolean search_selection_if_line;
     gboolean shortcuts_include_single_char;
+    gboolean select_when_shortcut_char;
     gint tag_color;
     gint text_color;
     gint highlight_color;
@@ -149,6 +150,7 @@ typedef struct {
     GtkWidget *shortcuts_include_single_char;
     GtkWidget *line_after;
     GtkWidget *text_after;
+    GtkWidget *select_when_shortcut_char;
 } Widgets;
 
 typedef struct {
@@ -230,7 +232,6 @@ set the cursor position after clicking somewhere on the screen to cancel a short
     gint replace_len;            // the length of the replacement for a set of serach words
 
     gboolean delete_added_bracket;
-    gint added_bracket_pos;
 
     gboolean in_selection;
     gboolean selection_is_a_word;
