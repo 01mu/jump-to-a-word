@@ -21,7 +21,7 @@
 
 #include <geanyplugin.h>
 
-void replace_search_cb(GtkMenuItem *menuitem, gpointer user_data);
+void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data);
 gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 
 #endif

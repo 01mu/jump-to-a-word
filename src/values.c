@@ -190,19 +190,23 @@ static gint get_cursor_position(ScintillaObject *sci, gint first_position, gint 
  * @brief Returns an array containing the markers that appear on the margin so they can be reinserted later. This is
  * necessary because they are displaced when the buffer is inserted.
  *
- * @param ScintillaObject *sci: Scintilla object
+ * @param ShortcutJump *sj: The plugin object
  * @param gint first_line_on_screen: The first line on screen, used as an offset
  * @param gint lines_on_screen: Number of lines on screen
  *
  * @return Array containing the markers as ints
  */
-static GArray *markers_margin_get(ScintillaObject *sci, gint first_line_on_screen, gint lines_on_screen) {
+static GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen) {
     GArray *markers = g_array_new(FALSE, FALSE, sizeof(gint));
 
-    for (gint i = 0; i < lines_on_screen; i++) {
-        scintilla_send_message(sci, SCI_MARKERDELETE, i + first_line_on_screen, SC_MARK_SHORTARROW);
+    if (sj->line_range_set) {
+        scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->line_range_first, 0);
+    }
 
-        gint marker = scintilla_send_message(sci, SCI_MARKERGET, i + first_line_on_screen, 0);
+    for (gint i = 0; i < lines_on_screen; i++) {
+        scintilla_send_message(sj->sci, SCI_MARKERDELETE, i + first_line_on_screen, SC_MARK_SHORTARROW);
+
+        gint marker = scintilla_send_message(sj->sci, SCI_MARKERGET, i + first_line_on_screen, 0);
 
         g_array_append_val(markers, marker);
     }
@@ -225,8 +229,6 @@ void init_sj_values(ShortcutJump *sj) {
 
     gchar *screen_lines = sci_get_contents_range(sj->sci, first_position, last_position);
 
-    GArray *markers = markers_margin_get(sj->sci, first_line_on_screen, lines_on_screen);
-
     sj->first_line_on_screen = first_line_on_screen;
     sj->lines_on_screen = lines_on_screen;
     sj->last_line_on_screen = last_line_on_screen;
@@ -246,13 +248,15 @@ void init_sj_values(ShortcutJump *sj) {
     sj->cursor_in_word = FALSE;
     sj->delete_added_bracket = FALSE;
     sj->replace_len = 0;
-    sj->line_range_set = FALSE;
+    sj->replace_instant = FALSE;
 
     sj->cache = g_string_new(screen_lines);
     sj->buffer = g_string_new(screen_lines);
+    sj->replace_cache = g_string_new(screen_lines);
+
     sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
     sj->words = g_array_new(FALSE, FALSE, sizeof(Word));
-    sj->markers = markers;
+    sj->markers = markers_margin_get(sj, first_line_on_screen, lines_on_screen);
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }
