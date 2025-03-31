@@ -23,10 +23,8 @@
 
 #include "jump_to_a_word.h"
 
-void search_replace_complete(ShortcutJump *sj);
-void search_replace_cancel(ShortcutJump *sj);
 void search_init(ShortcutJump *sj, gboolean instant_replace);
-void search_cb(GtkMenuItem *menuitem, gpointer user_data);
+void search_cb(GtkMenuItem *menu_item, gpointer user_data);
 void search_cancel(ShortcutJump *sj);
 gboolean search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 void search_mark_words(ShortcutJump *sj, gboolean instant_replace);

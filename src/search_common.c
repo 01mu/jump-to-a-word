@@ -22,6 +22,13 @@
 #include "jump_to_a_word.h"
 #include "util.h"
 
+/**
+ * @brief Returns the index of the word or text closest to the cursor when performing a search.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gint: The index
+ */
 gint get_search_word_pos(ShortcutJump *sj) {
     gint closest_to_left = 0;
     gint closest_to_right = 0;
@@ -59,6 +66,14 @@ gint get_search_word_pos(ShortcutJump *sj) {
     }
 }
 
+/**
+ * @brief Returs the index of the first valid word or text in the array after a search used for search wrapping.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gint: The first index
+ */
+
 gint get_search_word_pos_first(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
@@ -71,6 +86,13 @@ gint get_search_word_pos_first(ShortcutJump *sj) {
     return 0;
 }
 
+/**
+ * @brief Returs the index of the last valid word or text in the array after a search used for search wrapping.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gint: The last index
+ */
 gint get_search_word_pos_last(ShortcutJump *sj) {
     for (gint i = sj->words->len - 1; i >= 0; i--) {
         Word word = g_array_index(sj->words, Word, i);
@@ -83,6 +105,13 @@ gint get_search_word_pos_last(ShortcutJump *sj) {
     return 0;
 }
 
+/**
+ * @brief Highlights the currently selected word or text during a search after pressing the right arrow key.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gboolean: TRUE if there is text to the right, FALSE otherwise (we are beyond the last index)
+ */
 gboolean set_search_word_pos_right_key(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
@@ -103,6 +132,13 @@ gboolean set_search_word_pos_right_key(ShortcutJump *sj) {
     return FALSE;
 }
 
+/**
+ * @brief Highlights the currently selected word or text during a search after pressing the left arrow key.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gboolean: TRUE if there is text to the left, FALSE otherwise (we are beyond the first index)
+ */
 gboolean set_search_word_pos_left_key(ShortcutJump *sj) {
     for (gint i = sj->words->len - 1; i >= 0; i--) {
         Word word = g_array_index(sj->words, Word, i);
@@ -157,8 +193,6 @@ void search_end(ShortcutJump *sj) {
         scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
         scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
 
-        g_string_free(sj->replace_cache, TRUE);
-
         if (!sj->search_change_made) {
             scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
         }
@@ -189,12 +223,30 @@ void search_end(ShortcutJump *sj) {
     g_string_free(sj->search_query, TRUE);
     g_string_free(sj->eol_message, TRUE);
     g_array_free(sj->words, TRUE);
+    g_string_free(sj->replace_cache, TRUE);
 
     block_key_press_action(sj);
     block_click_action(sj);
+}
 
-    // g_signal_handler_block(sj->sci, sj->kp_handler_id);
-    // g_signal_handler_block(geany_data->main_widgets->window, sj->click_handler_id);
+/**
+ * @brief Cancels the word search or substring search replacement.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
+void search_replace_cancel(ShortcutJump *sj) {
+    search_end(sj);
+    ui_set_statusbar(TRUE, _("Search replace canceled"));
+}
+
+/**
+ * @brief Ends the word search or substring search replacement.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
+void search_replace_complete(ShortcutJump *sj) {
+    search_end(sj);
+    ui_set_statusbar(TRUE, _("Search replace completed"));
 }
 
 /**
@@ -277,7 +329,7 @@ void search_cancel(ShortcutJump *sj) {
  * @param GdkEventButton *event: Click event
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: False if uncontrolled for click or wrong mode
+ * @return gboolean: FALSE if uncontrolled for click or wrong mode
  */
 gboolean on_click_event_search(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;

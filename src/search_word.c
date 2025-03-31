@@ -198,7 +198,11 @@ void search_init(ShortcutJump *sj, gboolean instant_replace) {
     sj->current_mode = JM_SEARCH;
 
     set_sj_scintilla_object(sj);
-    set_selection_info(sj);
+
+    if (!instant_replace) {
+        set_selection_info(sj);
+    }
+
     init_sj_values(sj);
     define_indicators(sj->sci, sj);
 
@@ -211,26 +215,6 @@ void search_init(ShortcutJump *sj, gboolean instant_replace) {
     annotation_display_search(sj);
 
     ui_set_statusbar(TRUE, _("%i word%s in view"), sj->words->len, sj->words->len == 1 ? "" : "s");
-}
-
-/**
- * @brief Ends the word search replacement.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void search_replace_cancel(ShortcutJump *sj) {
-    search_end(sj);
-    ui_set_statusbar(TRUE, _("Search replace canceled"));
-}
-
-/**
- * @brief Ends the word search replacement.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void search_replace_complete(ShortcutJump *sj) {
-    search_end(sj);
-    ui_set_statusbar(TRUE, _("Search replace completed"));
 }
 
 /**
@@ -329,7 +313,7 @@ gint search_on_key_press(GdkEventKey *event, gpointer user_data) {
  * @param GdkEventKey *event: Keypress event
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: False if uncontrolled for key press
+ * @return gboolean: FALSE if uncontrolled for key press
  */
 static gboolean on_key_press_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
@@ -344,10 +328,10 @@ static gboolean on_key_press_search(GtkWidget *widget, GdkEventKey *event, gpoin
 /**
  * @brief Provides a menu callback for performing a search jump.
  *
- * @param GtkMenuItem *menuitem: (unused)
+ * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
  */
-void search_cb(GtkMenuItem *menuitem, gpointer user_data) {
+void search_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_NONE) {
@@ -362,7 +346,7 @@ void search_cb(GtkMenuItem *menuitem, gpointer user_data) {
  * @param guint key_id: (unused)
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 gboolean search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;

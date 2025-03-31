@@ -26,6 +26,11 @@
 #include "util.h"
 #include "values.h"
 
+/**
+ * @brief Marks every occurace of the substring, clears the words array, and sets indicators.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 static void mark_text(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
@@ -48,10 +53,12 @@ static void mark_text(ShortcutJump *sj) {
             gint i = z - sj->buffer->str;
 
             Word data;
+
             gint start = sj->first_position + i;
             gint end = sj->first_position + i + sj->search_query->len;
             data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
             data.starting = start;
+            data.starting_doc = start;
             data.replace_pos = i;
             data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
             data.valid_search = TRUE;
@@ -72,10 +79,12 @@ static void mark_text(ShortcutJump *sj) {
             gint i = b - buffer_lower;
 
             Word data;
+
             gint start = sj->first_position + i;
             gint end = sj->first_position + i + sj->search_query->len;
             data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
             data.starting = start;
+            data.starting_doc = start;
             data.replace_pos = i;
             data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
             data.valid_search = TRUE;
@@ -112,16 +121,18 @@ static void mark_text(ShortcutJump *sj) {
     sj->search_word_pos_last = get_search_word_pos_last(sj);
 }
 
+/**
+ * @brief Handles key press event during a substring jump.
+ *
+ * @param GtkWidget *widget: (unused)
+ * @param GdkEventKey *event: Keypress event
+ * @param gpointer user_data: The plugin data
+ *
+ * @return gboolean: FALSE if uncontrolled for key press
+ */
 static gboolean on_key_press_substring(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
-
-    if (sj->delete_added_bracket) {
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->current_cursor_pos, 1);
-        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
-        scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
-        sj->delete_added_bracket = FALSE;
-    }
 
     gboolean is_other_char =
         strchr("[]\\;'.,/-=_+{`_+|}:<>?\"~)(*&^% $#@!)", (gchar)gdk_keyval_to_unicode(event->keyval)) ||
@@ -198,6 +209,12 @@ static gboolean on_key_press_substring(GtkWidget *widget, GdkEventKey *event, gp
     return FALSE;
 }
 
+/**
+ * @brief Sets the initial query if we are in a selection. The selected query will mark every occurance on the page.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param gboolean instant_replace: If we are instantly replacing
+ */
 static void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace) {
     if (instant_replace || sj->in_selection) {
         g_string_append(sj->search_query, sci_get_contents_range(sj->sci, sj->selection_start, sj->selection_end));
@@ -205,6 +222,12 @@ static void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace)
     }
 }
 
+/**
+ * @brief Begins the substring jump or replacement, defines indicators, and sets key and mouse movements.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param gboolean instant_replace: If we are instantly replacing
+ */
 void substring_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->current_mode != JM_NONE) {
         return;
@@ -234,10 +257,10 @@ void substring_init(ShortcutJump *sj, gboolean instant_replace) {
 /**
  * @brief Provides a menu callback for performing a substring jump.
  *
- * @param GtkMenuItem *menuitem: (unused)
+ * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
  */
-void substring_cb(GtkMenuItem *menuitem, gpointer user_data) {
+void substring_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_NONE) {
@@ -252,7 +275,7 @@ void substring_cb(GtkMenuItem *menuitem, gpointer user_data) {
  * @param guint key_id: (unused)
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 gboolean substring_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
