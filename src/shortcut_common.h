@@ -23,7 +23,6 @@
 
 #include "jump_to_a_word.h"
 
-void shortcut_replace_complete(ShortcutJump *sj);
 void shortcut_end(ShortcutJump *sj, gboolean was_canceled);
 void shortcut_char_waiting_cancel(ShortcutJump *sj);
 void shortcut_char_get_chars(ShortcutJump *sj, gchar search_char);

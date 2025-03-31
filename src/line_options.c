@@ -526,7 +526,7 @@ static void create_panel(ShortcutJump *sj) {
  * @param guint key_id: (unused)
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 gboolean open_line_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
@@ -546,7 +546,7 @@ gboolean open_line_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_d
  * @param guint key_id: (unused)
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 gboolean open_text_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
@@ -565,7 +565,7 @@ gboolean open_text_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_d
  * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 void open_line_options_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
@@ -582,7 +582,7 @@ void open_line_options_cb(GtkMenuItem *menu_item, gpointer user_data) {
  * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 void open_text_options_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;

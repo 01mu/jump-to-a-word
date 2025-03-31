@@ -80,7 +80,7 @@ void jump_to_previous_cursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
  * @param guint key_id: (unused)
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 gboolean jump_to_previous_cursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;

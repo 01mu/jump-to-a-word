@@ -132,10 +132,10 @@ void line_init(ShortcutJump *sj) {
 /**
  * @brief Provides a menu callback for jumping to a line.
  *
- * @param GtkMenuItem *menuitem: (unused)
+ * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
  */
-void jump_to_line_cb(GtkMenuItem *menuitem, gpointer user_data) {
+void jump_to_line_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_NONE) {
@@ -150,7 +150,7 @@ void jump_to_line_cb(GtkMenuItem *menuitem, gpointer user_data) {
  * @param guint key_id: (unused)
  * @param gpointer user_data: The plugin data
  *
- * @return gboolean: True
+ * @return gboolean: TRUE
  */
 gboolean jump_to_line_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;

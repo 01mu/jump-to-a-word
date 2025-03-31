@@ -18,6 +18,7 @@
 
 #include <plugindata.h>
 
+#include "Scintilla.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
 #include "previous_cursor.h"
@@ -44,10 +45,24 @@ static gboolean selection_is_a_word(ScintillaObject *sci, gint selection_start, 
     gint start_of_last = scintilla_send_message(sci, SCI_WORDSTARTPOSITION, selection_end, TRUE);
     gint end_of_last = scintilla_send_message(sci, SCI_WORDENDPOSITION, selection_end, TRUE);
 
-    // gboolean iw = scintilla_send_message(sci, SCI_ISRANGEWORD, start_of_first, end_of_first);
-    // ui_set_statusbar(TRUE, _("%i"), iw);
+    char word_chars[256];
+    scintilla_send_message(sci, SCI_GETWORDCHARS, 0, (sptr_t)word_chars);
 
-    return start_of_first != end_of_last && start_of_first == start_of_last && end_of_first == end_of_last;
+    gchar left_bound = scintilla_send_message(sci, SCI_GETCHARAT, selection_start - 1, 0);
+    gchar right_bound = scintilla_send_message(sci, SCI_GETCHARAT, selection_end, 0);
+    gint len = scintilla_send_message(sci, SCI_GETLENGTH, 0, 0);
+    gboolean bound_is_char = FALSE;
+
+    for (char *p = word_chars; *p != '\0'; p++) {
+        guchar ch = (*p >= 32 && *p <= 126) ? *p : '?';
+
+        if ((start_of_first - 1 <= 0 && left_bound == ch) || (end_of_last < len && right_bound == ch)) {
+            bound_is_char = TRUE;
+        }
+    }
+
+    return start_of_first != end_of_last && start_of_first == start_of_last && end_of_first == end_of_last &&
+           !bound_is_char;
 }
 
 /**
@@ -65,15 +80,6 @@ static gboolean selection_is_a_line(ShortcutJump *sj, ScintillaObject *sci, gint
     gint line_of_start = scintilla_send_message(sci, SCI_LINEFROMPOSITION, selection_start, TRUE);
     gint line_of_end = scintilla_send_message(sci, SCI_LINEFROMPOSITION, selection_end, TRUE);
 
-    // gint start_pos = scintilla_send_message(sci, SCI_POSITIONFROMLINE, line_of_start, 0);
-    // gint line_length = scintilla_send_message(sci, SCI_LINELENGTH, line_of_start, 0) - 1;
-    // gint end_pos = scintilla_send_message(sci, SCI_GETLINEENDPOSITION, line_of_start, 0);
-
-    // if (line_of_start == line_of_end && selection_start == start_pos && selection_end == end_pos &&
-    // end_pos == start_pos + line_length) {
-    // return TRUE;
-    //}
-
     if (!sj->selection_is_a_word && line_of_start == line_of_end) {
         return TRUE;
     }
@@ -90,6 +96,9 @@ static gboolean selection_is_a_line(ShortcutJump *sj, ScintillaObject *sci, gint
 void set_selection_info(ShortcutJump *sj) {
     gint selection_start = scintilla_send_message(sj->sci, SCI_GETSELECTIONSTART, 0, 0);
     gint selection_end = scintilla_send_message(sj->sci, SCI_GETSELECTIONEND, 0, 0);
+
+    // ui_set_statusbar(TRUE, _("%i"), selection_start);
+    //  ui_set_statusbar(TRUE, _("%i"), selection_end);
 
     sj->in_selection = selection_start != selection_end && sj->current_mode != JM_LINE;
     sj->selection_start = selection_start;

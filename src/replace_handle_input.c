@@ -20,6 +20,7 @@
 
 #include "jump_to_a_word.h"
 #include "line_options.h"
+#include "search_common.h"
 #include "search_word.h"
 #include "selection.h"
 #include "shortcut_char.h"
@@ -64,7 +65,7 @@ static void handle_single_backspace(ShortcutJump *sj) {
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_replace_complete(sj);
+        shortcut_char_replacing_complete(sj);
     }
 }
 
@@ -266,7 +267,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
             }
 
             if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-                shortcut_replace_complete(sj);
+                shortcut_char_replacing_complete(sj);
             }
 
             return TRUE;
@@ -288,7 +289,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         }
 
         if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            shortcut_replace_complete(sj);
+            shortcut_char_replacing_complete(sj);
         }
 
         return TRUE;
@@ -306,7 +307,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         if (sj->search_change_made) {
-            shortcut_replace_complete(sj);
+            shortcut_char_replacing_complete(sj);
         } else {
             shortcut_char_replacing_cancel(sj);
         }
