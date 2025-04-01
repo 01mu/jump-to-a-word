@@ -329,7 +329,7 @@ void shortcut_cancel(ShortcutJump *sj) {
 gint shortcut_get_search_results_count(ScintillaObject *sci, GArray *words) {
     gint search_results_count = 0;
 
-    for (gint i = 0; i < words->len; i + +) {
+    for (gint i = 0; i < words->len; i++) {
         Word *word = &g_array_index(words, Word, i);
 
         if (word->shortcut_marked) {
@@ -491,11 +491,19 @@ static gint shortcut_on_key_press(GdkEventKey *event, gpointer user_data) {
     }
 
     if (event->keyval == GDK_KEY_Return) {
-        Word word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
+        Word word;
 
         if (sj->shortcut_single_pos == -1) {
             shortcut_cancel(sj);
         } else {
+            if (strcmp(sj->search_query->str, "") == 0) {
+                gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+
+                word = g_array_index(sj->words, Word, current_line - sj->first_line_on_screen);
+            } else {
+                word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
+            }
+
             shortcut_complete(sj, word.starting_doc, word.word->len, word.line);
         }
 
@@ -542,6 +550,7 @@ static gint shortcut_on_key_press(GdkEventKey *event, gpointer user_data) {
 
         if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
             Word word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
+
             shortcut_complete(sj, word.starting_doc, word.word->len, word.line);
         }
 
