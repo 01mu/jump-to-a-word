@@ -496,7 +496,7 @@ static gint shortcut_on_key_press(GdkEventKey *event, gpointer user_data) {
         if (sj->shortcut_single_pos == -1) {
             shortcut_cancel(sj);
         } else {
-            if (strcmp(sj->search_query->str, "") == 0) {
+            if (strcmp(sj->search_query->str, "") == 0 && sj->current_mode == JM_LINE) {
                 gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
 
                 word = g_array_index(sj->words, Word, current_line - sj->first_line_on_screen);
