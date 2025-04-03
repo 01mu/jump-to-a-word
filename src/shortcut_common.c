@@ -137,10 +137,6 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     search_clear_indicators(sj->sci, sj->words);
     annotation_clear(sj->sci, sj->eol_message_line);
 
-    if (!sj->in_selection) {
-        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
-    }
-
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
 
@@ -307,6 +303,10 @@ void shortcut_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) 
         }
     }
 
+    if (!sj->in_selection || (sj->in_selection && sj->selection_is_a_word)) {
+        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
+    }
+
     annotation_clear(sj->sci, sj->eol_message_line);
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Jump completed"));
@@ -326,6 +326,10 @@ void shortcut_cancel(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+
+    if (!sj->in_selection || (sj->in_selection && sj->selection_is_a_word)) {
+        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
+    }
 
     annotation_clear(sj->sci, sj->eol_message_line);
     shortcut_end(sj, TRUE);
@@ -588,10 +592,6 @@ static gint shortcut_on_key_press(GdkEventKey *event, gpointer user_data) {
  */
 void set_after_shortcut_placement(ShortcutJump *sj) {
     gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
-
-    if (!sj->in_selection) {
-        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
-    }
 
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->last_position - sj->first_position);

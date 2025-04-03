@@ -105,7 +105,6 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
                     } while (valid_smart_case(haystack_char, needle_char) && i == k - 1);
 
                     if (k - 1 == sj->search_query->len) {
-                        ui_set_statusbar(TRUE, _("%i"), i);
                         word->valid_search = TRUE;
                         sj->search_results_count += 1;
                     }
