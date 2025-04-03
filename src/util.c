@@ -23,16 +23,37 @@
 #include "keybindings.h"
 #include "line_options.h"
 
+/**
+ * @brief Sets indicators for a given range.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param Indicator type: Which indicator
+ * @param gint starting: The starting point
+ * @param gint length: The length of the indicator
+ */
 void set_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting, gint length) {
     scintilla_send_message(sci, SCI_SETINDICATORCURRENT, type, 0);
     scintilla_send_message(sci, SCI_INDICATORFILLRANGE, starting, length);
 }
 
+/**
+ * @brief Clears indicators for a given range.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param Indicator type: Which indicator
+ * @param gint starting: The starting point
+ * @param gint length: The length of the indicator
+ */
 void clear_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting, gint length) {
     scintilla_send_message(sci, SCI_SETINDICATORCURRENT, type, type);
     scintilla_send_message(sci, SCI_INDICATORCLEARRANGE, starting, length);
 }
 
+/**
+ * @brief Sets the indicators for valid shortcuts.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 void set_shortcut_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
@@ -44,6 +65,11 @@ void set_shortcut_indicators(ShortcutJump *sj) {
     }
 }
 
+/**
+ * @brief Sets the indicators for valid words.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 void set_word_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
@@ -55,10 +81,20 @@ void set_word_indicators(ShortcutJump *sj) {
     }
 }
 
+/**
+ * @brief Returns the number of line endings that were added during a shortcut placement at a given line. This is
+ * needed so we can maintain the correct cursor position.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param gint current_line: The current line
+ *
+ * @return gint: The number of line endings at a certain line
+ */
 gint get_lfs(ShortcutJump *sj, gint current_line) {
     if (sj->in_selection && sj->selection_is_a_line) {
         return 0;
     }
+
     gint line = sj->in_selection && sj->config_settings->search_from_selection
                     ? scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->first_position, 0) + 1
                     : sj->first_line_on_screen;
@@ -66,6 +102,13 @@ gint get_lfs(ShortcutJump *sj, gint current_line) {
     return g_array_index(sj->lf_positions, gint, current_line - line);
 }
 
+/**
+ * @brief Returns the current cursor position controlling for line endings.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gint: The new position
+ */
 gint set_cursor_position_with_lfs(ShortcutJump *sj) {
     gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     gint lfs = get_lfs(sj, current_line);
@@ -105,9 +148,9 @@ void margin_markers_reset(ShortcutJump *sj) {
 }
 
 /**
- * @brief Returns the indent width of the current document.
+ * @brief Returns the indent width of the current document to control for tabs during a line jump.
  *
- * @return ScintillaObject *: The indent width
+ * @return gint: The indent width
  */
 gint get_indent_width() {
     GeanyDocument *doc = document_get_current();
@@ -135,11 +178,26 @@ void search_clear_indicators(ScintillaObject *sci, GArray *words) {
     }
 }
 
+/**
+ * @brief Checks if a special key is pressed so we can continue the text replacement and accept new characters.
+ *
+ * @param GdkEventKey *event: The key press event
+ *
+ * @return gboolean: If it was pressed
+ */
 gboolean mod_key_pressed(GdkEventKey *event) {
     return event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R || event->keyval == GDK_KEY_Caps_Lock ||
            event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R;
 }
 
+/**
+ * @brief Checks if a mouse movement was performed so we can cancel the jump and clear memory.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param GdkEventButton *event: The mouse event
+ *
+ * @return gboolean: If it was activated
+ */
 gboolean mouse_movement_performed(ShortcutJump *sj, GdkEventButton *event) {
     return (sj->config_settings->cancel_on_mouse_move && event->type == GDK_MOTION_NOTIFY) ||
            event->type == GDK_LEAVE_NOTIFY || event->type == GDK_SCROLL || event->type == GDK_BUTTON_PRESS ||
@@ -166,24 +224,50 @@ void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, INDIC_TEXTFORE);
     scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_TEXT, 120);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color);
-
-    scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, INDIC_TEXTFORE);
-    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_TEXT, 120);
-    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color);
 }
 
+/**
+ * @brief Saves the cusor position. This is necessary because we have to keep the cursor in its original position on
+ * the page while the text is updating during a replacement.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gint: The cursor's 'position
+ */
 gint save_cursor_position(ShortcutJump *sj) { return scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0); }
 
+/**
+ * @brief Sets the key press action for a jump.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param KeyPressCallback function: The callback
+ */
 void set_key_press_action(ShortcutJump *sj, KeyPressCallback function) {
     sj->kp_handler_id = g_signal_connect(sj->sci, "key-press-event", G_CALLBACK(function), sj);
 }
 
+/**
+ * @brief Sets the click action for a jump.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param ClickCallback function: The callback
+ */
 void set_click_action(ShortcutJump *sj, ClickCallback function) {
     sj->click_handler_id = g_signal_connect(sj->geany_data->main_widgets->window, "event", G_CALLBACK(function), sj);
 }
 
+/**
+ * @brief Blocks a key press action previously set during a jump.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 void block_key_press_action(ShortcutJump *sj) { g_signal_handler_block(sj->sci, sj->kp_handler_id); }
 
+/**
+ * @brief Blocks a click action previously set during a jump.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 void block_click_action(ShortcutJump *sj) {
     g_signal_handler_block(sj->geany_data->main_widgets->window, sj->click_handler_id);
 }

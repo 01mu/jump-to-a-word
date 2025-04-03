@@ -118,6 +118,7 @@ typedef struct {
     gboolean search_selection_if_line;
     gboolean shortcuts_include_single_char;
     gboolean select_when_shortcut_char;
+    gboolean search_case_sensitive_smart_case;
     gint tag_color;
     gint text_color;
     gint highlight_color;
@@ -151,6 +152,7 @@ typedef struct {
     GtkWidget *line_after;
     GtkWidget *text_after;
     GtkWidget *select_when_shortcut_char;
+    GtkWidget *search_case_sensitive_smart_case;
 } Widgets;
 
 typedef struct {
@@ -173,28 +175,21 @@ typedef struct {
     Settings *config_settings;
     Widgets *config_widgets;
     Colors *gdk_colors;
-
     TextLineWindow *tl_window;
 
-    ScintillaObject *sci; // scintilla object
+    ScintillaObject *sci;
     GtkWidget *main_menu_item;
     gchar *config_file;
     GeanyData *geany_data;
 
-    gboolean replace_instant;
+    gint first_line_on_screen;
+    gint lines_on_screen;
+    gint last_line_on_screen;
+    gint first_position;
+    gint last_position;
 
-    gboolean line_range_set;     // whether we are performing a line range selection jump
-    gint line_range_first;       // the first line in the selection
-    gint text_range_word_length; // the length of the first word used in a selection range
-
-    gint first_line_on_screen; // index of first line on screen
-    gint lines_on_screen;      // number of lines on screen
-    gint last_line_on_screen;  // index of last line on screen
-    gint first_position;       // position of first char on screen
-    gint last_position;        // position of last char on screen
-
-    gint current_cursor_pos;  // cursor position before a jump
-    gint previous_cursor_pos; // cursor position used for navigating backwards
+    gint current_cursor_pos;
+    gint previous_cursor_pos;
 
     GString *cache;         // original text on screen before shortcuts are displayed
     GString *buffer;        // text with shortcuts positioned over words
@@ -213,12 +208,15 @@ This is necessary because we need to know how many LFs were shifted up until a c
 set the cursor position after clicking somewhere on the screen to cancel a shortcut jump.
 */
 
+    gboolean replace_instant; // whether we are performing an instant replace
+
+    gboolean line_range_set;     // whether we are performing a line range selection jump
+    gint line_range_first;       // the first line in the selection
+    gint text_range_word_length; // the length of the first word used in a selection range
+
     GString *search_query;     // query used during a jump
     gint search_results_count; // marked words during search
     gint shortcut_single_pos;  // index of highlighted word
-
-    gulong kp_handler_id;    // key press handler
-    gulong click_handler_id; // click handler
 
     GString *eol_message;  // end of line annotation message used during a word search
     gint eol_message_line; // line end of line annotation will appear on
@@ -232,6 +230,9 @@ set the cursor position after clicking somewhere on the screen to cancel a short
     gint replace_len;            // the length of the replacement for a set of serach words
 
     gboolean delete_added_bracket;
+
+    gulong kp_handler_id;
+    gulong click_handler_id;
 
     gboolean in_selection;
     gboolean selection_is_a_word;

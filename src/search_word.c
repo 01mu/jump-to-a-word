@@ -28,31 +28,6 @@
 #include "util.h"
 #include "values.h"
 
-static gboolean on_key_press_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
-gboolean on_click_event_search(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
-
-void search_get_words(ShortcutJump *sj) {
-    for (gint i = 0; i < sj->last_position - sj->first_position; i++) {
-        gint start = scintilla_send_message(sj->sci, SCI_WORDSTARTPOSITION, sj->first_position + i, TRUE);
-        gint end = scintilla_send_message(sj->sci, SCI_WORDENDPOSITION, sj->first_position + i, TRUE);
-
-        if (start == end || start < sj->first_position || end > sj->last_position) {
-            continue;
-        }
-
-        Word data;
-
-        data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
-        data.starting_doc = start;
-        data.starting = start;
-        data.replace_pos = i;
-        data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
-
-        g_array_append_val(sj->words, data);
-        i += data.word->len;
-    }
-}
-
 /**
  * @brief Provides a filter used in word search when the setting is set to case insensitive.
 
@@ -68,8 +43,6 @@ gboolean search_case_insensitive_match(const gchar *word, const gchar *search_qu
 /**
  * @brief Resets indicators and info from the previous search, begins a new search, sets the highlight indicator for the
  * first result, and sets the indexes for the first and last valid search words in the words array (used for wrapping).
- * Also sets the first highlighted word to the first occurance on the current line as opposed to the first occurance in
- * the view (if this option is enabled).
  *
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
@@ -109,17 +82,82 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
             continue;
         }
 
-        if (sj->config_settings->search_case_sensitive && sj->config_settings->search_start_from_beginning) {
-            if (g_str_has_prefix(word->word->str, sj->search_query->str)) {
-                word->valid_search = TRUE;
-                sj->search_results_count += 1;
+        if (sj->config_settings->search_case_sensitive && sj->config_settings->search_case_sensitive_smart_case) {
+            if (sj->config_settings->search_start_from_beginning) {
+                gint i = 0;
+
+                for (gchar *p = word->word->str; *p != '\0'; p++) {
+                    gchar *z = sj->search_query->str;
+                    gint k = 0;
+                    gchar haystack_char = p[0];
+                    gchar needle_char = z[0];
+
+                    do {
+                        z = sj->search_query->str + k;
+
+                        gchar *d = p + k;
+
+                        haystack_char = d[0];
+                        needle_char = z[0];
+
+                        z++;
+                        k++;
+                    } while (valid_smart_case(haystack_char, needle_char) && i == k - 1);
+
+                    if (k - 1 == sj->search_query->len) {
+                        ui_set_statusbar(TRUE, _("%i"), i);
+                        word->valid_search = TRUE;
+                        sj->search_results_count += 1;
+                    }
+
+                    i++;
+                }
+            }
+
+            if (!sj->config_settings->search_start_from_beginning) {
+                gint i = 0;
+
+                for (gchar *p = word->word->str; *p != '\0'; p++) {
+                    gchar *z = sj->search_query->str;
+                    gint k = 0;
+                    gchar haystack_char = p[0];
+                    gchar needle_char = z[0];
+
+                    do {
+                        z = sj->search_query->str + k;
+
+                        gchar *d = p + k;
+
+                        haystack_char = d[0];
+                        needle_char = z[0];
+
+                        z++;
+                        k++;
+                    } while (valid_smart_case(haystack_char, needle_char));
+
+                    if (k - 1 == sj->search_query->len) {
+                        word->valid_search = TRUE;
+                        sj->search_results_count += 1;
+                    }
+
+                    i++;
+                }
             }
         }
 
-        if (sj->config_settings->search_case_sensitive && !sj->config_settings->search_start_from_beginning) {
-            if (g_strstr_len(word->word->str, -1, sj->search_query->str)) {
-                word->valid_search = TRUE;
-                sj->search_results_count += 1;
+        if (sj->config_settings->search_case_sensitive && !sj->config_settings->search_case_sensitive_smart_case) {
+            if (sj->config_settings->search_start_from_beginning) {
+                if (g_str_has_prefix(word->word->str, sj->search_query->str)) {
+                    word->valid_search = TRUE;
+                    sj->search_results_count += 1;
+                }
+            }
+
+            if (!sj->config_settings->search_start_from_beginning) {
+                if (g_strstr_len(word->word->str, -1, sj->search_query->str)) {
+                    word->valid_search = TRUE;
+                    sj->search_results_count += 1;
+                }
             }
         }
 
@@ -165,56 +203,6 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
     }
 
     sj->search_word_pos_last = get_search_word_pos_last(sj);
-}
-
-void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace) {
-    gint start = scintilla_send_message(sj->sci, SCI_WORDSTARTPOSITION, sj->current_cursor_pos, TRUE);
-    gint end = scintilla_send_message(sj->sci, SCI_WORDENDPOSITION, sj->current_cursor_pos, TRUE);
-    gchar *current_word = start != end ? sci_get_contents_range(sj->sci, start, end) : "";
-    gboolean ps = sj->config_settings->use_selected_word_or_char && sj->in_selection && sj->selection_is_a_word;
-
-    current_word = ps ? sci_get_contents_range(sj->sci, sj->selection_start, sj->selection_end) : current_word;
-
-    if ((current_word && strlen(current_word) > 0) && (ps || instant_replace)) {
-        g_string_append(sj->search_query, current_word);
-        search_mark_words(sj, instant_replace);
-    }
-}
-
-/**
- * @brief Assigns every word on the screen to the words struct, sets configuration for indicators, and activates key
- * press and click signals. In the event that we are performing an instant search, we set the appropriate starting
- * and ending positions (the earliest and latest indexes of words in the array that match a query) and the initial
- * position. This process is also triggered if we are using use_current_word.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gboolean instant_replace: If instant replace mode is enabled
- */
-void search_init(ShortcutJump *sj, gboolean instant_replace) {
-    if (sj->current_mode != JM_NONE) {
-        return;
-    }
-
-    sj->current_mode = JM_SEARCH;
-
-    set_sj_scintilla_object(sj);
-
-    if (!instant_replace) {
-        set_selection_info(sj);
-    }
-
-    init_sj_values(sj);
-    define_indicators(sj->sci, sj);
-
-    search_get_words(sj);
-    search_set_initial_query(sj, instant_replace);
-
-    set_key_press_action(sj, on_key_press_search);
-    set_click_action(sj, on_click_event_search);
-
-    annotation_display_search(sj);
-
-    ui_set_statusbar(TRUE, _("%i word%s in view"), sj->words->len, sj->words->len == 1 ? "" : "s");
 }
 
 /**
@@ -297,8 +285,7 @@ gint search_on_key_press(GdkEventKey *event, gpointer user_data) {
         }
     }
 
-    if (event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R || event->keyval == GDK_KEY_Caps_Lock ||
-        event->keyval == GDK_KEY_Control_L) {
+    if (mod_key_pressed(event)) {
         return TRUE;
     }
 
@@ -323,6 +310,90 @@ static gboolean on_key_press_search(GtkWidget *widget, GdkEventKey *event, gpoin
     }
 
     return FALSE;
+}
+
+/**
+ * @brief Sets all the words within a range to the words array.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
+void search_get_words(ShortcutJump *sj) {
+    for (gint i = 0; i < sj->last_position - sj->first_position; i++) {
+        gint start = scintilla_send_message(sj->sci, SCI_WORDSTARTPOSITION, sj->first_position + i, TRUE);
+        gint end = scintilla_send_message(sj->sci, SCI_WORDENDPOSITION, sj->first_position + i, TRUE);
+
+        if (start == end || start < sj->first_position || end > sj->last_position) {
+            continue;
+        }
+
+        Word data;
+
+        data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
+        data.starting_doc = start;
+        data.starting = start;
+        data.replace_pos = i;
+        data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
+
+        g_array_append_val(sj->words, data);
+        i += data.word->len;
+    }
+}
+
+/**
+ * @brief Sets the inital query used in a word search based on selection. If a word is highlighted we use it for
+ * searching if use_selected_word_or_char is enabled. During an instant replace the word under the cursor is replaced.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param gboolean instant_replace: Whether we are instant replacing
+ */
+void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace) {
+    gint start = scintilla_send_message(sj->sci, SCI_WORDSTARTPOSITION, sj->current_cursor_pos, TRUE);
+    gint end = scintilla_send_message(sj->sci, SCI_WORDENDPOSITION, sj->current_cursor_pos, TRUE);
+    gchar *current_word = start != end ? sci_get_contents_range(sj->sci, start, end) : "";
+    gboolean ps = sj->config_settings->use_selected_word_or_char && sj->in_selection && sj->selection_is_a_word;
+
+    current_word = ps ? sci_get_contents_range(sj->sci, sj->selection_start, sj->selection_end) : current_word;
+
+    if ((current_word && strlen(current_word) > 0) && (ps || instant_replace)) {
+        g_string_append(sj->search_query, current_word);
+        search_mark_words(sj, instant_replace);
+    }
+}
+
+/**
+ * @brief Assigns every word on the screen to the words struct, sets configuration for indicators, and activates key
+ * press and click signals. In the event that we are performing an instant search, we set the appropriate starting
+ * and ending positions (the earliest and latest indexes of words in the array that match a query) and the initial
+ * position. This process is also triggered if we are using use_current_word.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param gboolean instant_replace: If instant replace mode is enabled
+ */
+void search_init(ShortcutJump *sj, gboolean instant_replace) {
+    if (sj->current_mode != JM_NONE) {
+        return;
+    }
+
+    sj->current_mode = JM_SEARCH;
+
+    set_sj_scintilla_object(sj);
+
+    if (!instant_replace) {
+        set_selection_info(sj);
+    }
+
+    init_sj_values(sj);
+    define_indicators(sj->sci, sj);
+
+    search_get_words(sj);
+    search_set_initial_query(sj, instant_replace);
+
+    set_key_press_action(sj, on_key_press_search);
+    set_click_action(sj, on_click_event_search);
+
+    annotation_display_search(sj);
+
+    ui_set_statusbar(TRUE, _("%i word%s in view"), sj->words->len, sj->words->len == 1 ? "" : "s");
 }
 
 /**

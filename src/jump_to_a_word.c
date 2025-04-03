@@ -141,24 +141,6 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, SCNotificati
         return TRUE;
     }
 
-    // if (nt->modificationType & (SC_MOD_INSERTCHECK)) {
-    // if (sj->current_mode == JM_SEARCH) {
-    // GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    // gchar *clipboard_text = gtk_clipboard_wait_for_text(clipboard);
-
-    // if (strcmp(clipboard_text, nt->text) == 0) {
-    // g_string_append(sj->search_query, nt->text);
-
-    // sj->delete_len += strlen(nt->text);
-    // sj->delete_pasted = TRUE;
-
-    // search_mark_words(sj, FALSE);
-    // annotation_display_search(sj);
-    // return TRUE;
-    //}
-    //}
-    //}
-
     if (nt->modificationType & (SC_MOD_INSERTTEXT)) {
         if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING || sj->current_mode == JM_SUBSTRING) {
             if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
@@ -300,7 +282,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(move_marker_to_line, "move_marker_to_line", "general", FALSE);
     SET_SETTING_BOOL(cancel_on_mouse_move, "cancel_on_mouse_move", "general", FALSE);
     SET_SETTING_BOOL(search_from_selection, "search_from_selection", "general", TRUE);
-    SET_SETTING_BOOL(search_selection_if_line, "search_selection_if_line", "general", TRUE);
+    SET_SETTING_BOOL(search_selection_if_line, "search_selection_if_line", "general", FALSE);
 
     SET_SETTING_BOOL(select_when_shortcut_char, "select_when_shortcut_char", "shortcut", TRUE);
     SET_SETTING_BOOL(shortcut_all_caps, "shortcut_all_caps", "shortcut", TRUE);
@@ -309,9 +291,10 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(center_shortcut, "center_shortcut", "shortcut", FALSE);
 
     SET_SETTING_BOOL(wrap_search, "wrap_search", "search", TRUE);
-    SET_SETTING_BOOL(search_case_sensitive, "search_case_sensitive", "search", TRUE);
-    SET_SETTING_BOOL(match_whole_word, "match_whole_word", "search", FALSE);
     SET_SETTING_BOOL(search_start_from_beginning, "search_start_from_beginning", "search", TRUE);
+    SET_SETTING_BOOL(match_whole_word, "match_whole_word", "search", FALSE);
+    SET_SETTING_BOOL(search_case_sensitive, "search_case_sensitive", "search", TRUE);
+    SET_SETTING_BOOL(search_case_sensitive_smart_case, "search_case_sensitive_smart_case", "search", FALSE);
 
     SET_SETTING_INTEGER(text_after, "text_after", "text_after", TX_SELECT_TEXT);
     SET_SETTING_INTEGER(line_after, "line_after", "line_after", LA_SELECT_TO_LINE);
@@ -412,6 +395,17 @@ static void configure_response_cb(GtkDialog *dialog, gint response, gpointer use
  */
 static void single_line_toggle_cb(GtkToggleButton *toggle_button, gpointer data) {
     gtk_widget_set_sensitive(g_object_get_data(G_OBJECT(data), "search_selection_if_line"),
+                             gtk_toggle_button_get_active(toggle_button));
+}
+
+/**
+ * @brief Toggles availability of "Smart casing".
+ *
+ * @param GtkToggleButton *toggle_button: The button that triggers the toggle
+ * @param gpointer data: The dialog
+ */
+static void smart_case_toggle_cb(GtkToggleButton *toggle_button, gpointer data) {
+    gtk_widget_set_sensitive(g_object_get_data(G_OBJECT(data), "search_case_sensitive_smart_case"),
                              gtk_toggle_button_get_active(toggle_button));
 }
 
@@ -533,7 +527,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 1);
 
     WIDGET_FRAME(_("Jumping to a word, character, or line using shortcuts"), GTK_ORIENTATION_VERTICAL);
-    WIDGET_CONF_BOOL(select_when_shortcut_char, _("Select to text in a character jump"),
+    WIDGET_CONF_BOOL(select_when_shortcut_char, _("Select to text during a character jump"),
                      _("Always select the text between the cursor and the character being jumped to"));
     WIDGET_CONF_BOOL(shortcut_all_caps, _("Display shortcuts in all caps"),
                      _("Display the shortcuts in all caps for visibility"));
@@ -547,11 +541,32 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_FRAME(_("Jumping to a word or substring using search"), GTK_ORIENTATION_VERTICAL);
     WIDGET_CONF_BOOL(wrap_search, _("Always wrap search"),
                      _("Return to the opposite side of the selected text range after moving out of range"));
-    WIDGET_CONF_BOOL(search_case_sensitive, _("Case sensitive"),
-                     _("Use proper case matching when jumping to or searching for text"));
-    WIDGET_CONF_BOOL(match_whole_word, _("Match only a whole word"), _("Only mark words if every character matches"));
     WIDGET_CONF_BOOL(search_start_from_beginning, _("Match from start of word"),
                      _("Only mark words that match the query from the beginning"));
+    WIDGET_CONF_BOOL(match_whole_word, _("Match only a whole word"), _("Only mark words if every character matches"));
+
+    sj->config_widgets->search_case_sensitive = gtk_check_button_new_with_label("Case sensitive");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj->config_widgets->search_case_sensitive),
+                                 sj->config_settings->search_case_sensitive);
+    g_signal_connect(sj->config_widgets->search_case_sensitive, "toggled", G_CALLBACK(smart_case_toggle_cb), dialog);
+    gtk_widget_set_tooltip_text(sj->config_widgets->search_case_sensitive,
+                                "Use proper case matching when jumping to or searching for text");
+
+    sj->config_widgets->search_case_sensitive_smart_case = gtk_check_button_new_with_label("Use smartcase matching");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj->config_widgets->search_case_sensitive_smart_case),
+                                 sj->config_settings->search_case_sensitive_smart_case);
+    gtk_widget_set_tooltip_text(sj->config_widgets->search_case_sensitive_smart_case,
+                                "Lower case query characters match both lower and upper case haystack characters, "
+                                "upper case query characters only match upper case haystack characters");
+
+    g_object_set_data(G_OBJECT(dialog), "search_case_sensitive_smart_case",
+                      sj->config_widgets->search_case_sensitive_smart_case);
+    smart_case_toggle_cb(GTK_TOGGLE_BUTTON(sj->config_widgets->search_case_sensitive), dialog);
+
+    frame = gtk_frame_new(NULL);
+    gtk_frame_set_label_widget(GTK_FRAME(frame), sj->config_widgets->search_case_sensitive);
+    gtk_container_add(GTK_CONTAINER(frame), sj->config_widgets->search_case_sensitive_smart_case);
+    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 1);
 
     WIDGET_FRAME(_("After jumping to a word, character, or substring"), GTK_ORIENTATION_VERTICAL);
     sj->config_widgets->text_after = gtk_combo_box_text_new();

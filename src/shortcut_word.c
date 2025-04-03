@@ -26,7 +26,12 @@
 #include "values.h"
 
 /**
- * @brief Set the shortcut tags in place in the buffer string.
+ * @brief Places spaces over the word to hide it if that setting is enabled.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param GArray *words: The word array
+ * @param GString *buffer: The buffer of the text on screen
+ * @param gint first_position: The first position on the screen
  */
 static GString *shortcut_hide_word(ShortcutJump *sj, GArray *words, GString *buffer, gint first_position) {
     if (sj->config_settings->hide_word_shortcut_jump) {

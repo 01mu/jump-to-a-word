@@ -32,6 +32,13 @@
  * @param ShortcutJump *sj: The plugin object
  */
 static void mark_text(ShortcutJump *sj) {
+    if (sj->delete_added_bracket) {
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->current_cursor_pos, 1);
+        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+        scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
+        sj->delete_added_bracket = FALSE;
+    }
+
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
 
@@ -56,6 +63,7 @@ static void mark_text(ShortcutJump *sj) {
 
             gint start = sj->first_position + i;
             gint end = sj->first_position + i + sj->search_query->len;
+
             data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
             data.starting = start;
             data.starting_doc = start;
@@ -70,9 +78,52 @@ static void mark_text(ShortcutJump *sj) {
         }
     }
 
+    if (sj->config_settings->search_case_sensitive && sj->config_settings->search_case_sensitive_smart_case) {
+        gint i = 0;
+
+        for (gchar *p = sj->buffer->str; *p != '\0'; p++) {
+            gchar *z = sj->search_query->str;
+            gint k = 0;
+            gchar haystack_char = p[0];
+            gchar needle_char = z[0];
+
+            do {
+                z = sj->search_query->str + k;
+
+                gchar *d = p + k;
+
+                haystack_char = d[0];
+                needle_char = z[0];
+
+                z++;
+                k++;
+            } while (valid_smart_case(haystack_char, needle_char));
+
+            if (k - 1 == sj->search_query->len) {
+                Word data;
+
+                gint start = sj->first_position + i;
+                gint end = sj->first_position + i + sj->search_query->len;
+
+                data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
+                data.starting = start;
+                data.starting_doc = start;
+                data.replace_pos = i;
+                data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
+                data.valid_search = TRUE;
+                g_array_append_val(sj->words, data);
+
+                sj->search_results_count += 1;
+            }
+
+            i++;
+        }
+    }
+
     if (!sj->config_settings->search_case_sensitive) {
         gchar *buffer_lower = g_ascii_strdown(sj->buffer->str, -1);
         gchar *query_lower = g_ascii_strdown(sj->search_query->str, -1);
+
         const gchar *b = buffer_lower;
 
         while ((b = g_strstr_len(b, -1, query_lower))) {
@@ -82,6 +133,7 @@ static void mark_text(ShortcutJump *sj) {
 
             gint start = sj->first_position + i;
             gint end = sj->first_position + i + sj->search_query->len;
+
             data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
             data.starting = start;
             data.starting_doc = start;
@@ -216,10 +268,8 @@ static gboolean on_key_press_substring(GtkWidget *widget, GdkEventKey *event, gp
  * @param gboolean instant_replace: If we are instantly replacing
  */
 static void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace) {
-    if (instant_replace || sj->in_selection) {
-        g_string_append(sj->search_query, sci_get_contents_range(sj->sci, sj->selection_start, sj->selection_end));
-        mark_text(sj);
-    }
+    g_string_append(sj->search_query, sci_get_contents_range(sj->sci, sj->selection_start, sj->selection_end));
+    mark_text(sj);
 }
 
 /**

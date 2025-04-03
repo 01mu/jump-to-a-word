@@ -78,7 +78,7 @@ static gint get_first_line_on_screen(ShortcutJump *sj) {
  *
  * @return gint: The first line on screen (0 index)
  */
-static gint get_number_of_lines_on_screen(ShortcutJump *sj, gint first_line_on_screen) {
+static gint get_number_of_lines_on_screen(ShortcutJump *sj) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
     if (!z && sj->in_selection && sj->config_settings->search_from_selection && !sj->selection_is_a_char) {
@@ -214,6 +214,12 @@ static GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, g
     return markers;
 }
 
+/**
+ * @brief Inits values used in the main plugin object. This function is called once for every type of jump. The *_end
+ * functions free memory allocated.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 void init_sj_values(ShortcutJump *sj) {
     if (!sj->sci) {
         ScintillaObject *sci = get_scintilla_object();
@@ -221,7 +227,7 @@ void init_sj_values(ShortcutJump *sj) {
     }
 
     gint first_line_on_screen = get_first_line_on_screen(sj);
-    gint lines_on_screen = get_number_of_lines_on_screen(sj, first_line_on_screen);
+    gint lines_on_screen = get_number_of_lines_on_screen(sj);
     gint last_line_on_screen = first_line_on_screen + lines_on_screen;
     gint first_position = get_first_position(sj, first_line_on_screen);
     gint last_position = get_last_position(sj, last_line_on_screen);

@@ -21,7 +21,7 @@
 #include "jump_to_a_word.h"
 
 /**
- * @brief Get the int value from GTK color type. Used when updaing the settings file. The color is in BGR.
+ * @brief Returns the int value from a GTK color type. Used when updaing the settings file. The color is in BGR.
  *
  * @param const GdkColor *color: GTK color struct
 
@@ -94,10 +94,11 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
     UPDATE_BOOL(hide_word_shortcut_jump, "hide_word_shortcut_jump", "shortcut");
     UPDATE_BOOL(center_shortcut, "center_shortcut", "shortcut");
 
-    UPDATE_BOOL(search_start_from_beginning, "search_start_from_beginning", "search");
-    UPDATE_BOOL(search_case_sensitive, "search_case_sensitive", "search");
-    UPDATE_BOOL(match_whole_word, "match_whole_word", "search");
     UPDATE_BOOL(wrap_search, "wrap_search", "search");
+    UPDATE_BOOL(search_start_from_beginning, "search_start_from_beginning", "search");
+    UPDATE_BOOL(match_whole_word, "match_whole_word", "search");
+    UPDATE_BOOL(search_case_sensitive, "search_case_sensitive", "search");
+    UPDATE_BOOL(search_case_sensitive_smart_case, "search_case_sensitive_smart_case", "search");
 
     UPDATE_INTEGER(text_after, "text_after", "text_after");
     UPDATE_INTEGER(line_after, "line_after", "line_after");

@@ -26,7 +26,7 @@
 #include "values.h"
 
 /**
- * @brief Begins jump to line mode.
+ * @brief Begins jump to line mode and controls for new line characters.
  *
  * @param ShortcutJump *sj: The plugin object
  */

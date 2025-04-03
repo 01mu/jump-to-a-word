@@ -23,6 +23,26 @@
 #include "util.h"
 
 /**
+ * @brief Returns whether the char being searched for in the buffer matches the smart case condition whereby a lowercase
+ * char matches both a lower and uppercase haystack char and an uppercase one only matches an uppercase chcaracter.
+ *
+ * @param char haystack_character: The character in the buffer
+ * @param char haystack_character: The character in the search query
+ *
+ * @return gboolean: TRUE if valid
+ */
+gboolean valid_smart_case(char haystack_char, char needle_char) {
+    gboolean g1 = g_unichar_islower(haystack_char) && g_unichar_islower(needle_char) && needle_char == haystack_char;
+
+    gboolean g2 = g_unichar_isupper(haystack_char) && g_unichar_islower(needle_char) &&
+                  g_ascii_tolower(haystack_char) == needle_char;
+
+    gboolean g3 = g_unichar_isupper(haystack_char) && g_unichar_isupper(needle_char) && needle_char == haystack_char;
+
+    return g1 || g2 || g3;
+}
+
+/**
  * @brief Returns the index of the word or text closest to the cursor when performing a search.
  *
  * @param ShortcutJump *sj: The plugin object
@@ -337,7 +357,7 @@ gboolean on_click_event_search(GtkWidget *widget, GdkEventButton *event, gpointe
     if (mouse_movement_performed(sj, event)) {
         if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH ||
             sj->current_mode == JM_SUBSTRING || sj->current_mode == JM_REPLACE_SUBSTRING) {
-            sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+            sj->current_cursor_pos = save_cursor_position(sj);
             scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
             search_cancel(sj);
             return TRUE;

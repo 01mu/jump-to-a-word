@@ -48,8 +48,6 @@ static void shortcut_char_replacing_end(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
 
-    // g_string_free(sj->replace_cache, TRUE);
-
     if (!sj->search_change_made) {
         scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     }
@@ -62,7 +60,7 @@ static void shortcut_char_replacing_end(ShortcutJump *sj) {
 }
 
 /**
- * @brief Display message for canceled shortcut char replacement and free memory.
+ * @brief Displays  message for canceled shortcut char replacement and frees memory.
  *
  * @param ShortcutJump *sj: The plugin object
  */
@@ -73,7 +71,7 @@ void shortcut_char_replacing_cancel(ShortcutJump *sj) {
 }
 
 /**
- * @brief Display message for completed shortcut jump and free memory.
+ * @brief Displays message for completed shortcut jump and frees memory.
  *
  * @param ShortcutJump *sj: The plugin object
  */
@@ -84,8 +82,8 @@ void shortcut_char_replacing_complete(ShortcutJump *sj) {
 }
 
 /**
- * @brief Handles click event for shortcut char jump. If the search char has not been initialized we run the search
- * so we can free memory and reset values used during the search.
+ * @brief Handles click event for shortcut char jump. If the search was no completed we clear the initalized values and
+ * free memory.
  *
  * @param GtkWidget *widget: (unused)
  * @param GdkEventButton *event: Click event
@@ -109,12 +107,7 @@ gboolean on_click_event_shortcut_char(GtkWidget *widget, GdkEventButton *event, 
         }
 
         if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
-
-            gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
-            gint lfs_at_current_line = g_array_index(sj->lf_positions, gint, current_line - sj->first_line_on_screen);
-
-            sj->current_cursor_pos -= lfs_at_current_line;
+            sj->current_cursor_pos = save_cursor_position(sj);
             shortcut_char_replacing_cancel(sj);
         }
 
@@ -128,6 +121,8 @@ gboolean on_click_event_shortcut_char(GtkWidget *widget, GdkEventButton *event, 
  * @brief Begins shortcut jump to character mode.
  *
  * @param ShortcutJump *sj: The plugin object
+ * @param gboolean init_set: Whether we are using an initial value (see replace_instant_init)
+ * @param gchar init: The highlighted character
  */
 void shortcut_char_init(ShortcutJump *sj, gboolean init_set, gchar init) {
     sj->current_mode = JM_SHORTCUT_CHAR_WAITING;
@@ -171,7 +166,7 @@ void shortcut_char_init(ShortcutJump *sj, gboolean init_set, gchar init) {
 }
 
 /**
- * @brief Provides a menu callback for performing a shortcut char jump.
+ * @brief Provides a menu callback for performing a shortcut character jump.
  *
  * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
@@ -185,7 +180,7 @@ void shortcut_char_cb(GtkMenuItem *menu_item, gpointer user_data) {
 }
 
 /**
- * @brief Provides a keybinding callback for performing a shortcut char jump.
+ * @brief Provides a keybinding callback for performing a shortcut character jump.
  *
  * @param GtkMenuItem *kb: (unused)
  * @param guint key_id: (unused)

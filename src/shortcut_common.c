@@ -30,6 +30,13 @@
 #include "shortcut_word.h"
 #include "util.h"
 
+/**
+ * @brief Returns the maximum number of shortcuts that can exist on screen.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ *
+ * @return gint: The number of shortcuts
+ */
 gint get_max_words(ShortcutJump *sj) { return sj->config_settings->shortcuts_include_single_char ? 702 : 676; }
 
 /**
@@ -55,7 +62,13 @@ GString *shortcut_mask_bytes(GArray *words, GString *buffer, gint first_position
 }
 
 /**
- * @brief Set the shortcut tags in place in the buffer string.
+ * @brief Set the shortcut tags in place in the buffer string and ignores repeated chars during a shortcut char jump.
+ *
+ * @param GArray *words: The words array
+ * @param GString *buffer: The string buffer containing shortcuts above text
+ * @param gint first_position: The first position on the screen (used as offset)
+ *
+ * @return GString *: The buffer with the shortcut tags added
  */
 GString *shortcut_set_tags_in_buffer(GArray *words, GString *buffer, gint first_position) {
     for (gint i = 0; i < words->len; i++) {
@@ -75,6 +88,7 @@ GString *shortcut_set_tags_in_buffer(GArray *words, GString *buffer, gint first_
 /**
  * @brief Generates the shortcut tag used by a word when performing a shortcut jump.
  *
+ * @param ShortcutJump *sj: The plugin object
  * @param gint position: The index of the word in the words array
  *
  * @return GString *: A pointer to the tag
@@ -449,7 +463,7 @@ gint shortcut_set_word_padding(ShortcutJump *sj, gint word_length) {
  * the search query with Backspace, and updates indicator higlights.
  *
  * @param GdkEventKey *event: struct containing the key event
- * @param gpointer user_data: (unused)
+ * @param gpointer user_data: The plugin data
  *
  * @return gint: FALSE if no controlled for key press action was found
  */
@@ -566,6 +580,12 @@ static gint shortcut_on_key_press(GdkEventKey *event, gpointer user_data) {
     return FALSE;
 }
 
+/**
+ * @brief Clears the range on screen and updates it with the text containing shortcuts and sets the cursor to the
+ * correct position if line ending characters are displaced.
+ *
+ * @@param ShortcutJump *sj: The plugin object
+ */
 void set_after_shortcut_placement(ShortcutJump *sj) {
     gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
 
@@ -825,12 +845,8 @@ gboolean on_click_event_shortcut(GtkWidget *widget, GdkEventButton *event, gpoin
 
     if (mouse_movement_performed(sj, event)) {
         if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_LINE) {
-            sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
-
-            gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
-            gint lfs_at_current_line = g_array_index(sj->lf_positions, gint, current_line - sj->first_line_on_screen);
-
-            sj->current_cursor_pos -= lfs_at_current_line;
+            sj->current_cursor_pos = save_cursor_position(sj);
+            sj->current_cursor_pos = set_cursor_position_with_lfs(sj);
             shortcut_cancel(sj);
             return TRUE;
         }

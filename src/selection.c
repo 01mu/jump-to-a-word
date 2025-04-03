@@ -29,50 +29,52 @@
 #include "util.h"
 
 /**
- * @brief Checks to see if the selection is a word. If the selection is a w word we use the entire page as a search
- * area instead (see usage). It seems unlikely someone would highlight a single word just to jump to/search for it.
+ * @brief Checks to see if the selection is a word.
  *
  * @param ScintillaObject *sci: The Scintilla object
  * @param gint selection_start: The start of the selection
  * @param gint selection_end: The end of the selection
  *
- * @return gboolean: Whether the entire selection is a single word
+ * @return gboolean: Whether the selection is a single word
  */
 static gboolean selection_is_a_word(ScintillaObject *sci, gint selection_start, gint selection_end) {
+    char word_chars[256];
+
+    scintilla_send_message(sci, SCI_GETWORDCHARS, 0, (sptr_t)word_chars);
+
     gint start_of_first = scintilla_send_message(sci, SCI_WORDSTARTPOSITION, selection_start, TRUE);
     gint end_of_first = scintilla_send_message(sci, SCI_WORDENDPOSITION, selection_start, TRUE);
 
     gint start_of_last = scintilla_send_message(sci, SCI_WORDSTARTPOSITION, selection_end, TRUE);
     gint end_of_last = scintilla_send_message(sci, SCI_WORDENDPOSITION, selection_end, TRUE);
 
-    char word_chars[256];
-    scintilla_send_message(sci, SCI_GETWORDCHARS, 0, (sptr_t)word_chars);
-
     gchar left_bound = scintilla_send_message(sci, SCI_GETCHARAT, selection_start - 1, 0);
     gchar right_bound = scintilla_send_message(sci, SCI_GETCHARAT, selection_end, 0);
+
     gint len = scintilla_send_message(sci, SCI_GETLENGTH, 0, 0);
-    gboolean bound_is_char = FALSE;
+
+    gboolean bound_is_word_char = FALSE;
 
     for (char *p = word_chars; *p != '\0'; p++) {
         guchar ch = (*p >= 32 && *p <= 126) ? *p : '?';
 
         if ((start_of_first - 1 <= 0 && left_bound == ch) || (end_of_last < len && right_bound == ch)) {
-            bound_is_char = TRUE;
+            bound_is_word_char = TRUE;
         }
     }
 
     return start_of_first != end_of_last && start_of_first == start_of_last && end_of_first == end_of_last &&
-           !bound_is_char;
+           !bound_is_word_char;
 }
 
 /**
- * @brief Checks to see if the selection is a line. Used for setting if enabled.
+ * @brief Checks to see if the selection is contained within a single line.
  *
  * @param ScintillaObject *sci: The Scintilla object
  * @param gint selection_start: The start of the selection
  * @param gint selection_end: The end of the selection
  *
- * @return gboolean: Whether the entire selection is a single word
+ * @return gboolean: Whether the selection is within a single line
  */
 static gboolean selection_is_a_line(ShortcutJump *sj, ScintillaObject *sci, gint selection_start, gint selection_end) {
     selection_end -= 1;
@@ -96,9 +98,6 @@ static gboolean selection_is_a_line(ShortcutJump *sj, ScintillaObject *sci, gint
 void set_selection_info(ShortcutJump *sj) {
     gint selection_start = scintilla_send_message(sj->sci, SCI_GETSELECTIONSTART, 0, 0);
     gint selection_end = scintilla_send_message(sj->sci, SCI_GETSELECTIONEND, 0, 0);
-
-    // ui_set_statusbar(TRUE, _("%i"), selection_start);
-    //  ui_set_statusbar(TRUE, _("%i"), selection_end);
 
     sj->in_selection = selection_start != selection_end && sj->current_mode != JM_LINE;
     sj->selection_start = selection_start;

@@ -84,9 +84,6 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
 static void replace_string(ShortcutJump *sj, gboolean instant_replace) {
-    // gchar *s = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
-    // sj->replace_cache = g_string_new(s);
-
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
