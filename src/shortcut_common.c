@@ -19,7 +19,6 @@
 #include <math.h>
 #include <plugindata.h>
 
-#include "Scintilla.h"
 #include "annotation.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
@@ -29,6 +28,18 @@
 #include "shortcut_char.h"
 #include "shortcut_word.h"
 #include "util.h"
+
+/**
+ * @brief Sets the first visible line after writing the buffer with shortcuts to the screen. This is needed because the
+ * view may be off by one from its previous position after the text is inserted.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
+void set_to_first_visible_line(ShortcutJump *sj) {
+    if (!sj->in_selection || (sj->in_selection && (sj->selection_is_a_word || sj->selection_is_a_char))) {
+        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
+    }
+}
 
 /**
  * @brief Returns the maximum number of shortcuts that can exist on screen.
@@ -303,9 +314,7 @@ void shortcut_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) 
         }
     }
 
-    if (!sj->in_selection || (sj->in_selection && sj->selection_is_a_word)) {
-        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
-    }
+    set_to_first_visible_line(sj);
 
     annotation_clear(sj->sci, sj->eol_message_line);
     shortcut_end(sj, FALSE);
@@ -327,9 +336,7 @@ void shortcut_cancel(ShortcutJump *sj) {
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 
-    if (!sj->in_selection || (sj->in_selection && sj->selection_is_a_word)) {
-        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
-    }
+    set_to_first_visible_line(sj);
 
     annotation_clear(sj->sci, sj->eol_message_line);
     shortcut_end(sj, TRUE);
@@ -592,6 +599,8 @@ static gint shortcut_on_key_press(GdkEventKey *event, gpointer user_data) {
  */
 void set_after_shortcut_placement(ShortcutJump *sj) {
     gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+
+    set_to_first_visible_line(sj);
 
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->last_position - sj->first_position);

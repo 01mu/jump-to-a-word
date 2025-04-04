@@ -18,7 +18,6 @@
 
 #include <plugindata.h>
 
-#include "Scintilla.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
 #include "previous_cursor.h"

@@ -52,9 +52,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
 
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
 
-    if (!sj->in_selection) {
-        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
-    }
+    set_to_first_visible_line(sj);
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 
@@ -173,7 +171,7 @@ static void replace_instant_init(ShortcutJump *sj) {
 }
 
 /**
- * @brief Begin replacement for specific modes
+ * @brief Begins replacement for specific modes.
  *
  * @param ShortcutJump *sj: The plugin object
  */

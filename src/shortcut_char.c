@@ -66,6 +66,9 @@ static void shortcut_char_replacing_end(ShortcutJump *sj) {
  */
 void shortcut_char_replacing_cancel(ShortcutJump *sj) {
     shortcut_char_replacing_end(sj);
+
+    set_to_first_visible_line(sj);
+
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Shortcut replacement canceled"));
 }
@@ -77,6 +80,9 @@ void shortcut_char_replacing_cancel(ShortcutJump *sj) {
  */
 void shortcut_char_replacing_complete(ShortcutJump *sj) {
     shortcut_char_replacing_end(sj);
+
+    set_to_first_visible_line(sj);
+
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Shortcut replacement completed"));
 }

@@ -19,7 +19,6 @@
 #include <math.h>
 #include <plugindata.h>
 
-#include "Scintilla.h"
 #include "annotation.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
@@ -39,6 +38,11 @@ ScintillaObject *get_scintilla_object() {
     return doc->editor->sci;
 }
 
+/**
+ * @brief Sets the current Scintilla object to the value in the plugin object.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
 void set_sj_scintilla_object(ShortcutJump *sj) {
     ScintillaObject *sci = get_scintilla_object();
     sj->sci = sci;

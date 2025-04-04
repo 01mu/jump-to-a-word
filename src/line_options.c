@@ -16,7 +16,6 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#include <geanyplugin.h>
 #include <plugindata.h>
 
 #include "jump_to_a_word.h"

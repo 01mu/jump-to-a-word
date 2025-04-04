@@ -27,6 +27,7 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled);
 void shortcut_char_waiting_cancel(ShortcutJump *sj);
 void shortcut_char_get_chars(ShortcutJump *sj, gchar search_char);
 void shortcut_cancel(ShortcutJump *sj);
+void set_to_first_visible_line(ShortcutJump *sj);
 void set_after_shortcut_placement(ShortcutJump *sj);
 GString *shortcut_set_tags_in_buffer(GArray *words, GString *buffer, gint first_position);
 GString *shortcut_mask_bytes(GArray *words, GString *buffer, gint first_position);

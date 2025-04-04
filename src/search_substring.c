@@ -27,6 +27,30 @@
 #include "values.h"
 
 /**
+ * @brief Returns the substring searched for during a substring search.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param gint i: The starting position of the substring
+ *
+ * @return Word: The substring
+ */
+Word get_substring_for_search(ShortcutJump *sj, gint i) {
+    Word data;
+
+    gint start = sj->first_position + i;
+    gint end = sj->first_position + i + sj->search_query->len;
+
+    data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
+    data.starting = start;
+    data.starting_doc = start;
+    data.replace_pos = i;
+    data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
+    data.valid_search = TRUE;
+
+    return data;
+}
+
+/**
  * @brief Marks every occurace of the substring, clears the words array, and sets indicators.
  *
  * @param ShortcutJump *sj: The plugin object
@@ -52,33 +76,20 @@ static void mark_text(ShortcutJump *sj) {
     g_array_set_size(sj->words, 0);
     sj->search_results_count = 0;
 
-    if (sj->config_settings->search_case_sensitive) {
+    if (sj->config_settings->search_case_sensitive && !sj->config_settings->search_case_sensitive_smart_case) {
         gchar *b = sj->buffer->str;
         gchar *z = g_strstr_len(b, -1, sj->search_query->str);
 
         while (z) {
             gint i = z - sj->buffer->str;
+            Word data = get_substring_for_search(sj, i);
 
-            Word data;
-
-            gint start = sj->first_position + i;
-            gint end = sj->first_position + i + sj->search_query->len;
-
-            data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
-            data.starting = start;
-            data.starting_doc = start;
-            data.replace_pos = i;
-            data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
-            data.valid_search = TRUE;
             g_array_append_val(sj->words, data);
-
             sj->search_results_count += 1;
             b = z + sj->search_query->len;
             z = g_strstr_len(b, -1, sj->search_query->str);
         }
-    }
-
-    if (sj->config_settings->search_case_sensitive && sj->config_settings->search_case_sensitive_smart_case) {
+    } else if (sj->config_settings->search_case_sensitive && sj->config_settings->search_case_sensitive_smart_case) {
         gint i = 0;
 
         for (gchar *p = sj->buffer->str; *p != '\0'; p++) {
@@ -88,9 +99,9 @@ static void mark_text(ShortcutJump *sj) {
             gchar needle_char = z[0];
 
             do {
-                z = sj->search_query->str + k;
-
                 gchar *d = p + k;
+
+                z = sj->search_query->str + k;
 
                 haystack_char = d[0];
                 needle_char = z[0];
@@ -100,27 +111,15 @@ static void mark_text(ShortcutJump *sj) {
             } while (valid_smart_case(haystack_char, needle_char));
 
             if (k - 1 == sj->search_query->len) {
-                Word data;
-
-                gint start = sj->first_position + i;
-                gint end = sj->first_position + i + sj->search_query->len;
-
-                data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
-                data.starting = start;
-                data.starting_doc = start;
-                data.replace_pos = i;
-                data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
-                data.valid_search = TRUE;
-                g_array_append_val(sj->words, data);
+                Word data = get_substring_for_search(sj, i);
 
                 sj->search_results_count += 1;
+                g_array_append_val(sj->words, data);
             }
 
             i++;
         }
-    }
-
-    if (!sj->config_settings->search_case_sensitive) {
+    } else if (!sj->config_settings->search_case_sensitive) {
         gchar *buffer_lower = g_ascii_strdown(sj->buffer->str, -1);
         gchar *query_lower = g_ascii_strdown(sj->search_query->str, -1);
 
@@ -128,20 +127,9 @@ static void mark_text(ShortcutJump *sj) {
 
         while ((b = g_strstr_len(b, -1, query_lower))) {
             gint i = b - buffer_lower;
+            Word data = get_substring_for_search(sj, i);
 
-            Word data;
-
-            gint start = sj->first_position + i;
-            gint end = sj->first_position + i + sj->search_query->len;
-
-            data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
-            data.starting = start;
-            data.starting_doc = start;
-            data.replace_pos = i;
-            data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
-            data.valid_search = TRUE;
             g_array_append_val(sj->words, data);
-
             sj->search_results_count += 1;
             b += sj->search_query->len;
         }
