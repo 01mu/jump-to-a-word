@@ -26,8 +26,53 @@
 #include "search_word.h"
 #include "selection.h"
 #include "shortcut_char.h"
+#include "shortcut_line.h"
 #include "shortcut_word.h"
 #include "util.h"
+
+/**
+ * @brief Handles the action performed after jumping to a word or character using a shortcut.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param gint pos: The position of the word or text on screen
+ * @param gint word_length: The length of the text
+ * @param gint line: The line the text is on
+ */
+void handle_shortcut_text_jump(ShortcutJump *sj, gint pos, gint word_length, gint line) {
+    if ((sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) &&
+        sj->config_settings->text_after == TX_SELECT_TEXT_RANGE && !sj->line_range_set) {
+        scintilla_send_message(sj->sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
+        scintilla_send_message(sj->sci, SCI_MARKERADD, line, 0);
+        sj->line_range_first = pos;
+        sj->text_range_word_length = word_length;
+        g_string_erase(sj->search_query, 0, sj->search_query->len);
+        sj->line_range_set = TRUE;
+        return;
+    }
+
+    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+        if (sj->config_settings->text_after == TX_SELECT_TEXT) {
+            scintilla_send_message(sj->sci, SCI_SETSEL, pos, pos + word_length);
+        }
+
+        if (sj->config_settings->text_after == TX_SELECT_TO_TEXT ||
+            (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING && sj->config_settings->select_when_shortcut_char)) {
+            if (sj->current_cursor_pos > pos) {
+                scintilla_send_message(sj->sci, SCI_SETSEL, sj->current_cursor_pos, pos);
+            } else {
+                scintilla_send_message(sj->sci, SCI_SETSEL, sj->current_cursor_pos, pos + word_length);
+            }
+        }
+
+        if (sj->config_settings->text_after == TX_SELECT_TEXT_RANGE && sj->line_range_set) {
+            if (pos > sj->line_range_first) {
+                scintilla_send_message(sj->sci, SCI_SETSEL, sj->line_range_first, pos + word_length);
+            } else {
+                scintilla_send_message(sj->sci, SCI_SETSEL, pos, sj->line_range_first + sj->text_range_word_length);
+            }
+        }
+    }
+}
 
 /**
  * @brief Sets the first visible line after writing the buffer with shortcuts to the screen. This is needed because the
@@ -42,7 +87,8 @@ void set_to_first_visible_line(ShortcutJump *sj) {
 }
 
 /**
- * @brief Returns the maximum number of shortcuts that can exist on screen.
+ * @brief Returns the maximum number of shortcuts that can exist on screen. There can be at most 702 if we are including
+ * single char paterns as tags (A to Z and AA to ZZ) and 676 otherwise (AA to ZZ only).
  *
  * @param ShortcutJump *sj: The plugin object
  *
@@ -198,7 +244,7 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
  * original cached text, enables undo collection, and moves the marker or select the word if those settings are
  * enabled.
  *
- * @param ScintillaObject *sci: The Scintilla object
+ * @param ShortcutJump *sj: The plugin object
  * @param gint pos: The position of the start of the word in the document
  * @param gint word_length: The length of the word
  * @param gint line: The line the word is on (used when moving the marker)
@@ -219,66 +265,6 @@ void shortcut_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) 
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, pos, 0);
 
-    gboolean line_range_jumped = FALSE;
-
-    if (sj->current_mode == JM_LINE) {
-        if (sj->config_settings->line_after == LA_SELECT_LINE) {
-            gint pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, line, TRUE);
-            gint line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, line, TRUE);
-
-            scintilla_send_message(sj->sci, SCI_SETSEL, pos, pos + line_length);
-        }
-
-        if (sj->config_settings->line_after == LA_SELECT_TO_LINE) {
-            gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
-
-            gint first_line = current_line < line ? current_line : line;
-            gint second_line = (current_line >= line ? current_line : line);
-            gint pos_first = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line, TRUE);
-            gint pos_second = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, second_line, TRUE);
-            gint second_line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, second_line, TRUE);
-
-            scintilla_send_message(sj->sci, SCI_SETSEL, pos_first, pos_second + second_line_length);
-        }
-
-        if (sj->config_settings->line_after == LA_SELECT_LINE_RANGE && sj->line_range_set) {
-            scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->line_range_first, 0);
-
-            gint first_line = sj->line_range_first < line ? sj->line_range_first : line;
-            gint second_line = (sj->line_range_first >= line ? sj->line_range_first : line);
-            gint pos_first = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line, TRUE);
-            gint pos_second = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, second_line, TRUE);
-            gint second_line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, second_line, TRUE);
-
-            scintilla_send_message(sj->sci, SCI_SETSEL, pos_first, pos_second + second_line_length);
-            line_range_jumped = TRUE;
-        }
-    }
-
-    if (sj->current_mode == JM_LINE && sj->config_settings->line_after == LA_SELECT_LINE_RANGE && !sj->line_range_set) {
-        scintilla_send_message(sj->sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
-        scintilla_send_message(sj->sci, SCI_MARKERADD, line, 0);
-        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-        sj->line_range_first = line;
-        g_string_erase(sj->search_query, 0, sj->search_query->len);
-        sj->line_range_set = TRUE;
-    }
-
-    if (line_range_jumped) {
-        sj->line_range_set = FALSE;
-    }
-
-    if ((sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) &&
-        sj->config_settings->text_after == TX_SELECT_TEXT_RANGE && !sj->line_range_set) {
-        scintilla_send_message(sj->sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
-        scintilla_send_message(sj->sci, SCI_MARKERADD, line, 0);
-        sj->line_range_first = pos;
-        sj->text_range_word_length = word_length;
-        g_string_erase(sj->search_query, 0, sj->search_query->len);
-        sj->line_range_set = TRUE;
-        return;
-    }
-
     sj->previous_cursor_pos = sj->current_cursor_pos;
 
     if (sj->config_settings->move_marker_to_line) {
@@ -291,28 +277,8 @@ void shortcut_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) 
         }
     }
 
-    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        if (sj->config_settings->text_after == TX_SELECT_TEXT) {
-            scintilla_send_message(sj->sci, SCI_SETSEL, pos, pos + word_length);
-        }
-
-        if (sj->config_settings->text_after == TX_SELECT_TO_TEXT ||
-            (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING && sj->config_settings->select_when_shortcut_char)) {
-            if (sj->current_cursor_pos > pos) {
-                scintilla_send_message(sj->sci, SCI_SETSEL, sj->current_cursor_pos, pos);
-            } else {
-                scintilla_send_message(sj->sci, SCI_SETSEL, sj->current_cursor_pos, pos + word_length);
-            }
-        }
-
-        if (sj->config_settings->text_after == TX_SELECT_TEXT_RANGE && sj->line_range_set) {
-            if (pos > sj->line_range_first) {
-                scintilla_send_message(sj->sci, SCI_SETSEL, sj->line_range_first, pos + word_length);
-            } else {
-                scintilla_send_message(sj->sci, SCI_SETSEL, pos, sj->line_range_first + sj->text_range_word_length);
-            }
-        }
-    }
+    handle_shortcut_line_jump(sj, line);
+    handle_shortcut_text_jump(sj, pos, word_length, line);
 
     set_to_first_visible_line(sj);
 
@@ -455,7 +421,7 @@ gint shortcut_utf8_char_length(gchar c) {
 }
 
 /**
- * @brief Sets word padding for shortcuts if that option is enabled.
+ * @brief Sets the padding needed for centering shortcuts on words if that option is enabled.
  *
  * @param: gint word_length: The length of the word
  *
@@ -523,7 +489,9 @@ static gint shortcut_on_key_press(GdkEventKey *event, gpointer user_data) {
         } else {
             if (strcmp(sj->search_query->str, "") == 0 && sj->current_mode == JM_LINE) {
                 gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+                gint lfs = get_lfs(sj, current_line);
 
+                current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos + lfs, 0);
                 word = g_array_index(sj->words, Word, current_line - sj->first_line_on_screen);
             } else {
                 word = g_array_index(sj->words, Word, sj->shortcut_single_pos);

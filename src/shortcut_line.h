@@ -25,6 +25,7 @@
 
 void line_init(ShortcutJump *sj);
 void jump_to_line_cb(GtkMenuItem *menu_item, gpointer user_data);
+void handle_shortcut_line_jump(ShortcutJump *sj, gint line);
 gboolean jump_to_line_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 
 #endif
