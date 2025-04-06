@@ -30,7 +30,7 @@
  * @brief Returns the substring searched for during a substring search.
  *
  * @param ShortcutJump *sj: The plugin object
- * @param gint i: The starting position of the substring
+ * @param gint i: The starting position of the substring within the visible text
  *
  * @return Word: The substring
  */

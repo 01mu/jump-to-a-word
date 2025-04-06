@@ -607,7 +607,8 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 }
 
 /**
- * @brief The plugin's callbacks.
+ * @brief The plugin's callbacks which are used to ensure that the shortcuts written to the screen during a jump
+ * are not actually saved to the  file when it is saved or edited from an outside source.
  */
 static PluginCallback callbacks[] = {{"document-before-save", (GCallback)&on_cancel, TRUE, NULL},
                                      {"document-before-save-as", (GCallback)&on_cancel, TRUE, NULL},
