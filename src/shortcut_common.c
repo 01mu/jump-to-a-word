@@ -39,16 +39,7 @@
  * @param gint line: The line the text is on
  */
 void handle_shortcut_text_jump(ShortcutJump *sj, gint pos, gint word_length, gint line) {
-    if ((sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) &&
-        sj->config_settings->text_after == TX_SELECT_TEXT_RANGE && !sj->line_range_set) {
-        scintilla_send_message(sj->sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
-        scintilla_send_message(sj->sci, SCI_MARKERADD, line, 0);
-        sj->line_range_first = pos;
-        sj->text_range_word_length = word_length;
-        g_string_erase(sj->search_query, 0, sj->search_query->len);
-        sj->line_range_set = TRUE;
-        return;
-    }
+    gboolean text_range_jumped = FALSE;
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         if (sj->config_settings->text_after == TX_SELECT_TEXT) {
@@ -70,7 +61,23 @@ void handle_shortcut_text_jump(ShortcutJump *sj, gint pos, gint word_length, gin
             } else {
                 scintilla_send_message(sj->sci, SCI_SETSEL, pos, sj->line_range_first + sj->text_range_word_length);
             }
+
+            text_range_jumped = TRUE;
         }
+    }
+
+    if ((sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) &&
+        sj->config_settings->text_after == TX_SELECT_TEXT_RANGE && !sj->line_range_set) {
+        scintilla_send_message(sj->sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
+        scintilla_send_message(sj->sci, SCI_MARKERADD, line, 0);
+        sj->line_range_first = pos;
+        sj->text_range_word_length = word_length;
+        g_string_erase(sj->search_query, 0, sj->search_query->len);
+        sj->line_range_set = TRUE;
+    }
+
+    if (text_range_jumped) {
+        sj->line_range_set = FALSE;
     }
 }
 

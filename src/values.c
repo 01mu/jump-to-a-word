@@ -203,8 +203,16 @@ static gint get_cursor_position(ScintillaObject *sci, gint first_position, gint 
 static GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen) {
     GArray *markers = g_array_new(FALSE, FALSE, sizeof(gint));
 
-    if (sj->line_range_set) {
-        scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->line_range_first, 0);
+    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+        if (sj->line_range_set) {
+            gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->line_range_first, 0);
+
+            scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, 0);
+        }
+    } else {
+        if (sj->line_range_set) {
+            scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->line_range_first, 0);
+        }
     }
 
     for (gint i = 0; i < lines_on_screen; i++) {
