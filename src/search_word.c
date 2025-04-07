@@ -102,7 +102,7 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
                         z++;
                         k++;
-                    } while (valid_smart_case(haystack_char, needle_char) && i == k - 1);
+                    } while (valid_smart_case(haystack_char, needle_char) || haystack_char == needle_char);
 
                     if (k - 1 == sj->search_query->len) {
                         word->valid_search = TRUE;

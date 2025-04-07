@@ -108,7 +108,8 @@ static void mark_text(ShortcutJump *sj) {
 
                 z++;
                 k++;
-            } while (valid_smart_case(haystack_char, needle_char));
+            } while (valid_smart_case(haystack_char, needle_char) ||
+                     (!g_unichar_isalpha(needle_char) && needle_char == haystack_char));
 
             if (k - 1 == sj->search_query->len) {
                 Word data = get_substring_for_search(sj, i);

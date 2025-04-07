@@ -39,7 +39,7 @@ gboolean valid_smart_case(char haystack_char, char needle_char) {
 
     gboolean g3 = g_unichar_isupper(haystack_char) && g_unichar_isupper(needle_char) && needle_char == haystack_char;
 
-    return g1 || g2 || g3 || (!g_unichar_isalpha(needle_char) && needle_char == haystack_char);
+    return g1 || g2 || g3;
 }
 
 /**
