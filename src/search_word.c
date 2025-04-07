@@ -84,32 +84,22 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
         if (sj->config_settings->search_case_sensitive && sj->config_settings->search_case_sensitive_smart_case) {
             if (sj->config_settings->search_start_from_beginning) {
-                gint i = 0;
-
                 for (gchar *p = word->word->str; *p != '\0'; p++) {
-                    gchar *z = sj->search_query->str;
-                    gint k = 0;
-                    gchar haystack_char = p[0];
-                    gchar needle_char = z[0];
+                    gint matched_chars = 0;
 
-                    do {
-                        z = sj->search_query->str + k;
+                    for (gint z = 0; z < sj->search_query->len; z++) {
+                        gchar haystack_char = word->word->str[z];
+                        gchar needle_char = sj->search_query->str[z];
 
-                        gchar *d = p + k;
+                        if (valid_smart_case(haystack_char, needle_char)) {
+                            matched_chars += 1;
+                        }
+                    }
 
-                        haystack_char = d[0];
-                        needle_char = z[0];
-
-                        z++;
-                        k++;
-                    } while (valid_smart_case(haystack_char, needle_char) || haystack_char == needle_char);
-
-                    if (k - 1 == sj->search_query->len) {
+                    if (matched_chars == sj->search_query->len) {
                         word->valid_search = TRUE;
                         sj->search_results_count += 1;
                     }
-
-                    i++;
                 }
             }
 
