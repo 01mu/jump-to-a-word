@@ -67,7 +67,6 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
         if (instant_replace) {
             if (strcmp(word->word->str, sj->search_query->str) == 0) {
                 word->valid_search = TRUE;
-                sj->search_results_count += 1;
             }
 
             continue;
@@ -76,7 +75,6 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
         if (!instant_replace && sj->config_settings->match_whole_word) {
             if (strcmp(word->word->str, sj->search_query->str) == 0) {
                 word->valid_search = TRUE;
-                sj->search_results_count += 1;
             }
 
             continue;
@@ -98,14 +96,11 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
                     if (matched_chars == sj->search_query->len) {
                         word->valid_search = TRUE;
-                        sj->search_results_count += 1;
                     }
                 }
             }
 
             if (!sj->config_settings->search_start_from_beginning) {
-                gint i = 0;
-
                 for (gchar *p = word->word->str; *p != '\0'; p++) {
                     gchar *z = sj->search_query->str;
                     gint k = 0;
@@ -126,10 +121,7 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
                     if (k - 1 == sj->search_query->len) {
                         word->valid_search = TRUE;
-                        sj->search_results_count += 1;
                     }
-
-                    i++;
                 }
             }
         }
@@ -138,14 +130,12 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
             if (sj->config_settings->search_start_from_beginning) {
                 if (g_str_has_prefix(word->word->str, sj->search_query->str)) {
                     word->valid_search = TRUE;
-                    sj->search_results_count += 1;
                 }
             }
 
             if (!sj->config_settings->search_start_from_beginning) {
                 if (g_strstr_len(word->word->str, -1, sj->search_query->str)) {
                     word->valid_search = TRUE;
-                    sj->search_results_count += 1;
                 }
             }
         }
@@ -153,7 +143,6 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
         if (!sj->config_settings->search_case_sensitive && sj->config_settings->search_start_from_beginning) {
             if (search_case_insensitive_match(word->word->str, sj->search_query->str)) {
                 word->valid_search = TRUE;
-                sj->search_results_count += 1;
             }
         }
 
@@ -163,7 +152,6 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
             if (g_strrstr(word_lower, query_lower)) {
                 word->valid_search = TRUE;
-                sj->search_results_count += 1;
             }
 
             g_free(word_lower);
@@ -175,6 +163,8 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
         Word word = g_array_index(sj->words, Word, i);
 
         if (word.valid_search) {
+            sj->search_results_count += 1;
+
             set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting, word.word->len);
             set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting, word.word->len);
         }
