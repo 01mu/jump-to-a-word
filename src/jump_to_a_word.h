@@ -37,9 +37,9 @@ typedef struct {
 } Word;
 
 typedef enum {
-    INDICATOR_TAG,
-    INDICATOR_HIGHLIGHT,
-    INDICATOR_TEXT,
+    INDICATOR_TAG = INDIC_FULLBOX,
+    INDICATOR_HIGHLIGHT = 1,
+    INDICATOR_TEXT = 2,
 } Indicator;
 
 typedef enum {
