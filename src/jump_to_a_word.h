@@ -119,9 +119,21 @@ typedef struct {
     gboolean shortcuts_include_single_char;
     gboolean select_when_shortcut_char;
     gboolean search_case_sensitive_smart_case;
+
     gint tag_color;
     gint text_color;
     gint highlight_color;
+
+    gint tag_color_store_style;
+    gint tag_color_store_fore;
+    gint tag_color_store_outline;
+    gint text_color_store_style;
+    gint text_color_store_fore;
+    gint text_color_store_outline;
+    gint highlight_color_store_style;
+    gint highlight_color_store_fore;
+    gint highlight_color_store_outline;
+
     gint search_annotation_bg_color;
     LineAfter line_after;
     TextAfter text_after;

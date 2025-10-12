@@ -213,6 +213,18 @@ gboolean mouse_movement_performed(ShortcutJump *sj, GdkEventButton *event) {
  * @param ScintillaObject *sci: Scintilla object
  */
 void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
+    sj->config_settings->tag_color_store_style = scintilla_send_message(sci, SCI_INDICGETSTYLE, INDICATOR_TAG, 0);
+    sj->config_settings->tag_color_store_outline = scintilla_send_message(sci, SCI_INDICGETOUTLINEALPHA, INDICATOR_TAG, 0);
+    sj->config_settings->tag_color_store_fore = scintilla_send_message(sci, SCI_INDICGETFORE, INDICATOR_TAG, 0);
+
+    sj->config_settings->highlight_color_store_style = scintilla_send_message(sci, SCI_INDICGETSTYLE, INDICATOR_HIGHLIGHT, 0);
+    sj->config_settings->highlight_color_store_outline = scintilla_send_message(sci, SCI_INDICGETALPHA, INDICATOR_HIGHLIGHT, 0);
+    sj->config_settings->highlight_color_store_fore = scintilla_send_message(sci, SCI_INDICGETFORE, INDICATOR_HIGHLIGHT, 0);
+
+    sj->config_settings->text_color_store_style = scintilla_send_message(sci, SCI_INDICGETSTYLE, INDICATOR_TEXT, 0);
+    sj->config_settings->text_color_store_outline = scintilla_send_message(sci, SCI_INDICGETALPHA, INDICATOR_TEXT, 0);
+    sj->config_settings->text_color_store_fore = scintilla_send_message(sci, SCI_INDICGETFORE, INDICATOR_TEXT, 0);
+
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TAG, INDIC_FULLBOX);
     scintilla_send_message(sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG, 120);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color);

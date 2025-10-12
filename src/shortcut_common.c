@@ -235,6 +235,18 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     block_key_press_action(sj);
     block_click_action(sj);
 
+    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TAG, sj->config_settings->tag_color_store_style);
+    scintilla_send_message(sj->sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG, sj->config_settings->tag_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color_store_fore);
+
+    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_HIGHLIGHT, sj->config_settings->tag_color_store_style);
+    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT, sj->config_settings->highlight_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT, sj->config_settings->highlight_color_store_fore);
+
+    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, sj->config_settings->tag_color_store_style);
+    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_TEXT, sj->config_settings->text_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color_store_fore);
+
     if (performing_line_after && !was_canceled) {
         if (sj->config_settings->line_after == LA_JUMP_TO_CHARACTER_SHORTCUT) {
             shortcut_char_init(sj, FALSE, '0');
