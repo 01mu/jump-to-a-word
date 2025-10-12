@@ -294,7 +294,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(search_start_from_beginning, "search_start_from_beginning", "search", TRUE);
     SET_SETTING_BOOL(match_whole_word, "match_whole_word", "search", FALSE);
     SET_SETTING_BOOL(search_case_sensitive, "search_case_sensitive", "search", TRUE);
-    SET_SETTING_BOOL(search_case_sensitive_smart_case, "search_case_sensitive_smart_case", "search", FALSE);
+    SET_SETTING_BOOL(search_case_sensitive_smart_case, "search_case_sensitive_smart_case", "search", TRUE);
 
     SET_SETTING_INTEGER(text_after, "text_after", "text_after", TX_SELECT_TEXT);
     SET_SETTING_INTEGER(line_after, "line_after", "line_after", LA_SELECT_TO_LINE);
