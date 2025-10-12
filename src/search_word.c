@@ -246,7 +246,7 @@ gint search_on_key_press(GdkEventKey *event, gpointer user_data) {
         return TRUE;
     }
 
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, 1, 1);
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);

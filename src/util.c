@@ -45,7 +45,7 @@ void set_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting
  * @param gint length: The length of the indicator
  */
 void clear_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting, gint length) {
-    scintilla_send_message(sci, SCI_SETINDICATORCURRENT, type, type);
+    scintilla_send_message(sci, SCI_SETINDICATORCURRENT, type, 0);
     scintilla_send_message(sci, SCI_INDICATORCLEARRANGE, starting, length);
 }
 

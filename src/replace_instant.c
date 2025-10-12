@@ -60,7 +60,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
     search_clear_indicators(sj->sci, sj->words);
 
     if (instant_replace) {
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, 0, 0);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
         for (gint i = 0; i < sj->words->len; i++) {
             Word word = g_array_index(sj->words, Word, i);
@@ -88,7 +88,7 @@ static void replace_string(ShortcutJump *sj, gboolean instant_replace) {
     search_clear_indicators(sj->sci, sj->words);
 
     if (instant_replace) {
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, 0, 0);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
         for (gint i = 0; i < sj->words->len; i++) {
             Word word = g_array_index(sj->words, Word, i);

@@ -275,7 +275,7 @@ void shortcut_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
 
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, 1, 1);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
         scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting, word->shortcut->len);
     }
 
@@ -384,7 +384,7 @@ gint shortcut_get_highlighted_pos(ScintillaObject *sci, GArray *words) {
  * @return GArray *: The pointer to the original array
  */
 GArray *shortcut_mark_words(ScintillaObject *sci, GArray *words, GString *search_query) {
-    scintilla_send_message(sci, SCI_SETINDICATORCURRENT, 1, 1);
+    scintilla_send_message(sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
 
     for (gint i = 0; i < words->len; i++) {
         Word *word = &g_array_index(words, Word, i);
@@ -471,7 +471,7 @@ static gint shortcut_on_key_press(GdkEventKey *event, gpointer user_data) {
 
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
 
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, 1, 1);
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
 
     if (keychar >= 96 && keychar <= 122) {
         keychar -= (sj->config_settings->shortcut_all_caps ? 32 : 0);

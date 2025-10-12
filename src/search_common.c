@@ -198,7 +198,7 @@ void search_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, 0, 0);
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
     if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
         for (gint i = 0; i < sj->words->len; i++) {

@@ -35,7 +35,7 @@ static void shortcut_char_replacing_end(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
 
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, 0, 0);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
         if (word.valid_search) {
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position,

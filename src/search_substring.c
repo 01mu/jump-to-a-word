@@ -222,7 +222,7 @@ static gboolean on_key_press_substring(GtkWidget *widget, GdkEventKey *event, gp
         return TRUE;
     }
 
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, 1, 1);
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
