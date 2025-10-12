@@ -233,6 +233,7 @@ gint search_on_key_press(GdkEventKey *event, gpointer user_data) {
     }
 
     if (keychar != 0 && (g_unichar_isalpha(keychar) || is_other_char)) {
+        ui_set_statusbar(TRUE, _("%i"), 213);
         g_string_append_c(sj->search_query, keychar);
 
         search_mark_words(sj, FALSE);
