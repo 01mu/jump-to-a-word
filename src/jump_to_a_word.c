@@ -423,7 +423,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
 #define HORIZONTAL_FRAME()                                                                                             \
     G_STMT_START {                                                                                                     \
-        hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);                                                             \
+        hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);                                                             \
         gtk_box_set_homogeneous(GTK_BOX(hbox), TRUE);                                                                  \
         gtk_container_add(GTK_CONTAINER(vbox), hbox);                                                                  \
     }                                                                                                                  \
@@ -431,22 +431,22 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
 #define WIDGET_FRAME(description, orientation)                                                                         \
     G_STMT_START {                                                                                                     \
-        container = gtk_box_new(orientation, 1);                                                                       \
+        container = gtk_box_new(orientation, 0);                                                                       \
         frame = gtk_frame_new(NULL);                                                                                   \
         gtk_frame_set_label(GTK_FRAME(frame), description);                                                            \
         gtk_container_add(GTK_CONTAINER(frame), container);                                                            \
-        gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 1);                                                     \
+        gtk_box_pack_start(GTK_BOX(vbox), frame, FALSE, FALSE, 0);                                                     \
     }                                                                                                                  \
     G_STMT_END
 
 #define WIDGET_FRAME_COLOR(description, orientation)                                                                   \
     G_STMT_START {                                                                                                     \
-        container = gtk_box_new(orientation, 1);                                                                       \
+        container = gtk_box_new(orientation, 0);                                                                       \
         frame = gtk_frame_new(NULL);                                                                                   \
         gtk_frame_set_label(GTK_FRAME(frame), description);                                                            \
         gtk_widget_set_hexpand(frame, TRUE);                                                                           \
         gtk_widget_set_halign(frame, GTK_ALIGN_FILL);                                                                  \
-        gtk_widget_set_size_request(frame, 200, -1);                                                                   \
+        gtk_widget_set_size_request(frame, 200, 0);                                                                    \
         gtk_container_add(GTK_CONTAINER(frame), container);                                                            \
     }                                                                                                                  \
     G_STMT_END
@@ -456,7 +456,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
         sj->config_widgets->name = gtk_check_button_new_with_label(description);                                       \
         gtk_widget_set_tooltip_text(sj->config_widgets->name, tooltip);                                                \
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj->config_widgets->name), sj->config_settings->name);          \
-        gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->name, FALSE, FALSE, 1);                             \
+        gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->name, FALSE, FALSE, 0);                             \
     }                                                                                                                  \
     G_STMT_END
 
@@ -466,19 +466,19 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
         sj->config_widgets->type = gtk_color_button_new();                                                             \
         configure_color_from_int(&sj->gdk_colors->type_gdk, sj->config_settings->type);                                \
         gtk_color_button_set_color(GTK_COLOR_BUTTON(sj->config_widgets->type), &sj->gdk_colors->type_gdk);             \
-        gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->type, FALSE, FALSE, 1);                             \
-        gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 1);                                                       \
+        gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->type, FALSE, FALSE, 0);                             \
+        gtk_box_pack_start(GTK_BOX(hbox), frame, TRUE, TRUE, 0);                                                       \
         G_GNUC_END_IGNORE_DEPRECATIONS                                                                                 \
     }                                                                                                                  \
     G_STMT_END
 
-    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     GtkWidget *scrollbox = gtk_scrolled_window_new(NULL, NULL);
     GtkWidget *hbox;
     GtkWidget *container;
     GtkWidget *frame;
 
-    gtk_widget_set_size_request(GTK_WIDGET(scrollbox), -1, 400);
+    gtk_widget_set_size_request(GTK_WIDGET(scrollbox), 0, 400);
 
 #if GTK_CHECK_VERSION(3, 8, 0)
     gtk_container_add(GTK_CONTAINER(scrollbox), vbox);
@@ -524,7 +524,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     frame = gtk_frame_new(NULL);
     gtk_frame_set_label_widget(GTK_FRAME(frame), sj->config_widgets->search_from_selection);
     gtk_container_add(GTK_CONTAINER(frame), sj->config_widgets->search_selection_if_line);
-    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 0);
 
     WIDGET_FRAME(_("Jumping to a word, character, or line using shortcuts"), GTK_ORIENTATION_VERTICAL);
     WIDGET_CONF_BOOL(select_when_shortcut_char, _("Select to text during a character jump"),
@@ -566,7 +566,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     frame = gtk_frame_new(NULL);
     gtk_frame_set_label_widget(GTK_FRAME(frame), sj->config_widgets->search_case_sensitive);
     gtk_container_add(GTK_CONTAINER(frame), sj->config_widgets->search_case_sensitive_smart_case);
-    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 0);
 
     WIDGET_FRAME(_("After jumping to a word, character, or substring"), GTK_ORIENTATION_VERTICAL);
     sj->config_widgets->text_after = gtk_combo_box_text_new();
@@ -575,7 +575,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
         gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(sj->config_widgets->text_after), _(text_conf[i].label));
     }
 
-    gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->text_after, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->text_after, FALSE, FALSE, 0);
     gtk_combo_box_set_active(GTK_COMBO_BOX(sj->config_widgets->text_after), sj->config_settings->text_after);
 
     WIDGET_FRAME(_("After jumping to a line"), GTK_ORIENTATION_VERTICAL);
@@ -585,7 +585,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
         gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(sj->config_widgets->line_after), _(line_conf[i].label));
     }
 
-    gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->line_after, FALSE, FALSE, 1);
+    gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->line_after, FALSE, FALSE, 0);
     gtk_combo_box_set_active(GTK_COMBO_BOX(sj->config_widgets->line_after), sj->config_settings->line_after);
 
     HORIZONTAL_FRAME();
