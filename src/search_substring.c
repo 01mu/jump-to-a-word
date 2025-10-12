@@ -76,7 +76,7 @@ static void mark_text(ShortcutJump *sj) {
     g_array_set_size(sj->words, 0);
     sj->search_results_count = 0;
 
-    if (sj->config_settings->search_case_sensitive && !sj->config_settings->search_case_sensitive_smart_case) {
+    if (sj->config_settings->search_case_sensitive && !sj->config_settings->search_smart_case) {
         gchar *b = sj->buffer->str;
         gchar *z = g_strstr_len(b, -1, sj->search_query->str);
 
@@ -89,7 +89,7 @@ static void mark_text(ShortcutJump *sj) {
             b = z + sj->search_query->len;
             z = g_strstr_len(b, -1, sj->search_query->str);
         }
-    } else if (sj->config_settings->search_case_sensitive && sj->config_settings->search_case_sensitive_smart_case) {
+    } else if (sj->config_settings->search_case_sensitive && sj->config_settings->search_smart_case) {
         gint i = 0;
 
         for (gchar *p = sj->buffer->str; *p != '\0'; p++) {

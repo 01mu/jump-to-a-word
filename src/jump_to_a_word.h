@@ -118,7 +118,7 @@ typedef struct {
     gboolean search_selection_if_line;
     gboolean shortcuts_include_single_char;
     gboolean select_when_shortcut_char;
-    gboolean search_case_sensitive_smart_case;
+    gboolean search_smart_case;
 
     gint tag_color;
     gint text_color;
@@ -164,7 +164,7 @@ typedef struct {
     GtkWidget *line_after;
     GtkWidget *text_after;
     GtkWidget *select_when_shortcut_char;
-    GtkWidget *search_case_sensitive_smart_case;
+    GtkWidget *search_smart_case;
 } Widgets;
 
 typedef struct {

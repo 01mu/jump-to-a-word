@@ -98,7 +98,7 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
     UPDATE_BOOL(search_start_from_beginning, "search_start_from_beginning", "search");
     UPDATE_BOOL(match_whole_word, "match_whole_word", "search");
     UPDATE_BOOL(search_case_sensitive, "search_case_sensitive", "search");
-    UPDATE_BOOL(search_case_sensitive_smart_case, "search_case_sensitive_smart_case", "search");
+    UPDATE_BOOL(search_smart_case, "search_smart_case", "search");
 
     UPDATE_INTEGER(text_after, "text_after", "text_after");
     UPDATE_INTEGER(line_after, "line_after", "line_after");

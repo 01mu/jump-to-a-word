@@ -80,7 +80,7 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
             continue;
         }
 
-        if (sj->config_settings->search_case_sensitive && sj->config_settings->search_case_sensitive_smart_case) {
+        if (sj->config_settings->search_case_sensitive && sj->config_settings->search_smart_case) {
             if (sj->config_settings->search_start_from_beginning) {
                 for (gchar *p = word->word->str; *p != '\0'; p++) {
                     gint matched_chars = 0;
@@ -126,7 +126,7 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
             }
         }
 
-        if (sj->config_settings->search_case_sensitive && !sj->config_settings->search_case_sensitive_smart_case) {
+        if (sj->config_settings->search_case_sensitive && !sj->config_settings->search_smart_case) {
             if (sj->config_settings->search_start_from_beginning) {
                 if (g_str_has_prefix(word->word->str, sj->search_query->str)) {
                     word->valid_search = TRUE;
