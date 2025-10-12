@@ -61,13 +61,13 @@ void annotation_show(ShortcutJump *sj) {
         sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     }
 
-    scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_ANGLES, 0);
-    scintilla_send_message(sj->sci, SCI_STYLESETFORE, EOLANNOTATION_ANGLES, sj->config_settings->text_color);
-    scintilla_send_message(sj->sci, SCI_STYLESETBACK, EOLANNOTATION_ANGLES,
+    scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM, 0);
+    scintilla_send_message(sj->sci, SCI_STYLESETFORE, EOLANNOTATION_STADIUM, sj->config_settings->text_color);
+    scintilla_send_message(sj->sci, SCI_STYLESETBACK, EOLANNOTATION_STADIUM,
                            sj->config_settings->search_annotation_bg_color);
     scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETTEXT, sj->eol_message_line, (sptr_t)sj->eol_message->str);
 
-    scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETSTYLEOFFSET, EOLANNOTATION_ANGLES, 0);
+    scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETSTYLEOFFSET, EOLANNOTATION_STADIUM, 0);
 }
 
 /**
