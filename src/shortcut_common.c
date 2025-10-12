@@ -236,12 +236,15 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     block_click_action(sj);
 
     scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TAG, sj->config_settings->tag_color_store_style);
-    scintilla_send_message(sj->sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG, sj->config_settings->tag_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG,
+                           sj->config_settings->tag_color_store_outline);
     scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color_store_fore);
 
     scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_HIGHLIGHT, sj->config_settings->tag_color_store_style);
-    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT, sj->config_settings->highlight_color_store_outline);
-    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT, sj->config_settings->highlight_color_store_fore);
+    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT,
+                           sj->config_settings->highlight_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT,
+                           sj->config_settings->highlight_color_store_fore);
 
     scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, sj->config_settings->tag_color_store_style);
     scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_TEXT, sj->config_settings->text_color_store_outline);
