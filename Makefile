@@ -57,3 +57,7 @@ valgrind:
 .PHONY: bear
 bear: clean
 	mkdir -p build && bear --output build/compile_commands.json -- make build
+
+.PHONY: push
+push:
+	git push origin master
