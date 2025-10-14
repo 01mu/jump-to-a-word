@@ -645,7 +645,7 @@ static PluginCallback callbacks[] = {{"document-before-save", (GCallback)&on_can
                                      {"editor-notify", (GCallback)&on_editor_notify, TRUE, NULL},
                                      {NULL, NULL, FALSE, NULL}};
 
-void help() { utils_open_browser("https://www.github.com/01mu/jump-to-a-word"); }
+void help(GeanyPlugin *plugin, void *data) { utils_open_browser("https://www.github.com/01mu/jump-to-a-word"); }
 
 /**
  * @brief Inits the plugin object that persits throughout the plugin's lifetime.
