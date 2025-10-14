@@ -19,8 +19,6 @@
 #include <plugindata.h>
 
 #include "jump_to_a_word.h"
-#include "keybindings.h"
-#include "line_options.h"
 #include "util.h"
 
 /**

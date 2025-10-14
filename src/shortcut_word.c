@@ -19,7 +19,6 @@
 #include <plugindata.h>
 
 #include "jump_to_a_word.h"
-#include "line_options.h"
 #include "selection.h"
 #include "shortcut_common.h"
 #include "util.h"

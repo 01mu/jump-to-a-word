@@ -20,9 +20,7 @@
 
 #include "annotation.h"
 #include "jump_to_a_word.h"
-#include "line_options.h"
 #include "replace_handle_input.h"
-#include "replace_instant.h"
 #include "search_common.h"
 #include "selection.h"
 #include "util.h"

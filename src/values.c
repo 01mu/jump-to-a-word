@@ -19,9 +19,7 @@
 #include <math.h>
 #include <plugindata.h>
 
-#include "annotation.h"
 #include "jump_to_a_word.h"
-#include "line_options.h"
 
 /**
  * @brief Returns the Scintilla object from the current document.

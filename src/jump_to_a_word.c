@@ -18,7 +18,6 @@
 
 #include <plugindata.h>
 
-#include "annotation.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
 #include "preferences.h"
@@ -27,12 +26,10 @@
 #include "search_common.h"
 #include "search_substring.h"
 #include "search_word.h"
-#include "selection.h"
 #include "shortcut_char.h"
 #include "shortcut_common.h"
 #include "shortcut_line.h"
 #include "shortcut_word.h"
-#include "util.h"
 
 /**
  * @brief Line settings used in the plugin configuration and line options windows.

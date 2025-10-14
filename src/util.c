@@ -18,10 +18,7 @@
 
 #include <plugindata.h>
 
-#include "annotation.h"
 #include "jump_to_a_word.h"
-#include "keybindings.h"
-#include "line_options.h"
 
 /**
  * @brief Sets indicators for a given range.

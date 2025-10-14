@@ -19,13 +19,6 @@
 #include <plugindata.h>
 
 #include "jump_to_a_word.h"
-#include "line_options.h"
-#include "previous_cursor.h"
-#include "search_word.h"
-#include "shortcut_common.h"
-#include "shortcut_line.h"
-#include "shortcut_word.h"
-#include "util.h"
 
 /**
  * @brief Checks to see if the selection is a word.

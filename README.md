@@ -51,7 +51,9 @@ If a range of text is selected, the text within that selection will be used for 
 You can move the cursor back to its previous position after a jump.
 
 ## Building
-Make sure you have [Geany](https://github.com/geany/geany) installed:
+Make sure you have [Geany](https://github.com/geany/geany) installed.
+
+Run:
 
 ```
 apt-get install libgtk-3-dev autoconf automake autopoint gettext
