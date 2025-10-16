@@ -58,6 +58,10 @@ valgrind:
 bear: clean
 	mkdir -p build && bear --output build/compile_commands.json -- make build
 
+.PHONY: tidy
+tidy:
+	clang-tidy src/jump_to_a_word.c -p build/
+
 .PHONY: push
 push:
 	git push origin master
