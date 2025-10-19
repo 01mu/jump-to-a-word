@@ -51,6 +51,7 @@ typedef enum {
     KB_JUMP_TO_LINE,
     KB_OPEN_LINE_OPTIONS,
     KB_OPEN_TEXT_OPTIONS,
+    KB_OPEN_REPLACE_OPTIONS,
     KB_JUMP_TO_A_SUBSTRING,
     KB_COUNT,
 } KB;
@@ -88,6 +89,13 @@ typedef enum {
 } LineAfter;
 
 typedef enum {
+    RA_REPLACE,
+    RA_INSERT_START,
+    RA_INSERT_END,
+    RA_COUNT,
+} ReplaceAction;
+
+typedef enum {
     SOURCE_SETTINGS_CHANGE,
     SOURCE_OPTION_MENU,
 } SettingSource;
@@ -95,6 +103,7 @@ typedef enum {
 typedef enum {
     OM_TEXT,
     OM_LINE,
+    OM_REPLACE,
 } OptionMod;
 
 typedef gboolean (*KeyPressCallback)(GtkWidget *, GdkEventKey *, gpointer);
@@ -135,8 +144,10 @@ typedef struct {
     gint highlight_color_store_outline;
 
     gint search_annotation_bg_color;
+
     LineAfter line_after;
     TextAfter text_after;
+    ReplaceAction replace_action;
 } Settings;
 
 typedef struct {
@@ -163,6 +174,7 @@ typedef struct {
     GtkWidget *shortcuts_include_single_char;
     GtkWidget *line_after;
     GtkWidget *text_after;
+    GtkWidget *replace_action;
     GtkWidget *select_when_shortcut_char;
     GtkWidget *search_smart_case;
 } Widgets;

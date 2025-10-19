@@ -32,6 +32,11 @@ extern const struct {
     TextAfter type;
 } text_conf[];
 
+extern const struct {
+    gchar *label;
+    ReplaceAction type;
+} replace_conf[];
+
 /**
  * @brief Activates row when Enter is pressed.
  *
@@ -179,6 +184,27 @@ static void fill_store_text(const ShortcutJump *sj, GtkListStore *store) {
 }
 
 /**
+ * @brief Stores the listings for replace options.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param GtkListStore *store: The store
+ */
+static void fill_store_replace(const ShortcutJump *sj, GtkListStore *store) {
+    for (gint i = 0; i < RA_COUNT; i++) {
+        gchar *label;
+
+        if (sj->config_settings->replace_action == replace_conf[i].type) {
+            label = g_markup_printf_escaped("%i. <b>%s</b>", i + 1, replace_conf[i].label);
+        } else {
+            label = g_markup_printf_escaped("%i. %s", i + 1, replace_conf[i].label);
+        }
+
+        gtk_list_store_insert_with_values(store, NULL, replace_conf[i].type, COL_LABEL, label, COL_TYPE,
+                                          replace_conf[i].type, -1);
+    }
+}
+
+/**
  * @brief Returns the score used for the most relevant match from the input field.
  *
  * @param const gchar *needle: The input string
@@ -315,6 +341,12 @@ static void on_entry_text_notify(GObject *object, GParamSpec *pspec, gpointer du
         gtk_widget_hide(sj->tl_window->panel);
     }
 
+    if (sj->option_mod == OM_REPLACE && (value > 0 && value <= RA_COUNT)) {
+        sj->config_settings->replace_action = value - 1;
+        update_settings(SOURCE_OPTION_MENU, sj);
+        gtk_widget_hide(sj->tl_window->panel);
+    }
+
     gtk_tree_model_sort_reset_default_sort_func(GTK_TREE_MODEL_SORT(model));
     gtk_tree_sortable_set_default_sort_func(GTK_TREE_SORTABLE(model), sort_func, sj, NULL);
 
@@ -344,8 +376,10 @@ static void on_view_row_activated(GtkTreeView *view, GtkTreePath *path, GtkTreeV
 
         if (sj->option_mod == OM_LINE) {
             sj->config_settings->line_after = type;
-        } else {
+        } else if (sj->option_mod == OM_TEXT) {
             sj->config_settings->text_after = type;
+        } else {
+            sj->config_settings->replace_action = type;
         }
 
         update_settings(SOURCE_OPTION_MENU, sj);
@@ -428,8 +462,10 @@ static void on_panel_show(GtkWidget *widget, gpointer dummy) {
 
     if (sj->option_mod == OM_LINE) {
         fill_store_line(sj, sj->tl_window->store);
-    } else {
+    } else if (sj->option_mod == OM_TEXT) {
         fill_store_text(sj, sj->tl_window->store);
+    } else {
+        fill_store_replace(sj, sj->tl_window->store);
     }
 
     gtk_widget_grab_focus(sj->tl_window->entry);
@@ -557,6 +593,26 @@ gboolean open_text_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_d
 }
 
 /**
+ * @brief Provides a keybinding callback for opening the replacement settings window.
+ *
+ * @param GeanyKeyBinding *kb: (unused)
+ * @param guint key_id: (unused)
+ * @param gpointer user_data: The plugin data
+ *
+ * @return gboolean: TRUE
+ */
+gboolean open_replace_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    sj->option_mod = OM_REPLACE;
+
+    create_panel(sj);
+    gtk_widget_show(sj->tl_window->panel);
+
+    return TRUE;
+}
+
+/**
  * @brief Provides a menu callback for opening the line settings window.
  *
  * @param GtkMenuItem *menu_item: (unused)
@@ -585,6 +641,23 @@ void open_text_options_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     sj->option_mod = OM_TEXT;
+
+    create_panel(sj);
+    gtk_widget_show(sj->tl_window->panel);
+}
+
+/**
+ * @brief Provides a menu callback for opening the replacement settings window.
+ *
+ * @param GtkMenuItem *menu_item: (unused)
+ * @param gpointer user_data: The plugin data
+ *
+ * @return gboolean: TRUE
+ */
+void open_replace_options_cb(GtkMenuItem *menu_item, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    sj->option_mod = OM_REPLACE;
 
     create_panel(sj);
     gtk_widget_show(sj->tl_window->panel);

@@ -101,6 +101,7 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
 
     UPDATE_INTEGER(text_after, "text_after", "text_after");
     UPDATE_INTEGER(line_after, "line_after", "line_after");
+    UPDATE_INTEGER(replace_action, "replace_action", "replace_action");
 
     UPDATE_COLOR(text_color, "text_color", text_color_gdk);
     UPDATE_COLOR(search_annotation_bg_color, "search_annotation_bg_color", search_annotation_bg_color_gdk);

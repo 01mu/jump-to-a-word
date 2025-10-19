@@ -54,7 +54,17 @@ const struct {
 } text_conf[] = {{"Do nothing", TX_DO_NOTHING},
                  {"Select text", TX_SELECT_TEXT},
                  {"Select to text", TX_SELECT_TO_TEXT},
-                 {"Selecst text range", TX_SELECT_TEXT_RANGE}};
+                 {"Select text range", TX_SELECT_TEXT_RANGE}};
+
+/**
+ * @brief Replace settings used in the plugin configuration and replace options windows.
+ */
+const struct {
+    gchar *label;
+    ReplaceAction type;
+} replace_conf[] = {{"Replace string", RA_REPLACE},
+                    {"Insert at start of string", RA_INSERT_START},
+                    {"Insert at end of string", RA_INSERT_END}};
 
 /**
  * @brief Provides a callback for either saving or closing a document, or quitting. This is necessary for shortcut
@@ -239,6 +249,10 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_KEYBINDING("Open line options window", "open_line_options", open_line_options_kb, KB_OPEN_LINE_OPTIONS, sj,
                    item);
 
+    SET_MENU_ITEM("Open _Replacement Options Window", open_replace_options_cb, sj);
+    SET_KEYBINDING("Open replacement options window", "open_replace_options", open_replace_options_kb,
+                   KB_OPEN_REPLACE_OPTIONS, sj, item);
+
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(sj->main_menu_item), submenu);
     gtk_container_add(GTK_CONTAINER(sj->geany_data->main_widgets->tools_menu), sj->main_menu_item);
 }
@@ -295,6 +309,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
 
     SET_SETTING_INTEGER(text_after, "text_after", "text_after", TX_SELECT_TEXT);
     SET_SETTING_INTEGER(line_after, "line_after", "line_after", LA_SELECT_TO_LINE);
+    SET_SETTING_INTEGER(replace_action, "replace_action", "replace_action", RA_REPLACE);
 
     SET_SETTING_COLOR(text_color, "text_color", 0xD4D4D4);
     SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0x1E1E1E);
@@ -607,6 +622,20 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
     gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->line_after, FALSE, FALSE, 0);
     gtk_combo_box_set_active(GTK_COMBO_BOX(sj->config_widgets->line_after), sj->config_settings->line_after);
+
+    /*
+     * Replacement action
+     */
+
+    WIDGET_FRAME("Replacement action", GTK_ORIENTATION_VERTICAL);
+    sj->config_widgets->replace_action = gtk_combo_box_text_new();
+
+    for (gint i = 0; i < RA_COUNT; i++) {
+        gtk_combo_box_text_append_text(GTK_COMBO_BOX_TEXT(sj->config_widgets->replace_action), replace_conf[i].label);
+    }
+
+    gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->replace_action, FALSE, FALSE, 0);
+    gtk_combo_box_set_active(GTK_COMBO_BOX(sj->config_widgets->replace_action), sj->config_settings->replace_action);
 
     /*
      * Colors

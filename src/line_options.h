@@ -31,7 +31,9 @@ typedef enum { COL_TYPE_MENU_ITEM = 1 << 0, COL_TYPE_FILE = 1 << 1, COL_TYPE_ANY
 
 void open_text_options_cb(GtkMenuItem *menu_item, gpointer user_data);
 void open_line_options_cb(GtkMenuItem *menu_item, gpointer user_data);
+void open_replace_options_cb(GtkMenuItem *menu_item, gpointer user_data);
 gboolean open_text_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 gboolean open_line_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
+gboolean open_replace_options_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 
 #endif
