@@ -288,3 +288,17 @@ void disconnect_click_action(ShortcutJump *sj) {
     // g_signal_handler_block(sj->geany_data->main_widgets->window, sj->click_handler_id);
     g_signal_handler_disconnect(sj->geany_data->main_widgets->window, sj->click_handler_id);
 }
+
+void reset_indicators(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TAG, sj->config_settings->tag_color_store_style);
+    scintilla_send_message(sj->sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG,
+                           sj->config_settings->tag_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color_store_fore);
+
+    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_HIGHLIGHT,
+                           sj->config_settings->highlight_color_store_style);
+    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT,
+                           sj->config_settings->highlight_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT,
+                           sj->config_settings->highlight_color_store_fore);
+}
