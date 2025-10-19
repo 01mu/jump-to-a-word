@@ -68,7 +68,8 @@ static gboolean selection_is_a_word(ScintillaObject *sci, gint selection_start, 
  *
  * @return gboolean: Whether the selection is within a single line
  */
-static gboolean selection_is_a_line(const ShortcutJump *sj, ScintillaObject *sci, gint selection_start, gint selection_end) {
+static gboolean selection_is_a_line(const ShortcutJump *sj, ScintillaObject *sci, gint selection_start,
+                                    gint selection_end) {
     selection_end -= 1;
 
     gint line_of_start = scintilla_send_message(sci, SCI_LINEFROMPOSITION, selection_start, TRUE);
