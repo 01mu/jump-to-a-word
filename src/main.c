@@ -131,7 +131,7 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
  *
  * @return gboolean: FALSE if nothing was triggered
  */
-static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, SCNotification *nt, gpointer user_data) {
+static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (nt->nmhdr.code == SCN_MODIFYATTEMPTRO) {
@@ -651,7 +651,7 @@ void help(GeanyPlugin *plugin, void *data) { utils_open_browser("https://www.git
  *
  * @return ShortcutJump *: The plugin object
  */
-ShortcutJump *init_data(GeanyPlugin *plugin) {
+ShortcutJump *init_data(const GeanyPlugin *plugin) {
     ShortcutJump *sj = g_new0(ShortcutJump, 1);
 
     sj->geany_data = plugin->geany_data;

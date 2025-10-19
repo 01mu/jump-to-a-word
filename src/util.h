@@ -25,15 +25,15 @@
 
 void set_word_indicators(ShortcutJump *sj);
 void set_shortcut_indicators(ShortcutJump *sj);
-void set_key_press_action(ShortcutJump *sj, KeyPressCallback function);
+void connect_key_press_action(ShortcutJump *sj, KeyPressCallback function);
 void set_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting, gint length);
-void set_click_action(ShortcutJump *sj, ClickCallback function);
+void connect_click_action(ShortcutJump *sj, ClickCallback function);
 void search_clear_indicators(ScintillaObject *sci, GArray *words);
 void margin_markers_reset(ShortcutJump *sj);
 void define_indicators(ScintillaObject *sci, ShortcutJump *sj);
 void clear_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting, gint length);
-void block_key_press_action(ShortcutJump *sj);
-void block_click_action(ShortcutJump *sj);
+void disconnect_key_press_action(ShortcutJump *sj);
+void disconnect_click_action(ShortcutJump *sj);
 gint set_cursor_position_with_lfs(ShortcutJump *sj);
 gint save_cursor_position(ShortcutJump *sj);
 gint get_lfs(ShortcutJump *sj, gint current_line);

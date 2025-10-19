@@ -113,10 +113,14 @@ static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
     replace_string(sj, instant_replace);
     annotation_display_replace_substring(sj);
     sj->current_mode = JM_REPLACE_SUBSTRING;
+
+    disconnect_key_press_action(sj);
+    connect_key_press_action(sj, on_key_press_search_replace);
 }
 
 /**
- * @brief Begins the replacement for a search word.
+ * @brief Begins the replacement for a search word. Disconnects the previous key action handler that was acceping
+ * characters for the search query and initiates the replacement handler.
  *
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
@@ -131,6 +135,9 @@ static void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
     replace_string(sj, instant_replace);
     annotation_display_replace(sj);
     sj->current_mode = JM_REPLACE_SEARCH;
+
+    disconnect_key_press_action(sj);
+    connect_key_press_action(sj, on_key_press_search_replace);
 }
 
 /**

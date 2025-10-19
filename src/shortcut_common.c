@@ -230,8 +230,8 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     g_array_free(sj->words, TRUE);
     g_array_free(sj->lf_positions, TRUE);
 
-    block_key_press_action(sj);
-    block_click_action(sj);
+    disconnect_key_press_action(sj);
+    disconnect_click_action(sj);
 
     scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TAG, sj->config_settings->tag_color_store_style);
     scintilla_send_message(sj->sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG,
@@ -764,8 +764,8 @@ void shortcut_char_waiting_cancel(ShortcutJump *sj) {
     g_array_free(sj->lf_positions, TRUE);
     g_array_free(sj->words, TRUE);
 
-    block_key_press_action(sj);
-    block_click_action(sj);
+    disconnect_key_press_action(sj);
+    disconnect_click_action(sj);
 
     sj->current_mode = JM_NONE;
 

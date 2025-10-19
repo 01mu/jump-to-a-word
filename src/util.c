@@ -255,7 +255,7 @@ gint save_cursor_position(ShortcutJump *sj) { return scintilla_send_message(sj->
  * @param ShortcutJump *sj: The plugin object
  * @param KeyPressCallback function: The callback
  */
-void set_key_press_action(ShortcutJump *sj, KeyPressCallback function) {
+void connect_key_press_action(ShortcutJump *sj, KeyPressCallback function) {
     sj->kp_handler_id = g_signal_connect(sj->sci, "key-press-event", G_CALLBACK(function), sj);
 }
 
@@ -265,22 +265,26 @@ void set_key_press_action(ShortcutJump *sj, KeyPressCallback function) {
  * @param ShortcutJump *sj: The plugin object
  * @param ClickCallback function: The callback
  */
-void set_click_action(ShortcutJump *sj, ClickCallback function) {
+void connect_click_action(ShortcutJump *sj, ClickCallback function) {
     sj->click_handler_id = g_signal_connect(sj->geany_data->main_widgets->window, "event", G_CALLBACK(function), sj);
 }
 
 /**
- * @brief Blocks a key press action previously set during a jump.
+ * @brief Destroys a key press action previously set during a jump.
  *
  * @param ShortcutJump *sj: The plugin object
  */
-void block_key_press_action(ShortcutJump *sj) { g_signal_handler_block(sj->sci, sj->kp_handler_id); }
+void disconnect_key_press_action(ShortcutJump *sj) {
+    // g_signal_handler_block(sj->sci, sj->kp_handler_id);
+    g_signal_handler_disconnect(sj->sci, sj->kp_handler_id);
+}
 
 /**
- * @brief Blocks a click action previously set during a jump.
+ * @brief Destroys a click action previously set during a jump.
  *
  * @param ShortcutJump *sj: The plugin object
  */
-void block_click_action(ShortcutJump *sj) {
-    g_signal_handler_block(sj->geany_data->main_widgets->window, sj->click_handler_id);
+void disconnect_click_action(ShortcutJump *sj) {
+    // g_signal_handler_block(sj->geany_data->main_widgets->window, sj->click_handler_id);
+    g_signal_handler_disconnect(sj->geany_data->main_widgets->window, sj->click_handler_id);
 }

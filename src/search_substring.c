@@ -99,10 +99,10 @@ static void mark_text(ShortcutJump *sj) {
         gint i = 0;
 
         for (gchar *p = sj->buffer->str; *p != '\0'; p++) {
-            const gchar *z = sj->search_query->str;
+            const gchar *z;
             gint k = 0;
-            gchar haystack_char = p[0];
-            gchar needle_char = z[0];
+            gchar haystack_char;
+            gchar needle_char;
 
             do {
                 const gchar *d = p + k;
@@ -176,17 +176,13 @@ static void mark_text(ShortcutJump *sj) {
  *
  * @return gboolean: FALSE if uncontrolled for key press
  */
-static gboolean on_key_press_substring(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
 
     gboolean is_other_char =
         strchr("[]\\;'.,/-=_+{`_+|}:<>?\"~)(*&^% $#@!)", (gchar)gdk_keyval_to_unicode(event->keyval)) ||
         (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9);
-
-    if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-        return replace_handle_input(sj, event, keychar);
-    }
 
     if (event->keyval == GDK_KEY_Return) {
         if (sj->search_word_pos != -1) {
@@ -292,8 +288,8 @@ void substring_init(ShortcutJump *sj, gboolean instant_replace) {
         search_set_initial_query(sj, instant_replace);
     }
 
-    set_key_press_action(sj, on_key_press_substring);
-    set_click_action(sj, on_click_event_search);
+    connect_key_press_action(sj, on_key_press_search_substring);
+    connect_click_action(sj, on_click_event_search);
 
     annotation_display_substring(sj);
 }

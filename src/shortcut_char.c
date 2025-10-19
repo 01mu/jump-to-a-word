@@ -166,8 +166,8 @@ void shortcut_char_init(ShortcutJump *sj, gboolean init_set, gchar init) {
         annotation_display_shortcut_char(sj);
     }
 
-    set_key_press_action(sj, on_key_press_shortcut_char);
-    set_click_action(sj, on_click_event_shortcut_char);
+    connect_key_press_action(sj, on_key_press_shortcut_char);
+    connect_click_action(sj, on_click_event_shortcut_char);
 }
 
 /**

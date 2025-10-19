@@ -184,8 +184,8 @@ void line_init(ShortcutJump *sj) {
         set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.shortcut->len);
     }
 
-    set_key_press_action(sj, on_key_press_shortcut);
-    set_click_action(sj, on_click_event_shortcut);
+    connect_key_press_action(sj, on_key_press_shortcut);
+    connect_click_action(sj, on_click_event_shortcut);
 
     ui_set_statusbar(TRUE, _("%i line%s in view"), sj->words->len, sj->words->len == 1 ? "" : "s");
 }

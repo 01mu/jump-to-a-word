@@ -100,10 +100,10 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
             if (!sj->config_settings->search_start_from_beginning) {
                 for (gchar *p = word->word->str; *p != '\0'; p++) {
-                    const gchar *z = sj->search_query->str;
+                    const gchar *z;
                     gint k = 0;
-                    gchar haystack_char = p[0];
-                    gchar needle_char = z[0];
+                    gchar haystack_char;
+                    gchar needle_char;
 
                     do {
                         z = sj->search_query->str + k;
@@ -186,22 +186,19 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
  * search query with Backspace, performs navigation of tagged words with Left and Right, and handles search replace
  * mode key key input.
  *
- * @param GdkEventKey *event: A struct containing the key event
- * @param gpointer user_data: The plugin object
+ * @param GtkWidget *widget: (unused)
+ * @param GdkEventKey *event: Keypress event
+ * @param gpointer user_data: The plugin data
  *
  * @return gint: FALSE if no controlled for key press action was found
  */
-gint search_on_key_press(GdkEventKey *event, gpointer user_data) {
+static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
 
     gboolean is_other_char =
         strchr("[]\\;'.,/-=_+{`_+|}:<>?\"~)(*&^%$#@!)", (gchar)gdk_keyval_to_unicode(event->keyval)) ||
         (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9);
-
-    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        return replace_handle_input(sj, event, keychar);
-    }
 
     if (event->keyval == GDK_KEY_Return) {
         if (sj->search_word_pos != -1) {
@@ -267,25 +264,6 @@ gint search_on_key_press(GdkEventKey *event, gpointer user_data) {
     }
 
     search_cancel(sj);
-    return FALSE;
-}
-
-/**
- * @brief Handles key press event during a search jump.
- *
- * @param GtkWidget *widget: (unused)
- * @param GdkEventKey *event: Keypress event
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: FALSE if uncontrolled for key press
- */
-static gboolean on_key_press_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-
-    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH) {
-        return search_on_key_press(event, sj);
-    }
-
     return FALSE;
 }
 
@@ -365,8 +343,8 @@ void search_init(ShortcutJump *sj, gboolean instant_replace) {
     search_get_words(sj);
     search_set_initial_query(sj, instant_replace);
 
-    set_key_press_action(sj, on_key_press_search);
-    set_click_action(sj, on_click_event_search);
+    connect_key_press_action(sj, on_key_press_search_word);
+    connect_click_action(sj, on_click_event_search);
 
     annotation_display_search(sj);
 
