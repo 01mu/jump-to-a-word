@@ -54,7 +54,7 @@ clean:
 valgrind:
 	@valgrind ./$(TARGET)
 
-## bear: create compile_comands.json for lsp
+## bear: create compile_comands.json for the language server protocol
 .PHONY: bear
 bear: clean
 	@mkdir -p build && bear --output build/compile_commands.json -- make build
