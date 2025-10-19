@@ -131,6 +131,16 @@ static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
     annotation_display_replace_substring(sj);
     sj->current_mode = JM_REPLACE_SUBSTRING;
 
+    if (sj->config_settings->replace_action == RA_INSERT_END) {
+        for (gint i = 0; i < sj->words->len; i++) {
+            Word *word = &g_array_index(sj->words, Word, i);
+
+            if (word->valid_search) {
+                word->replace_pos += sj->search_query->len;
+            }
+        }
+    }
+
     disconnect_key_press_action(sj);
     connect_key_press_action(sj, on_key_press_search_replace);
 }
