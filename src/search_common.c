@@ -19,8 +19,8 @@
 #include <plugindata.h>
 
 #include "annotation.h"
-#include "replace_handle_input.h"
 #include "jump_to_a_word.h"
+#include "replace_handle_input.h"
 #include "util.h"
 
 /**
@@ -188,6 +188,23 @@ gboolean set_search_word_pos_left_key(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void search_end(ShortcutJump *sj) {
+
+    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TAG, sj->config_settings->tag_color_store_style);
+    scintilla_send_message(sj->sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG,
+                           sj->config_settings->tag_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color_store_fore);
+
+    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_HIGHLIGHT,
+                           sj->config_settings->highlight_color_store_style);
+    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT,
+                           sj->config_settings->highlight_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT,
+                           sj->config_settings->highlight_color_store_fore);
+
+    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, sj->config_settings->text_color_store_style);
+    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_TEXT, sj->config_settings->text_color_store_outline);
+    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color_store_fore);
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
 
     search_clear_indicators(sj->sci, sj->words);
