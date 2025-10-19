@@ -72,12 +72,12 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
 }
 
 /**
- * @brief Replaces either a word or a substring.
+ * @brief Sets the indicators for a string or word being replaced.
  *
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
-static void replace_string(ShortcutJump *sj, gboolean instant_replace) {
+static void set_replace_indicators(ShortcutJump *sj, gboolean instant_replace) {
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
@@ -110,7 +110,7 @@ static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
         return;
     }
 
-    replace_string(sj, instant_replace);
+    set_replace_indicators(sj, instant_replace);
     annotation_display_replace_substring(sj);
     sj->current_mode = JM_REPLACE_SUBSTRING;
 
@@ -132,7 +132,7 @@ static void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
         return;
     }
 
-    replace_string(sj, instant_replace);
+    set_replace_indicators(sj, instant_replace);
     annotation_display_replace(sj);
     sj->current_mode = JM_REPLACE_SEARCH;
 
