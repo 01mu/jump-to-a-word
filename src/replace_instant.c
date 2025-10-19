@@ -20,6 +20,7 @@
 
 #include "annotation.h"
 #include "jump_to_a_word.h"
+#include "replace_handle_input.h"
 #include "search_common.h"
 #include "search_substring.h"
 #include "search_word.h"
@@ -28,6 +29,22 @@
 #include "shortcut_common.h"
 #include "util.h"
 #include "values.h"
+
+/**
+ * @brief Handles key press event during a search jump after starting a replace action.
+ *
+ * @param GtkWidget *widget: (unused)
+ * @param GdkEventKey *event: Keypress event
+ * @param gpointer user_data: The plugin data
+ *
+ * @return gboolean: FALSE if uncontrolled for key press
+ */
+static gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    gunichar keychar = gdk_keyval_to_unicode(event->keyval);
+
+    return replace_handle_input(sj, event, keychar);
+}
 
 /**
  * @brief Begins the replacement for a selected character.

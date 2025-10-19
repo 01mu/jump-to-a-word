@@ -35,6 +35,5 @@ gboolean valid_smart_case(char haystack_char, char needle_char);
 gboolean set_search_word_pos_right_key(ShortcutJump *sj);
 gboolean set_search_word_pos_left_key(ShortcutJump *sj);
 gboolean on_click_event_search(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
-gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 
 #endif
