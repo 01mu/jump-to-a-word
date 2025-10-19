@@ -60,7 +60,7 @@ bear: clean
 
 .PHONY: tidy
 tidy:
-	clang-tidy src/jump_to_a_word.c -p build/
+	clang-tidy src/main.c -p build/
 
 .PHONY: push
 push:
