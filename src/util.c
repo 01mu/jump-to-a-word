@@ -178,11 +178,11 @@ void search_clear_indicators(ScintillaObject *sci, GArray *words) {
 /**
  * @brief Checks if a special key is pressed so we can continue the text replacement and accept new characters.
  *
- * @param GdkEventKey *event: The key press event
+ * @param const GdkEventKey *event: The key press event
  *
  * @return gboolean: If it was pressed
  */
-gboolean mod_key_pressed(GdkEventKey *event) {
+gboolean mod_key_pressed(const GdkEventKey *event) {
     return event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R || event->keyval == GDK_KEY_Caps_Lock ||
            event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R;
 }
@@ -195,11 +195,11 @@ gboolean mod_key_pressed(GdkEventKey *event) {
  *
  * @return gboolean: If it was activated
  */
-gboolean mouse_movement_performed(ShortcutJump *sj, GdkEventButton *event) {
+gboolean mouse_movement_performed(ShortcutJump *sj, const GdkEventButton *event) {
     return (sj->config_settings->cancel_on_mouse_move && event->type == GDK_MOTION_NOTIFY) ||
            event->type == GDK_LEAVE_NOTIFY || event->type == GDK_SCROLL || event->type == GDK_BUTTON_PRESS ||
            event->type == GDK_BUTTON_RELEASE || event->type == GDK_SELECTION_CLEAR ||
-           event->type == GDK_SELECTION_REQUEST || event->type == GDK_SELECTION_NOTIFY || event->type == GDK_SCROLL ||
+           event->type == GDK_SELECTION_REQUEST || event->type == GDK_SELECTION_NOTIFY ||
            event->type == GDK_2BUTTON_PRESS || event->type == GDK_3BUTTON_PRESS;
 }
 

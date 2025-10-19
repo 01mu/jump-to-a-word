@@ -32,7 +32,7 @@
  * @param GString *buffer: The buffer of the text on screen
  * @param gint first_position: The first position on the screen
  */
-static GString *shortcut_hide_word(ShortcutJump *sj, GArray *words, GString *buffer, gint first_position) {
+static GString *shortcut_hide_word(const ShortcutJump *sj, GArray *words, GString *buffer, gint first_position) {
     if (sj->config_settings->hide_word_shortcut_jump) {
         for (gint i = 0; i < words->len; i++) {
             Word word = g_array_index(words, Word, i);
@@ -107,7 +107,7 @@ void shortcut_word_init(ShortcutJump *sj) {
             gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, i, 0);
 
             if (line != prev_line) {
-                for (gint i = prev_line; i < line; i++) {
+                for (gint j = prev_line; j < line; j++) {
                     g_array_append_val(sj->lf_positions, lfs_added);
                 }
 

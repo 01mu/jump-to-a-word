@@ -86,7 +86,7 @@ void handle_shortcut_text_jump(ShortcutJump *sj, gint pos, gint word_length, gin
  * @param ShortcutJump *sj: The plugin object
  */
 void set_to_first_visible_line(ShortcutJump *sj) {
-    if (!sj->in_selection || (sj->in_selection && (sj->selection_is_a_word || sj->selection_is_a_char))) {
+    if (!sj->in_selection || sj->selection_is_a_word || sj->selection_is_a_char) {
         scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
     }
 }

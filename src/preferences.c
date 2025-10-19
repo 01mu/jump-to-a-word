@@ -75,7 +75,6 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
 
     GKeyFile *config = g_key_file_new();
     gchar *config_dir = g_path_get_dirname(sj->config_file);
-    gchar *data;
 
     g_key_file_load_from_file(config, sj->config_file, G_KEY_FILE_NONE, NULL);
 
@@ -108,10 +107,11 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
     UPDATE_COLOR(tag_color, "tag_color", tag_color_gdk);
     UPDATE_COLOR(highlight_color, "highlight_color", highlight_color_gdk);
 
+
     if (!g_file_test(config_dir, G_FILE_TEST_IS_DIR) && utils_mkdir(config_dir, TRUE) != 0) {
         dialogs_show_msgbox(GTK_MESSAGE_ERROR, _("Plugin configuration directory could not be created."));
     } else {
-        data = g_key_file_to_data(config, NULL, NULL);
+        gchar *data = g_key_file_to_data(config, NULL, NULL);
         utils_write_file(sj->config_file, data);
         g_free(data);
     }

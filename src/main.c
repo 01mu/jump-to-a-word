@@ -54,7 +54,7 @@ const struct {
 } text_conf[] = {{"Do nothing", TX_DO_NOTHING},
                  {"Select text", TX_SELECT_TEXT},
                  {"Select to text", TX_SELECT_TO_TEXT},
-                 {"Select text range", TX_SELECT_TEXT_RANGE}};
+                 {"Selecst text range", TX_SELECT_TEXT_RANGE}};
 
 /**
  * @brief Provides a callback for either saving or closing a document, or quitting. This is necessary for shortcut

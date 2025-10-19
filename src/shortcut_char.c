@@ -162,7 +162,7 @@ void shortcut_char_init(ShortcutJump *sj, gboolean init_set, gchar init) {
         sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
     }
 
-    if (!sj->in_selection || (sj->in_selection && !sj->selection_is_a_char)) {
+    if (!sj->in_selection || !sj->selection_is_a_char) {
         annotation_display_shortcut_char(sj);
     }
 

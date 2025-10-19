@@ -142,9 +142,9 @@ static void tree_view_move_focus(GtkTreeView *view, GtkMovementStep step, gint a
  * @param ShortcutJump *sj: The plugin object
  * @param GtkListStore *store: The store
  */
-static void fill_store_line(ShortcutJump *sj, GtkListStore *store) {
+static void fill_store_line(const ShortcutJump *sj, GtkListStore *store) {
     for (gint i = 0; i < LA_COUNT; i++) {
-        gchar *label = line_conf[i].label;
+        gchar *label;
 
         if (sj->config_settings->line_after == line_conf[i].type) {
             label = g_markup_printf_escaped("%i. <b>%s</b>", i + 1, line_conf[i].label);
@@ -163,9 +163,9 @@ static void fill_store_line(ShortcutJump *sj, GtkListStore *store) {
  * @param ShortcutJump *sj: The plugin object
  * @param GtkListStore *store: The store
  */
-static void fill_store_text(ShortcutJump *sj, GtkListStore *store) {
+static void fill_store_text(const ShortcutJump *sj, GtkListStore *store) {
     for (gint i = 0; i < TX_COUNT; i++) {
-        gchar *label = text_conf[i].label;
+        gchar *label;
 
         if (sj->config_settings->text_after == text_conf[i].type) {
             label = g_markup_printf_escaped("%i. <b>%s</b>", i + 1, text_conf[i].label);
@@ -479,9 +479,7 @@ static void create_panel(ShortcutJump *sj) {
     gtk_frame_set_shadow_type(GTK_FRAME(frame), GTK_SHADOW_IN);
     gtk_container_add(GTK_CONTAINER(sj->tl_window->panel), frame);
 
-    G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-    box = gtk_vbox_new(FALSE, 0);
-    G_GNUC_END_IGNORE_DEPRECATIONS
+    box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 
     gtk_container_add(GTK_CONTAINER(frame), box);
 

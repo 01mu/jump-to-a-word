@@ -46,6 +46,12 @@ Word get_substring_for_search(ShortcutJump *sj, gint i) {
     data.replace_pos = i;
     data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
     data.valid_search = TRUE;
+    data.shortcut = NULL;
+    data.padding = 0;
+    data.bytes = 0;
+    data.replacing = FALSE;
+    data.shortcut_marked = FALSE;
+    data.is_hidden_neighbor = FALSE;
 
     return data;
 }
@@ -93,20 +99,19 @@ static void mark_text(ShortcutJump *sj) {
         gint i = 0;
 
         for (gchar *p = sj->buffer->str; *p != '\0'; p++) {
-            gchar *z = sj->search_query->str;
+            const gchar *z = sj->search_query->str;
             gint k = 0;
             gchar haystack_char = p[0];
             gchar needle_char = z[0];
 
             do {
-                gchar *d = p + k;
+                const gchar *d = p + k;
 
                 z = sj->search_query->str + k;
 
                 haystack_char = d[0];
                 needle_char = z[0];
 
-                z++;
                 k++;
             } while (valid_smart_case(haystack_char, needle_char) ||
                      (!g_unichar_isalpha(needle_char) && needle_char == haystack_char));

@@ -70,7 +70,7 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
             continue;
         }
 
-        if (!instant_replace && sj->config_settings->match_whole_word) {
+        if (sj->config_settings->match_whole_word) {
             if (strcmp(word->word->str, sj->search_query->str) == 0) {
                 word->valid_search = TRUE;
             }
@@ -100,7 +100,7 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
             if (!sj->config_settings->search_start_from_beginning) {
                 for (gchar *p = word->word->str; *p != '\0'; p++) {
-                    gchar *z = sj->search_query->str;
+                    const gchar *z = sj->search_query->str;
                     gint k = 0;
                     gchar haystack_char = p[0];
                     gchar needle_char = z[0];
@@ -108,12 +108,11 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
                     do {
                         z = sj->search_query->str + k;
 
-                        gchar *d = p + k;
+                        const gchar *d = p + k;
 
                         haystack_char = d[0];
                         needle_char = z[0];
 
-                        z++;
                         k++;
                     } while (valid_smart_case(haystack_char, needle_char));
 
