@@ -244,7 +244,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         return TRUE;
     }
 
-    if (!sj->search_change_made) {
+    if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
         clear_occurances(sj);
     }
 
