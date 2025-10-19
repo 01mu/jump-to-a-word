@@ -198,44 +198,44 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     GtkWidget *submenu = gtk_menu_new();
     GtkWidget *item;
 
-    sj->main_menu_item = gtk_menu_item_new_with_mnemonic("Jump to a Word");
+    sj->main_menu_item = gtk_menu_item_new_with_mnemonic("_Jump to a Word");
 
     gtk_widget_show(submenu);
     gtk_widget_show(sj->main_menu_item);
 
-    SET_MENU_ITEM("Jump to Word (Shortcut)", shortcut_cb, sj);
+    SET_MENU_ITEM("Jump to _Word (Shortcut)", shortcut_cb, sj);
     SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shortcut_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj,
                    item);
 
-    SET_MENU_ITEM("Jump to Character (Shortcut)", shortcut_char_cb, sj);
+    SET_MENU_ITEM("Jump to _Character (Shortcut)", shortcut_char_cb, sj);
     SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shortcut_char_kb,
                    KB_JUMP_TO_A_CHAR_SHORTCUT, sj, item);
 
-    SET_MENU_ITEM("Jump to Line (Shortcut)", jump_to_line_cb, sj);
+    SET_MENU_ITEM("Jump to _Line (Shortcut)", jump_to_line_cb, sj);
     SET_KEYBINDING("Jump to line (shortcut)", "jump_to_a_line", jump_to_line_kb, KB_JUMP_TO_LINE, sj, item);
 
-    SET_MENU_ITEM("Jump to Word (Search)", search_cb, sj);
+    SET_MENU_ITEM("Jump to W_ord (Search)", search_cb, sj);
     SET_KEYBINDING("Jump to word (search)", "jump_to_a_word_search", search_kb, KB_JUMP_TO_A_WORD_SEARCH, sj, item);
 
-    SET_MENU_ITEM("Jump to Substring (Search)", substring_cb, sj);
+    SET_MENU_ITEM("Jump to _Substring (Search)", substring_cb, sj);
     SET_KEYBINDING("Jump to substring (search)", "jump_to_a_substring", substring_kb, KB_JUMP_TO_A_SUBSTRING, sj, item);
 
-    SET_MENU_ITEM("Jump to Previous Cursor Position", jump_to_previous_cursor_cb, sj);
+    SET_MENU_ITEM("Jump to _Previous Cursor Position", jump_to_previous_cursor_cb, sj);
     SET_KEYBINDING("Jump to previous cursor position", "jump_to_previous_cursor", jump_to_previous_cursor_kb,
                    KB_JUMP_TO_PREVIOUS_CARET, sj, item);
 
     SET_MENU_SEPERATOR();
 
-    SET_MENU_ITEM("Replace Selected Text", replace_search_cb, sj);
+    SET_MENU_ITEM("_Replace Selected Text", replace_search_cb, sj);
     SET_KEYBINDING("Replace selected text", "replace_search", replace_search_kb, KB_REPLACE_SEARCH, sj, item);
 
     SET_MENU_SEPERATOR();
 
-    SET_MENU_ITEM("Open Text Options Window", open_text_options_cb, sj);
+    SET_MENU_ITEM("Open _Text Options Window", open_text_options_cb, sj);
     SET_KEYBINDING("Open text options window", "open_text_options", open_text_options_kb, KB_OPEN_TEXT_OPTIONS, sj,
                    item);
 
-    SET_MENU_ITEM("Open Line Options Window", open_line_options_cb, sj);
+    SET_MENU_ITEM("Open _Line Options Window", open_line_options_cb, sj);
     SET_KEYBINDING("Open line options window", "open_line_options", open_line_options_kb, KB_OPEN_LINE_OPTIONS, sj,
                    item);
 
@@ -447,7 +447,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
 #define WIDGET_CONF_BOOL(name, description, tooltip)                                                                   \
     G_STMT_START {                                                                                                     \
-        sj->config_widgets->name = gtk_check_button_new_with_label(description);                                       \
+        sj->config_widgets->name = gtk_check_button_new_with_mnemonic(description);                                    \
         gtk_widget_set_tooltip_text(sj->config_widgets->name, tooltip);                                                \
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj->config_widgets->name), sj->config_settings->name);          \
         gtk_box_pack_start(GTK_BOX(container), sj->config_widgets->name, FALSE, FALSE, 0);                             \
@@ -456,7 +456,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
 #define WIDGET_CONF_BOOL_TOGGLE(name, description, tooltip)                                                            \
     G_STMT_START {                                                                                                     \
-        sj->config_widgets->name = gtk_check_button_new_with_label(description);                                       \
+        sj->config_widgets->name = gtk_check_button_new_with_mnemonic(description);                                    \
         gtk_widget_set_tooltip_text(sj->config_widgets->name, tooltip);                                                \
         gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(sj->config_widgets->name), sj->config_settings->name);          \
     }                                                                                                                  \
@@ -497,28 +497,28 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_FRAME("General", GTK_ORIENTATION_VERTICAL);
 
     gchar *tt = "Show the text that appears at the end of the current line when performing a jump";
-    WIDGET_CONF_BOOL(show_annotations, "Display end of line annotations", tt);
+    WIDGET_CONF_BOOL(show_annotations, "_Display end of line annotations", tt);
 
     tt = "Use the selected word or character for searching, jumping, or replacing";
-    WIDGET_CONF_BOOL(use_selected_word_or_char, "Use selected word or character for search", tt);
+    WIDGET_CONF_BOOL(use_selected_word_or_char, "_Use selected word or character for search", tt);
 
     tt = "Wait for the Enter key to be pressed before jumping to a shortcut or text";
-    WIDGET_CONF_BOOL(wait_for_enter, "Wait for Enter key to be pressed before jump", tt);
+    WIDGET_CONF_BOOL(wait_for_enter, "_Wait for Enter key to be pressed before jump", tt);
 
     tt = "Use the line the cursor is on for a shortcut jump or text search";
-    WIDGET_CONF_BOOL(only_tag_current_line, "Only tag current line", tt);
+    WIDGET_CONF_BOOL(only_tag_current_line, "O_nly tag current line", tt);
 
     tt = "Set the arrow marker on the markers margin after jumping to a shortcut or text";
-    WIDGET_CONF_BOOL(move_marker_to_line, "Set marker to current line after jump", tt);
+    WIDGET_CONF_BOOL(move_marker_to_line, "_Set marker to current line after jump", tt);
 
     tt = "Cancel the shortcut jump or text search when the mouse moves";
-    WIDGET_CONF_BOOL(cancel_on_mouse_move, "Cancel jump on mouse movement", tt);
+    WIDGET_CONF_BOOL(cancel_on_mouse_move, "Cancel _jump on mouse movement", tt);
 
     tt = "Use the currently selected text as the range instead of the visible page";
-    WIDGET_CONF_BOOL_TOGGLE(search_from_selection, "Search or replace within current selection", tt);
+    WIDGET_CONF_BOOL_TOGGLE(search_from_selection, "Search o_r replace within current selection", tt);
 
     tt = "Use the selected text even if it only spans a single line";
-    WIDGET_CONF_BOOL_TOGGLE(search_selection_if_line, "Even if it only exists on a single line", tt);
+    WIDGET_CONF_BOOL_TOGGLE(search_selection_if_line, "Even if it only e_xists on a single line", tt);
 
     g_signal_connect(sj->config_widgets->search_from_selection, "toggled", G_CALLBACK(single_line_toggle_cb), dialog);
     g_object_set_data(G_OBJECT(dialog), "search_selection_if_line", sj->config_widgets->search_selection_if_line);
@@ -536,19 +536,19 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_FRAME("Jumping to a word, character, or line using shortcuts", GTK_ORIENTATION_VERTICAL);
 
     tt = "Always select the text between the cursor and the character being jumped to";
-    WIDGET_CONF_BOOL(select_when_shortcut_char, "Select to text during a character jump", tt);
+    WIDGET_CONF_BOOL(select_when_shortcut_char, "S_elect to text during a character jump", tt);
 
     tt = "Display the shortcuts in all caps for visibility";
-    WIDGET_CONF_BOOL(shortcut_all_caps, "Display shortcuts in all caps", tt);
+    WIDGET_CONF_BOOL(shortcut_all_caps, "D_isplay shortcuts in all caps", tt);
 
     tt = "Include the tags A-Z when jumping to a shortcut";
-    WIDGET_CONF_BOOL(shortcuts_include_single_char, "Include single character tags", tt);
+    WIDGET_CONF_BOOL(shortcuts_include_single_char, "Inc_lude single character tags", tt);
 
     tt = "Place blank characters in the place of the words with shortcut tags";
-    WIDGET_CONF_BOOL(hide_word_shortcut_jump, "Hide words when jumping to a shortcut", tt);
+    WIDGET_CONF_BOOL(hide_word_shortcut_jump, "_Hide words when jumping to a shortcut", tt);
 
     tt = "Place shortcuts in the middle of words instead of the left";
-    WIDGET_CONF_BOOL(center_shortcut, "Position shortcuts in middle of words", tt);
+    WIDGET_CONF_BOOL(center_shortcut, "_Position shortcuts in middle of words", tt);
 
     /*
      * Jumping to a word or substring using search
@@ -557,19 +557,19 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_FRAME("Jumping to a word or substring using search", GTK_ORIENTATION_VERTICAL);
 
     tt = "Return to the opposite side of the selected text range after moving out of range";
-    WIDGET_CONF_BOOL(wrap_search, "Always wrap search", tt);
+    WIDGET_CONF_BOOL(wrap_search, "Alwa_ys wrap search", tt);
 
     tt = "Only mark words that match the query from the beginning";
-    WIDGET_CONF_BOOL(search_start_from_beginning, "Match from start of word", tt);
+    WIDGET_CONF_BOOL(search_start_from_beginning, "_Match from start of word", tt);
 
     tt = "Only mark words if every character matches";
-    WIDGET_CONF_BOOL(match_whole_word, "Match only a whole word", tt);
+    WIDGET_CONF_BOOL(match_whole_word, "Ma_tch only a whole word", tt);
 
     tt = "Use proper case matching when jumping to or searching for text";
-    WIDGET_CONF_BOOL_TOGGLE(search_case_sensitive, "Case sensitive", tt);
+    WIDGET_CONF_BOOL_TOGGLE(search_case_sensitive, "Case sensiti_ve", tt);
 
     tt = "Lower case chars match both lower and upper case chars, upper case chars only match upper case chars";
-    WIDGET_CONF_BOOL_TOGGLE(search_smart_case, "Use smartcase matching", tt);
+    WIDGET_CONF_BOOL_TOGGLE(search_smart_case, "Use smartcase matchin_g", tt);
 
     g_signal_connect(sj->config_widgets->search_case_sensitive, "toggled", G_CALLBACK(smart_case_toggle_cb), dialog);
     g_object_set_data(G_OBJECT(dialog), "search_smart_case", sj->config_widgets->search_smart_case);
