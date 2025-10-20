@@ -28,55 +28,56 @@
  * @brief Perform the line jump action after jumping to a line jump shortcut.
  *
  * @param ShortcutJump *sj: The plugin object
- * @param gint line: The line being jumped to either via Select To or Select Line Range
+ * @param gint target: The line being jumped to either via Select To or Select Line Range
  */
-void handle_shortcut_line_jump(ShortcutJump *sj, gint line) {
+void handle_shortcut_line_jump(ShortcutJump *sj, gint target) {
     gboolean line_range_jumped = FALSE;
 
-    if (sj->current_mode == JM_LINE) {
-        if (sj->config_settings->line_after == LA_SELECT_LINE) {
-            gint pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, line, TRUE);
-            gint line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, line, TRUE);
+    if (sj->config_settings->line_after == LA_SELECT_LINE) {
+        gint pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, target, TRUE);
+        gint line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, target, TRUE);
 
-            scintilla_send_message(sj->sci, SCI_SETSEL, pos, pos + line_length);
-        }
+        scintilla_send_message(sj->sci, SCI_SETSEL, pos, pos + line_length);
+    }
 
-        if (sj->config_settings->line_after == LA_SELECT_TO_LINE) {
-            gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+    if (sj->config_settings->line_after == LA_SELECT_TO_LINE) {
+        gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
 
-            gint first_line = current_line < line ? current_line : line;
-            gint second_line = (current_line >= line ? current_line : line);
-            gint pos_first = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line, TRUE);
-            gint pos_second = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, second_line, TRUE);
-            gint second_line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, second_line, TRUE);
+        gint pos_current = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, current_line, TRUE);
+        gint pos_target = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, target, TRUE);
+        gint current_line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, current_line, TRUE);
+        gint target_line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, target, TRUE);
 
-            scintilla_send_message(sj->sci, SCI_SETSEL, pos_first, pos_second + second_line_length);
-        }
-
-        if (sj->config_settings->line_after == LA_SELECT_LINE_RANGE && sj->line_range_set) {
-            scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->line_range_first, 0);
-
-            gint first_line = sj->line_range_first < line ? sj->line_range_first : line;
-            gint second_line = (sj->line_range_first >= line ? sj->line_range_first : line);
-            gint pos_first = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line, TRUE);
-            gint pos_second = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, second_line, TRUE);
-            gint second_line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, second_line, TRUE);
-
-            if (sj->line_range_first < line) {
-                scintilla_send_message(sj->sci, SCI_SETSEL, pos_first, pos_second + second_line_length);
-            } else {
-                scintilla_send_message(sj->sci, SCI_SETSEL, pos_second + second_line_length, pos_first);
-            }
-
-            line_range_jumped = TRUE;
+        if (pos_current > pos_target) {
+            scintilla_send_message(sj->sci, SCI_SETSEL, pos_current + current_line_length, pos_target);
+        } else {
+            scintilla_send_message(sj->sci, SCI_SETSEL, pos_current, pos_target + target_line_length);
         }
     }
 
-    if (sj->current_mode == JM_LINE && sj->config_settings->line_after == LA_SELECT_LINE_RANGE && !sj->line_range_set) {
+    if (sj->config_settings->line_after == LA_SELECT_LINE_RANGE && sj->line_range_set) {
+        scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->line_range_first, 0);
+
+        gint first_line = sj->line_range_first < target ? sj->line_range_first : target;
+        gint second_line = (sj->line_range_first >= target ? sj->line_range_first : target);
+        gint pos_first = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line, TRUE);
+        gint pos_second = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, second_line, TRUE);
+        gint second_line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, second_line, TRUE);
+
+        if (sj->line_range_first < target) {
+            scintilla_send_message(sj->sci, SCI_SETSEL, pos_first, pos_second + second_line_length);
+        } else {
+            scintilla_send_message(sj->sci, SCI_SETSEL, pos_second + second_line_length, pos_first);
+        }
+
+        line_range_jumped = TRUE;
+    }
+
+    if (sj->config_settings->line_after == LA_SELECT_LINE_RANGE && !sj->line_range_set) {
         scintilla_send_message(sj->sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
-        scintilla_send_message(sj->sci, SCI_MARKERADD, line, 0);
+        scintilla_send_message(sj->sci, SCI_MARKERADD, target, 0);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-        sj->line_range_first = line;
+        sj->line_range_first = target;
         g_string_erase(sj->search_query, 0, sj->search_query->len);
         sj->line_range_set = TRUE;
     }
