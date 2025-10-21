@@ -234,9 +234,9 @@ set the cursor position after clicking somewhere on the screen to cancel a short
 
     gboolean replace_instant; // whether we are performing an instant replace
 
-    gboolean line_range_set;     // whether we are performing a line range selection jump
-    gint line_range_first;       // the first line in the selection
-    gint text_range_word_length; // the length of the first word used in a selection range
+    gboolean range_is_set;       // whether we are performing a line or word range selection jump
+    gint range_first_pos;        // the position of the first range line or word
+    gint range_word_length; // the length of the first word used in a selection range
 
     GString *search_query;     // query used during a jump
     gint search_results_count; // marked words during search

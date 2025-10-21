@@ -274,7 +274,6 @@ void substring_init(ShortcutJump *sj, gboolean instant_replace) {
     }
 
     sj->current_mode = JM_SUBSTRING;
-
     set_sj_scintilla_object(sj);
 
     if (!instant_replace) {
@@ -290,7 +289,6 @@ void substring_init(ShortcutJump *sj, gboolean instant_replace) {
 
     connect_key_press_action(sj, on_key_press_search_substring);
     connect_click_action(sj, on_click_event_search);
-
     annotation_display_substring(sj);
 }
 

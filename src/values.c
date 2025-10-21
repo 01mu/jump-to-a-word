@@ -202,14 +202,14 @@ static GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, g
     GArray *markers = g_array_new(FALSE, FALSE, sizeof(gint));
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        if (sj->line_range_set) {
-            gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->line_range_first, 0);
+        if (sj->range_is_set) {
+            gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
 
             scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, 0);
         }
     } else {
-        if (sj->line_range_set) {
-            scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->line_range_first, 0);
+        if (sj->range_is_set) {
+            scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->range_first_pos, 0);
         }
     }
 
@@ -269,6 +269,8 @@ void init_sj_values(ShortcutJump *sj) {
     sj->cache = g_string_new(screen_lines);
     sj->buffer = g_string_new(screen_lines);
     sj->replace_cache = g_string_new(screen_lines);
+
+    g_string_append_c(sj->buffer, '\n');
 
     sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
     sj->words = g_array_new(FALSE, FALSE, sizeof(Word));

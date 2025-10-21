@@ -44,27 +44,21 @@ void annotation_show(ShortcutJump *sj) {
     sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
 
     if (sj->lf_positions->len > 0) {
-        gint cl = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
-        gint lfa = get_lfs(sj, cl);
-        gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos + lfa, 0);
+        gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+        gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
         gint lfs_added = get_lfs(sj, current_line);
+        gint line = sj->current_cursor_pos + lfs_added;
 
-        sj->eol_message_line =
-            scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos + lfs_added, 0);
-    } else {
-        sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+        sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, line, 0);
     }
 
-    if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
-    }
+    gint text_color = sj->config_settings->text_color;
+    gint search_annotation_bg_color = sj->config_settings->search_annotation_bg_color;
 
     scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM, 0);
-    scintilla_send_message(sj->sci, SCI_STYLESETFORE, EOLANNOTATION_STADIUM, sj->config_settings->text_color);
-    scintilla_send_message(sj->sci, SCI_STYLESETBACK, EOLANNOTATION_STADIUM,
-                           sj->config_settings->search_annotation_bg_color);
+    scintilla_send_message(sj->sci, SCI_STYLESETFORE, EOLANNOTATION_STADIUM, text_color);
+    scintilla_send_message(sj->sci, SCI_STYLESETBACK, EOLANNOTATION_STADIUM, search_annotation_bg_color);
     scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETTEXT, sj->eol_message_line, (sptr_t)sj->eol_message->str);
-
     scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETSTYLEOFFSET, EOLANNOTATION_STADIUM, 0);
 }
 

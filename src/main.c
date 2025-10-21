@@ -78,19 +78,19 @@ const struct {
 static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    sj->line_range_set = FALSE;
+    sj->range_is_set = FALSE;
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
         sj->current_mode == JM_LINE) {
-        shortcut_cancel(sj);
+        shrtct_cancel(sj);
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replacing_complete(sj);
+        shrtct_char_replace_complete(sj);
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shortcut_char_waiting_cancel(sj);
+        shrtct_char_waiting_cancel(sj);
     }
 
     if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
@@ -116,12 +116,12 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shortcut_char_waiting_cancel(sj);
+        shrtct_char_waiting_cancel(sj);
     }
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
         sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_LINE) {
-        shortcut_end(sj, FALSE);
+        shrtct_end(sj, FALSE);
     }
 
     if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
@@ -213,16 +213,16 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     gtk_widget_show(submenu);
     gtk_widget_show(sj->main_menu_item);
 
-    SET_MENU_ITEM("Jump to _Word (Shortcut)", shortcut_cb, sj);
-    SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shortcut_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj,
+    SET_MENU_ITEM("Jump to _Word (Shortcut)", shrtct_word_cb, sj);
+    SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shrtct_word_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj,
                    item);
 
-    SET_MENU_ITEM("Jump to _Character (Shortcut)", shortcut_char_cb, sj);
-    SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shortcut_char_kb,
+    SET_MENU_ITEM("Jump to _Character (Shortcut)", shrtct_char_cb, sj);
+    SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shrtct_char_kb,
                    KB_JUMP_TO_A_CHAR_SHORTCUT, sj, item);
 
-    SET_MENU_ITEM("Jump to _Line (Shortcut)", jump_to_line_cb, sj);
-    SET_KEYBINDING("Jump to line (shortcut)", "jump_to_a_line", jump_to_line_kb, KB_JUMP_TO_LINE, sj, item);
+    SET_MENU_ITEM("Jump to _Line (Shortcut)", shrtct_line_cb, sj);
+    SET_KEYBINDING("Jump to line (shortcut)", "jump_to_a_line", shrtct_line_kb, KB_JUMP_TO_LINE, sj, item);
 
     SET_MENU_ITEM("Jump to W_ord (Search)", search_cb, sj);
     SET_KEYBINDING("Jump to word (search)", "jump_to_a_word_search", search_kb, KB_JUMP_TO_A_WORD_SEARCH, sj, item);
@@ -349,15 +349,15 @@ static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
         sj->current_mode == JM_LINE) {
-        shortcut_cancel(sj);
+        shrtct_cancel(sj);
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shortcut_char_waiting_cancel(sj);
+        shrtct_char_waiting_cancel(sj);
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replacing_cancel(sj);
+        shrtct_char_replace_cancel(sj);
     }
 
     if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
@@ -700,7 +700,7 @@ ShortcutJump *init_data(const GeanyPlugin *plugin) {
     sj->sci = NULL;
     sj->in_selection = FALSE;
     sj->selection_is_a_word = FALSE;
-    sj->line_range_set = FALSE;
+    sj->range_is_set = FALSE;
     sj->previous_cursor_pos = -1;
     sj->delete_added_bracket = FALSE;
     sj->current_mode = JM_NONE;

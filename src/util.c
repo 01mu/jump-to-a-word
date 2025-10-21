@@ -124,7 +124,6 @@ void margin_markers_reset(ShortcutJump *sj) {
 
     for (gint i = 0; i < sj->lines_on_screen; i++) {
         gint marker = g_array_index(sj->markers, gint, i);
-
         scintilla_send_message(sj->sci, SCI_MARKERADDSET, i + sj->first_line_on_screen, marker);
     }
 
@@ -133,7 +132,6 @@ void margin_markers_reset(ShortcutJump *sj) {
 
         for (gint i = 0; i < sj->lines_on_screen - 1; i++) {
             gint marker = g_array_index(sj->markers, gint, i);
-
             scintilla_send_message(sj->sci, SCI_MARKERADDSET, i + sj->first_line_on_screen, marker);
         }
 
