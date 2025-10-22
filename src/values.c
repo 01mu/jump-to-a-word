@@ -270,7 +270,12 @@ void init_sj_values(ShortcutJump *sj) {
     sj->buffer = g_string_new(screen_lines);
     sj->replace_cache = g_string_new(screen_lines);
 
-    g_string_append_c(sj->buffer, '\n');
+    gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+    gchar last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, last_position - 1, 0);
+
+    if (chars_in_doc == last_position && last_char != '\n') {
+        g_string_append_c(sj->buffer, '\n');
+    }
 
     sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
     sj->words = g_array_new(FALSE, FALSE, sizeof(Word));
