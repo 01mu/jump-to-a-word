@@ -307,6 +307,7 @@ void shrtct_cancel(ShortcutJump *sj) {
     shrtct_set_to_first_visible_line(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
     shrtct_end(sj, TRUE);
+    sj->range_is_set = FALSE;
     ui_set_statusbar(TRUE, _("Jump canceled"));
 }
 
