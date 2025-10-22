@@ -35,7 +35,7 @@
  * @param gint word_length: The length of the text
  * @param gint line: The line the text is on
  */
-void shrtct_handle_jump_action(ShortcutJump *sj, gint pos, gint word_length, gint line) {
+gboolean shrtct_handle_jump_action(ShortcutJump *sj, gint pos, gint word_length, gint line) {
     gboolean text_range_jumped = FALSE;
 
     if (sj->config_settings->text_after == TX_SELECT_TEXT) {
@@ -75,7 +75,10 @@ void shrtct_handle_jump_action(ShortcutJump *sj, gint pos, gint word_length, gin
 
     if (text_range_jumped) {
         sj->range_is_set = FALSE;
+        return TRUE;
     }
+
+    return FALSE;
 }
 
 /**
@@ -270,13 +273,21 @@ void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
         shrtct_line_handle_jump_action(sj, line);
     }
 
+    gboolean clear_previous_marker = FALSE;
+
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        shrtct_handle_jump_action(sj, pos, word_length, line);
+        clear_previous_marker = shrtct_handle_jump_action(sj, pos, word_length, line);
     }
 
     shrtct_set_to_first_visible_line(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
     shrtct_end(sj, FALSE);
+
+    if (clear_previous_marker) {
+        gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
+        scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
+    }
+
     ui_set_statusbar(TRUE, _("Jump completed"));
 }
 
