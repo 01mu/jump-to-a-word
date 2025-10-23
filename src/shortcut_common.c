@@ -21,6 +21,7 @@
 
 #include "annotation.h"
 #include "jump_to_a_word.h"
+#include "search_substring.h"
 #include "search_word.h"
 #include "shortcut_char.h"
 #include "shortcut_line.h"
@@ -236,6 +237,8 @@ void shrtct_end(ShortcutJump *sj, gboolean was_canceled) {
             srtct_word_init(sj);
         } else if (sj->config_settings->line_after == LA_JUMP_TO_WORD_SEARCH) {
             search_init(sj, FALSE);
+        } else if (sj->config_settings->line_after == LA_JUMP_TO_SUBSTRING_SEARCH) {
+            substring_init(sj, FALSE);
         }
     }
 }

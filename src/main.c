@@ -43,7 +43,8 @@ const struct {
                  {"Select line range", LA_SELECT_LINE_RANGE},
                  {"Jump to word (shortcut)", LA_JUMP_TO_WORD_SHORTCUT},
                  {"Jump to character (shortcut)", LA_JUMP_TO_CHARACTER_SHORTCUT},
-                 {"Jump to word (search)", LA_JUMP_TO_WORD_SEARCH}};
+                 {"Jump to word (search)", LA_JUMP_TO_WORD_SEARCH},
+                 {"Jump to substring (search)", LA_JUMP_TO_SUBSTRING_SEARCH}};
 
 /**
  * @brief Text settings used in the plugin configuration and text options windows.

@@ -501,7 +501,7 @@ static void create_panel(ShortcutJump *sj) {
     GtkCellRenderer *cell;
 
     sj->tl_window->panel =
-        g_object_new(GTK_TYPE_WINDOW, "decorated", FALSE, "default-width", 250, "default-height", 200, "transient-for",
+        g_object_new(GTK_TYPE_WINDOW, "decorated", FALSE, "default-width", 275, "default-height", 275, "transient-for",
                      sj->geany_data->main_widgets->window, "window-position", GTK_WIN_POS_CENTER_ON_PARENT, "type-hint",
                      GDK_WINDOW_TYPE_HINT_DIALOG, "skip-taskbar-hint", TRUE, "skip-pager-hint", TRUE, NULL);
 
