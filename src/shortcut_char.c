@@ -74,8 +74,13 @@ void shrtct_char_get_chars(ShortcutJump *sj, gchar search_char) {
         }
 
         Word word;
+        gboolean ignore_hidden_neighbor_skip = FALSE;
 
-        if (current_char == search_char && prev_char == current_char && toggle == 0) {
+        if (sj->config_settings->shortcuts_include_single_char && sj->words->len <= 26) {
+            ignore_hidden_neighbor_skip = TRUE;
+        }
+
+        if (current_char == search_char && prev_char == current_char && toggle == 0 && !ignore_hidden_neighbor_skip) {
             GString *ch = g_string_new("");
             g_string_insert_c(ch, 0, current_char);
             word.word = ch;
