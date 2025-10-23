@@ -225,15 +225,15 @@ void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
     sj->config_settings->text_color_store_fore = scintilla_send_message(sci, SCI_INDICGETFORE, INDICATOR_TEXT, 0);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TAG, INDIC_FULLBOX);
-    scintilla_send_message(sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG, 127);
+    scintilla_send_message(sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG, 120);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_HIGHLIGHT, INDIC_FULLBOX);
-    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT, 63);
+    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT, 60);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT, sj->config_settings->highlight_color);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, INDIC_TEXTFORE);
-    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_TEXT, 127);
+    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_TEXT, 120);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color);
 }
 
