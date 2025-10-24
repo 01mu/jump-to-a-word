@@ -20,6 +20,7 @@
 
 #include "jump_to_a_word.h"
 #include "line_options.h"
+#include "multicursor.h"
 #include "preferences.h"
 #include "previous_cursor.h"
 #include "replace_instant.h"
@@ -239,6 +240,9 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 
     SET_MENU_ITEM("_Replace Selected Text", replace_search_cb, sj);
     SET_KEYBINDING("Replace selected text", "replace_search", replace_search_kb, KB_REPLACE_SEARCH, sj, item);
+
+    SET_MENU_ITEM("Toggle _Multicursor Mode", multicursor_cb, sj);
+    SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
 
     SET_MENU_SEPERATOR();
 
@@ -690,6 +694,10 @@ ShortcutJump *init_data(const GeanyPlugin *plugin) {
     sj->config_widgets = g_new0(Widgets, 1);
     sj->gdk_colors = g_new0(Colors, 1);
     sj->tl_window = g_new0(TextLineWindow, 1);
+
+    sj->multicursor_enabled = FALSE;
+    sj->multicursor_first_pos = 0;
+    sj->multicursor_last_pos = 0;
 
     sj->tl_window->panel = NULL;
     sj->tl_window->entry = NULL;

@@ -51,7 +51,7 @@ static GString *shrtct_word_hide_word(const ShortcutJump *sj, GArray *words, GSt
  *
  *  @param ShortcutJump *sj: The plugin object
  */
-void srtct_word_init(ShortcutJump *sj) {
+void shrtct_word_init(ShortcutJump *sj) {
     if (sj->current_mode != JM_NONE) {
         return;
     }
@@ -154,7 +154,7 @@ void shrtct_word_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_NONE) {
-        srtct_word_init(sj);
+        shrtct_word_init(sj);
     }
 }
 
@@ -171,7 +171,7 @@ gboolean shrtct_word_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_NONE) {
-        srtct_word_init(sj);
+        shrtct_word_init(sj);
         return TRUE;
     }
 

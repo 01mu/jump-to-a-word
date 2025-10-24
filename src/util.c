@@ -235,6 +235,10 @@ void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, INDIC_TEXTFORE);
     scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_TEXT, 120);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color);
+
+    scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_MULTICURSOR, INDIC_PLAIN);
+    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_MULTICURSOR, 60);
+    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_MULTICURSOR, sj->config_settings->highlight_color);
 }
 
 /**

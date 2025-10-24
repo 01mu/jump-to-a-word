@@ -23,7 +23,7 @@
 
 #include "jump_to_a_word.h"
 
-void srtct_word_init(ShortcutJump *sj);
+void shrtct_word_init(ShortcutJump *sj);
 void shrtct_word_cb(GtkMenuItem *menu_item, gpointer user_data);
 gboolean shrtct_word_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 

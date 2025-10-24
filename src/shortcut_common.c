@@ -176,11 +176,20 @@ void shrtct_end(ShortcutJump *sj, gboolean was_canceled) {
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
 
+    if (sj->multicursor_enabled) {
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+
+        for (gint i = 0; i < sj->multicursor_words->len; i++) {
+            Word word = g_array_index(sj->multicursor_words, Word, i);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, 1);
+        }
+    }
+
     if (performing_line_after && !was_canceled) {
         if (sj->config_settings->line_after == LA_JUMP_TO_CHARACTER_SHORTCUT) {
             shrtct_char_init(sj, FALSE, '0');
         } else if (sj->config_settings->line_after == LA_JUMP_TO_WORD_SHORTCUT) {
-            srtct_word_init(sj);
+            shrtct_word_init(sj);
         } else if (sj->config_settings->line_after == LA_JUMP_TO_WORD_SEARCH) {
             search_init(sj, FALSE);
         } else if (sj->config_settings->line_after == LA_JUMP_TO_SUBSTRING_SEARCH) {
@@ -205,7 +214,6 @@ void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, pos, 0);
     sj->previous_cursor_pos = sj->current_cursor_pos;
 
     if (sj->config_settings->move_marker_to_line) {
@@ -224,8 +232,12 @@ void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
 
     gboolean clear_previous_marker = FALSE;
 
-    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+    if (!sj->multicursor_enabled && (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING)) {
         clear_previous_marker = handle_text_after_action(sj, pos, word_length, line);
+    }
+
+    if (sj->multicursor_enabled) {
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 
     shrtct_set_to_first_visible_line(sj);
@@ -411,6 +423,54 @@ static void shrtct_set_indicators(ShortcutJump *sj) {
  *
  * @return gint: FALSE if no controlled for key press action was found
  */
+
+void add_multicursor_word(ShortcutJump *sj, Word word) {
+    Word mc_word;
+
+    mc_word.word = g_string_new(word.word->str);
+    mc_word.starting = word.starting;
+    mc_word.starting_doc = word.starting_doc;
+    mc_word.is_hidden_neighbor = word.is_hidden_neighbor;
+    mc_word.bytes = word.bytes;
+    mc_word.shortcut = g_string_new(word.shortcut->str);
+    mc_word.line = word.line;
+    mc_word.padding = word.padding;
+
+    mc_word.valid_search = TRUE;
+    mc_word.replacing = TRUE;
+
+    //mc_word.replace_pos = mc_word.starting_doc - sj->first_position;
+    //data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
+    //data.starting = start;
+    //data.starting_doc = start;
+    //data.replace_pos = i;
+    //data.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
+    //data.valid_search = TRUE;
+    //data.shortcut = NULL;
+    //data.padding = 0;
+    //data.bytes = 0;
+    //data.shortcut_marked = FALSE;
+    //data.is_hidden_neighbor = FALSE;
+
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word w = g_array_index(sj->multicursor_words, Word, i);
+
+        if (w.starting_doc == mc_word.starting_doc) {
+            return;
+        }
+    }
+
+    if (mc_word.starting_doc <= sj->multicursor_first_pos) {
+        sj->multicursor_first_pos = mc_word.starting_doc;
+    }
+
+    if (mc_word.starting_doc >= sj->multicursor_last_pos) {
+        sj->multicursor_last_pos = mc_word.starting_doc;
+    }
+
+    g_array_append_val(sj->multicursor_words, mc_word);
+}
+
 gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
@@ -455,6 +515,10 @@ gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
             word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
         }
 
+        if (sj->multicursor_enabled) {
+            add_multicursor_word(sj, word);
+        }
+
         shrtct_complete(sj, word.starting_doc, word.word->len, word.line);
         return TRUE;
     }
@@ -475,6 +539,11 @@ gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
 
         if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
             Word word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
+
+            if (sj->multicursor_enabled) {
+                add_multicursor_word(sj, word);
+            }
+
             shrtct_complete(sj, word.starting_doc, word.word->len, word.line);
         }
 

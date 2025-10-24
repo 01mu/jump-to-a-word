@@ -44,12 +44,12 @@ void annotation_show(ShortcutJump *sj) {
     sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
 
     if (sj->lf_positions->len > 0) {
-        gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
-        gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
-        gint lfs_added = get_lfs(sj, current_line);
-        gint line = sj->current_cursor_pos + lfs_added;
+        //gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+        //gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
+        //gint lfs_added = get_lfs(sj, current_line);
+        //gint line = sj->current_cursor_pos + lfs_added;
 
-        sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, line, 0);
+        //sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, line, 0);
     }
 
     gint text_color = sj->config_settings->text_color;

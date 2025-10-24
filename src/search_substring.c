@@ -37,6 +37,8 @@
 Word get_substring_for_search(ShortcutJump *sj, gint i) {
     Word data;
 
+    ui_set_statusbar(TRUE, _("%i"), i);
+
     gint start = sj->first_position + i;
     gint end = sj->first_position + i + sj->search_query->len;
 

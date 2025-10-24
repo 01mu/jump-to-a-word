@@ -19,6 +19,7 @@
 #include <plugindata.h>
 
 #include "jump_to_a_word.h"
+#include "multicursor.h"
 #include "search_common.h"
 #include "shortcut_char.h"
 #include "util.h"
@@ -118,10 +119,14 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
 
+    // ui_set_statusbar(TRUE, _("%i"), sj->first_position);
+    // ui_set_statusbar(TRUE, _("%li"), sj->replace_cache->len);
+
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
 
         if (word->valid_search) {
+            // ui_set_statusbar(TRUE, _("%i"), word->replace_pos + sj->replace_len);
             int t = word->replace_pos;
 
             word->replace_pos += chars_added;
@@ -156,6 +161,8 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
     } else {
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
+
+    // ui_set_statusbar(TRUE, _("%s"), sj->replace_cache->str);
 
     sj->replace_len += 1;
     sj->search_change_made = TRUE;
@@ -256,6 +263,11 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&
         sj->replace_len >= 0) {
         if (sj->replace_len == 0) {
+            if (sj->multicursor_enabled) {
+                disable_multicusor(sj);
+                return TRUE;
+            }
+
             if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
                 search_replace_complete(sj);
             }
@@ -278,6 +290,11 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     }
 
     if (event->keyval == GDK_KEY_Return) {
+        if (sj->multicursor_enabled) {
+            disable_multicusor(sj);
+            return TRUE;
+        }
+
         if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
             search_replace_complete(sj);
         }
@@ -290,6 +307,11 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     }
 
     sj->current_cursor_pos = sj->replace_len > 0 ? scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0) : pos_cache;
+
+    if (sj->multicursor_enabled) {
+        disable_multicusor(sj);
+        return FALSE;
+    }
 
     if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
         if (sj->search_change_made) {

@@ -40,6 +40,7 @@ typedef enum {
     INDICATOR_TAG = 2,
     INDICATOR_HIGHLIGHT = 3,
     INDICATOR_TEXT = 4,
+    INDICATOR_MULTICURSOR = 5,
 } Indicator;
 
 typedef enum {
@@ -53,6 +54,7 @@ typedef enum {
     KB_OPEN_TEXT_OPTIONS,
     KB_OPEN_REPLACE_OPTIONS,
     KB_JUMP_TO_A_SUBSTRING,
+    KB_MULTICURSOR,
     KB_COUNT,
 } KB;
 
@@ -66,6 +68,7 @@ typedef enum {
     JM_LINE,
     JM_SUBSTRING,
     JM_REPLACE_SUBSTRING,
+    JM_MULTICURSOR_REPLACING,
     JM_NONE,
 } JumpMode;
 
@@ -220,23 +223,24 @@ typedef struct {
     GString *buffer;        // text with shortcuts positioned over words
     GString *replace_cache; // the cached text being updated when chars are added or removed during replacement
 
-    GArray *markers;      // the markers on the screen
-    GArray *words;        // every word on screen
-    GArray *lf_positions; /* the number of times a "\n" was shifted forward before a line
-line        original string len: 9  replaced (pattern len of 2 overwrites [LF] so we shift) len: 12     total LF shifts
-1           a[LF]                   DE[LF]                                                               1
-2           a[LF]                   DF[LF]                                                               2
-3           aa[LF]                  DG[LF] (no shift)                                                    2
-4           a[LF]                   DH[LF]                                                               3
-5                                                                                                        3
-This is necessary because we need to know how many LFs were shifted up until a certain line in order to accurately
-set the cursor position after clicking somewhere on the screen to cancel a shortcut jump.
-*/
+    GArray *markers;           // the markers on the screen
+    GArray *words;             // every word on screen
+    GArray *multicursor_words; // words marked during a multicusror session
+    GArray *lf_positions;      /* the number of times a "\n" was shifted forward before a line
+     line        original string len: 9  replaced (pattern len of 2 overwrites [LF] so we shift) len: 12     total LF shifts
+     1           a[LF]                   DE[LF]                                                               1
+     2           a[LF]                   DF[LF]                                                               2
+     3           aa[LF]                  DG[LF] (no shift)                                                    2
+     4           a[LF]                   DH[LF]                                                               3
+     5                                                                                                        3
+     This is necessary because we need to know how many LFs were shifted up until a certain line in order to accurately
+     set the cursor position after clicking somewhere on the screen to cancel a shortcut jump.
+     */
 
     gboolean replace_instant; // whether we are performing an instant replace
 
-    gboolean range_is_set;       // whether we are performing a line or word range selection jump
-    gint range_first_pos;        // the position of the first range line or word
+    gboolean range_is_set;  // whether we are performing a line or word range selection jump
+    gint range_first_pos;   // the position of the first range line or word
     gint range_word_length; // the length of the first word used in a selection range
 
     GString *search_query;     // query used during a jump
@@ -268,6 +272,10 @@ set the cursor position after clicking somewhere on the screen to cancel a short
 
     gboolean option_mod;
     JumpMode current_mode;
+
+    gboolean multicursor_enabled;
+    gint multicursor_first_pos;
+    gint multicursor_last_pos;
 } ShortcutJump;
 
 #endif
