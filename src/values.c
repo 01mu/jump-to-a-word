@@ -224,6 +224,22 @@ static GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, g
     return markers;
 }
 
+void get_view_positions(ShortcutJump *sj) {
+    gint first_line_on_screen = get_first_line_on_screen(sj);
+    gint lines_on_screen = get_number_of_lines_on_screen(sj);
+    gint last_line_on_screen = first_line_on_screen + lines_on_screen;
+    gint first_position = get_first_position(sj, first_line_on_screen);
+    gint last_position = get_last_position(sj, last_line_on_screen);
+    gint current_cursor_pos = get_cursor_position(sj->sci, first_position, last_position);
+
+    sj->first_line_on_screen = first_line_on_screen;
+    sj->lines_on_screen = lines_on_screen;
+    sj->last_line_on_screen = last_line_on_screen;
+    sj->first_position = first_position;
+    sj->last_position = last_position;
+    sj->current_cursor_pos = current_cursor_pos;
+}
+
 /**
  * @brief Inits values used in the main plugin object. This function is called once for every type of jump. The *_end
  * functions free memory allocated.
@@ -236,23 +252,11 @@ void init_sj_values(ShortcutJump *sj) {
         sj->sci = sci;
     }
 
-    gint first_line_on_screen = get_first_line_on_screen(sj);
-    gint lines_on_screen = get_number_of_lines_on_screen(sj);
-    gint last_line_on_screen = first_line_on_screen + lines_on_screen;
-    gint first_position = get_first_position(sj, first_line_on_screen);
-    gint last_position = get_last_position(sj, last_line_on_screen);
-    gint current_cursor_pos = get_cursor_position(sj->sci, first_position, last_position);
+    get_view_positions(sj);
 
-    gchar *screen_lines = sci_get_contents_range(sj->sci, first_position, last_position);
+    gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
 
-    sj->first_line_on_screen = first_line_on_screen;
-    sj->lines_on_screen = lines_on_screen;
-    sj->last_line_on_screen = last_line_on_screen;
-    sj->first_position = first_position;
-    sj->last_position = last_position;
-    sj->current_cursor_pos = current_cursor_pos;
-
-    sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, current_cursor_pos, 0);
+    sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     sj->eol_message = g_string_new("");
     sj->search_query = g_string_new("");
 
@@ -271,15 +275,15 @@ void init_sj_values(ShortcutJump *sj) {
     sj->replace_cache = g_string_new(screen_lines);
 
     gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-    gchar last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, last_position - 1, 0);
+    gchar last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->last_position - 1, 0);
 
-    if (chars_in_doc == last_position && last_char != '\n') {
+    if (chars_in_doc == sj->last_position && last_char != '\n') {
         g_string_append_c(sj->buffer, '\n');
     }
 
     sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
     sj->words = g_array_new(FALSE, FALSE, sizeof(Word));
-    sj->markers = markers_margin_get(sj, first_line_on_screen, lines_on_screen);
+    sj->markers = markers_margin_get(sj, sj->first_line_on_screen, sj->lines_on_screen);
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }

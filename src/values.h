@@ -24,5 +24,6 @@
 void set_sj_scintilla_object(ShortcutJump *sj);
 void init_sj_values(ShortcutJump *sj);
 ScintillaObject *get_scintilla_object();
+void get_view_positions(ShortcutJump *sj);
 
 #endif
