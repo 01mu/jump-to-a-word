@@ -174,30 +174,6 @@ static void multicursor_replace(ShortcutJump *sj) {
 
     end_actions(sj);
 
-    g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
-    sj->words = sj->multicursor_words;
-
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word *word = &g_array_index(sj->words, Word, i);
-        word->replace_pos = word->starting_doc - sj->first_position;
-
-        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
-
-        if (word->starting_doc <= sj->multicursor_first_pos) {
-            sj->multicursor_first_pos = word->starting_doc;
-        }
-
-        if (word->starting_doc >= sj->multicursor_last_pos) {
-            sj->multicursor_last_pos = word->starting_doc;
-        }
-
-        if (sj->config_settings->replace_action == RA_INSERT_END) {
-            word->replace_pos += word->word->len;
-        }
-    }
-
     gint first_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_first_pos, 0);
     gint last_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_last_pos, 0);
 
@@ -210,6 +186,22 @@ static void multicursor_replace(ShortcutJump *sj) {
     sj->last_position = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, last_line_on_screen, 0);
 
     gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+
+    g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
+    sj->words = sj->multicursor_words;
+
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word *word = &g_array_index(sj->words, Word, i);
+        word->replace_pos = word->starting_doc - sj->first_position;
+
+         scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
+
+        if (sj->config_settings->replace_action == RA_INSERT_END) {
+            word->replace_pos += word->word->len;
+        }
+    }
 
     sj->cache = g_string_new(screen_lines);
     sj->buffer = g_string_new(screen_lines);

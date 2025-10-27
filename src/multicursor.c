@@ -161,11 +161,24 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
+        gint mw = multicursor_word.starting_doc;
 
-        if (word.starting_doc == multicursor_word.starting_doc) {
+        if (mw > word.starting_doc && mw < word.starting_doc + word.word->len) {
+            return;
+        }
+
+        if (word.starting_doc == mw) {
             g_array_remove_index(sj->multicursor_words, i);
             return;
         }
+    }
+
+    if (multicursor_word.starting_doc <= sj->multicursor_first_pos) {
+        sj->multicursor_first_pos = multicursor_word.starting_doc;
+    }
+
+    if (multicursor_word.starting_doc >= sj->multicursor_last_pos) {
+        sj->multicursor_last_pos = multicursor_word.starting_doc;
     }
 
     g_array_append_val(sj->multicursor_words, multicursor_word);
