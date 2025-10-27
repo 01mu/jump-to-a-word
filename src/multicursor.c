@@ -161,6 +161,7 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
 
         if (word.starting_doc == multicursor_word.starting_doc) {
+            g_array_remove_index(sj->multicursor_words, i);
             return;
         }
     }
