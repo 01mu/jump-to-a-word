@@ -62,6 +62,7 @@ void multicursor_end(ShortcutJump *sj) {
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
         scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting_doc, word.word->len);
+        g_string_free(word.word, TRUE);
     }
 
     g_string_free(sj->multicursor_eol_message, TRUE);
@@ -100,11 +101,6 @@ void multicursor_complete(ShortcutJump *sj) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
         gint start_pos = sj->first_position + word.replace_pos;
         scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, sj->replace_len + 1);
-    }
-
-    for (gint i = 0; i < sj->multicursor_words->len; i++) {
-        Word word = g_array_index(sj->multicursor_words, Word, i);
-        g_string_free(word.word, TRUE);
     }
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
