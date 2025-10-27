@@ -24,6 +24,5 @@
 void set_sj_scintilla_object(ShortcutJump *sj);
 void init_sj_values(ShortcutJump *sj);
 ScintillaObject *get_scintilla_object();
-void init_sj_values_multicursor(ShortcutJump *sj);
 
 #endif

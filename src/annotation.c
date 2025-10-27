@@ -43,13 +43,13 @@ void annotation_clear(ScintillaObject *sci, gint eol_message_line) {
 void annotation_show(ShortcutJump *sj) {
     sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
 
-    if (sj->lf_positions->len > 0) {
-        //gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
-        //gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
-        //gint lfs_added = get_lfs(sj, current_line);
-        //gint line = sj->current_cursor_pos + lfs_added;
+    if (sj->lf_positions && sj->lf_positions->len > 0) {
+        gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+        gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
+        gint lfs_added = get_lfs(sj, current_line);
+        gint line = sj->current_cursor_pos + lfs_added;
 
-        //sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, line, 0);
+        sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, line, 0);
     }
 
     gint text_color = sj->config_settings->text_color;
@@ -136,6 +136,67 @@ void annotation_display_replace_substring(ShortcutJump *sj) {
         annotation_clear(sj->sci, sj->eol_message_line);
         g_string_printf(sj->eol_message, s, sj->search_results_count, sj->search_results_count == 1 ? ")" : "s)");
         annotation_show(sj);
+    }
+}
+
+/**
+ * @brief Sets the end of line annotation message while replacing a multicursor string.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
+void annotation_display_multicusor_enabled_message(ShortcutJump *sj) {
+    if (sj->config_settings->show_annotations) {
+        annotation_clear(sj->sci, sj->eol_message_line);
+        g_string_printf(sj->eol_message, "Multicusor enabled");
+        annotation_show(sj);
+    }
+}
+
+/**
+ * @brief Sets the end of line annotation message while replacing a multicursor string.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
+void annotation_display_accepting_multicursor(ShortcutJump *sj) {
+    if (sj->config_settings->show_annotations) {
+        gchar *s = "Accepting multicusror input";
+
+        annotation_clear(sj->sci, sj->multicusor_eol_message_line);
+        g_string_printf(sj->multicursor_eol_message, s, sj->search_results_count, sj->search_results_count == 1 ? ")" : "s)");
+
+        gint text_color = sj->config_settings->text_color;
+        gint search_annotation_bg_color = sj->config_settings->search_annotation_bg_color;
+
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM, 0);
+        scintilla_send_message(sj->sci, SCI_STYLESETFORE, EOLANNOTATION_STADIUM, text_color);
+        scintilla_send_message(sj->sci, SCI_STYLESETBACK, EOLANNOTATION_STADIUM, search_annotation_bg_color);
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETTEXT, sj->multicusor_eol_message_line,
+                               (sptr_t)sj->multicursor_eol_message->str);
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETSTYLEOFFSET, EOLANNOTATION_STADIUM, 0);
+    }
+}
+
+/**
+ * @brief Sets the end of line annotation message while replacing a multicursor string.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ */
+void annotation_display_replace_multicursor(ShortcutJump *sj) {
+    if (sj->config_settings->show_annotations) {
+        gchar *s = "Replacing multicursor selection (%i string%s";
+
+        annotation_clear(sj->sci, sj->multicusor_eol_message_line);
+        g_string_printf(sj->multicursor_eol_message, s, sj->search_results_count, sj->search_results_count == 1 ? ")" : "s)");
+
+        gint text_color = sj->config_settings->text_color;
+        gint search_annotation_bg_color = sj->config_settings->search_annotation_bg_color;
+
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM, 0);
+        scintilla_send_message(sj->sci, SCI_STYLESETFORE, EOLANNOTATION_STADIUM, text_color);
+        scintilla_send_message(sj->sci, SCI_STYLESETBACK, EOLANNOTATION_STADIUM, search_annotation_bg_color);
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETTEXT, sj->multicusor_eol_message_line,
+                               (sptr_t)sj->multicursor_eol_message->str);
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETSTYLEOFFSET, EOLANNOTATION_STADIUM, 0);
     }
 }
 

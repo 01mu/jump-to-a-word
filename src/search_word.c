@@ -226,7 +226,6 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
     }
 
     if (keychar != 0 && (g_unichar_isalpha(keychar) || is_other_char)) {
-        ui_set_statusbar(TRUE, _("%i"), 213);
         g_string_append_c(sj->search_query, keychar);
 
         search_mark_words(sj, FALSE);

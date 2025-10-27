@@ -19,6 +19,11 @@
 #include <plugindata.h>
 
 #include "jump_to_a_word.h"
+#include "multicursor.h"
+#include "search_common.h"
+#include "search_word.h"
+#include "shortcut_char.h"
+#include "shortcut_common.h"
 
 /**
  * @brief Sets indicators for a given range.
@@ -229,7 +234,7 @@ void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_HIGHLIGHT, INDIC_FULLBOX);
-    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT, 60);
+    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT, 120);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT, sj->config_settings->highlight_color);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, INDIC_TEXTFORE);
@@ -237,7 +242,7 @@ void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_MULTICURSOR, INDIC_PLAIN);
-    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_MULTICURSOR, 60);
+    scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_MULTICURSOR, 0);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_MULTICURSOR, sj->config_settings->highlight_color);
 }
 
@@ -318,6 +323,10 @@ void reset_indicators(ShortcutJump *sj) {
 gboolean handle_text_after_action(ShortcutJump *sj, gint pos, gint word_length, gint line) {
     gboolean text_range_jumped = FALSE;
 
+    if (sj->config_settings->text_after == TX_DO_NOTHING) {
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, pos, 0);
+    }
+
     if (sj->config_settings->text_after == TX_SELECT_TEXT) {
         scintilla_send_message(sj->sci, SCI_SETSEL, pos, pos + word_length);
     }
@@ -359,4 +368,27 @@ gboolean handle_text_after_action(ShortcutJump *sj, gint pos, gint word_length, 
     }
 
     return FALSE;
+}
+
+void end_actions(ShortcutJump *sj) {
+    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
+        sj->current_mode == JM_LINE) {
+        shrtct_cancel(sj);
+    }
+
+    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        shrtct_char_replace_complete(sj);
+    }
+
+    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+        shrtct_char_waiting_cancel(sj);
+    }
+
+    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
+        search_replace_complete(sj);
+    }
+
+    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_SUBSTRING) {
+        search_cancel(sj);
+    }
 }

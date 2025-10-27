@@ -202,6 +202,7 @@ void shrtct_char_replace_cancel(ShortcutJump *sj) {
     shtct_char_replace_end(sj);
     shrtct_set_to_first_visible_line(sj);
     shrtct_end(sj, FALSE);
+    sj->current_mode = JM_NONE;
     ui_set_statusbar(TRUE, _("Shortcut replacement canceled"));
 }
 

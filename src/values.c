@@ -283,32 +283,3 @@ void init_sj_values(ShortcutJump *sj) {
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }
-
-void init_sj_values_multicursor(ShortcutJump *sj) {
-    if (!sj->sci) {
-        ScintillaObject *sci = get_scintilla_object();
-        sj->sci = sci;
-    }
-
-    //gint first_line_on_screen = get_first_line_on_screen(sj);
-    //gint lines_on_screen = get_number_of_lines_on_screen(sj);
-    //gint last_line_on_screen = first_line_on_screen + lines_on_screen;
-    //gint last_position = get_last_position(sj, last_line_on_screen);
-    gint current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
-
-    //gint current_cursor_pos = get_cursor_position(sj->sci, 0, last_position);
-
-    gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-
-    sj->multicursor_first_pos = chars_in_doc;
-    sj->multicursor_last_pos = 0;
-
-    sj->search_results_count = 0;
-
-    sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, current_cursor_pos, 0);
-    sj->eol_message = g_string_new("");
-    sj->search_query = g_string_new("");
-
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-    sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
-}

@@ -19,11 +19,14 @@
 #ifndef MULTICURSOR_H_
 #define MULTICURSOR_H_
 
-#include <geanyplugin.h>
 #include "jump_to_a_word.h"
+#include <geanyplugin.h>
 
 void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data);
 gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
-void disable_multicusor(ShortcutJump *sj);
+void multicursor_complete(ShortcutJump *sj);
+void multicursor_end(ShortcutJump *sj);
+void multicursor_cancel(ShortcutJump *sj);
+void multicursor_add_word(ShortcutJump *sj, Word word);
 
 #endif

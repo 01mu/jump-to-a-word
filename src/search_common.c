@@ -20,6 +20,7 @@
 
 #include "annotation.h"
 #include "jump_to_a_word.h"
+#include "multicursor.h"
 #include "util.h"
 
 /**
@@ -282,6 +283,13 @@ void search_complete(ShortcutJump *sj) {
     gint line = word.line;
     gint word_length = word.word->len;
 
+    if (sj->multicursor_enabled) {
+        multicursor_add_word(sj, word);
+
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
+    }
+
     sj->previous_cursor_pos = sj->current_cursor_pos;
     scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);
 
@@ -297,8 +305,12 @@ void search_complete(ShortcutJump *sj) {
 
     gboolean clear_previous_marker = FALSE;
 
-    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_SUBSTRING) {
+    if (sj->multicursor_enabled == MC_DISABLED && (sj->current_mode == JM_SEARCH || sj->current_mode == JM_SUBSTRING)) {
         clear_previous_marker = handle_text_after_action(sj, pos, word_length, line);
+    }
+
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 
     search_end(sj);

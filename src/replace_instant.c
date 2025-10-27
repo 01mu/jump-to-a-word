@@ -146,33 +146,93 @@ static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
     connect_key_press_action(sj, on_key_press_search_replace);
 }
 
+gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
+    const Word *struct_a = (const Word *)a;
+    const Word *struct_b = (const Word *)b;
+
+    if (struct_a->starting_doc < struct_b->starting_doc) {
+        return -1;
+    } else if (struct_a->starting_doc > struct_b->starting_doc) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 /**
  * @brief Begins the replacement for a multicursor substring.
  *
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
-static void multicursor_replace(ShortcutJump *sj, gboolean instant_replace) {
+static void multicursor_replace(ShortcutJump *sj) {
+    end_actions(sj);
+
+    gint first_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_first_pos, 0);
+    gint last_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_last_pos, 0);
+
+    gint lines_on_screen = last_line_on_screen - first_line_on_screen;
+
+    sj->first_line_on_screen = first_line_on_screen;
+    sj->lines_on_screen = lines_on_screen;
+    sj->last_line_on_screen = last_line_on_screen;
+    sj->first_position = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line_on_screen, 0);
+    sj->last_position = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, last_line_on_screen, 0);
+
+    gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+
+    sj->cache = g_string_new(screen_lines);
+    sj->buffer = g_string_new(screen_lines);
+    sj->replace_cache = g_string_new(screen_lines);
+    sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
+
+    g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
+    sj->words = sj->multicursor_words;
+    sj->search_results_count = 0;
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word *word = &g_array_index(sj->words, Word, i);
+        sj->search_results_count += 1;
+        word->replace_pos = word->starting_doc - sj->first_position;
+    }
+
     if (sj->search_results_count == 0) {
+        multicursor_end(sj);
         ui_set_statusbar(TRUE, _("No substrings to replace"));
         return;
     }
 
-    set_replace_indicators(sj, instant_replace);
-    annotation_display_replace_substring(sj);
-    sj->current_mode = JM_MULTICURSOR_REPLACING;
+    gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+    gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
+    sj->multicusor_eol_message_line = line;
+    sj->current_cursor_pos = pos;
+
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting_doc, word.word->len);
+
+        if (word.valid_search) {
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
+        }
+    }
 
     if (sj->config_settings->replace_action == RA_INSERT_END) {
         for (gint i = 0; i < sj->words->len; i++) {
             Word *word = &g_array_index(sj->words, Word, i);
 
             if (word->valid_search) {
-                word->replace_pos += sj->search_query->len;
+                word->replace_pos += word->word->len;
             }
         }
     }
 
-    disconnect_key_press_action(sj);
+    sj->current_mode = JM_MULTICURSOR_REPLACING;
+    sj->multicursor_enabled = MC_REPLACING;
+    annotation_display_replace_multicursor(sj);
+    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
     connect_key_press_action(sj, on_key_press_search_replace);
 }
 
@@ -242,90 +302,16 @@ static void replace_instant_init(ShortcutJump *sj) {
     replace_substring_init(sj, TRUE);
 }
 
-gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
-    const Word *struct_a = (const Word *)a;
-    const Word *struct_b = (const Word *)b;
-
-    if (struct_a->starting_doc < struct_b->starting_doc) {
-        return -1;
-    } else if (struct_a->starting_doc > struct_b->starting_doc) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
 /**
  * @brief Begins replacement for specific modes.
  *
  * @param ShortcutJump *sj: The plugin object
  */
 static void replace(ShortcutJump *sj) {
-    if (sj->multicursor_enabled) {
-        if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
-            sj->current_mode == JM_LINE) {
-            shrtct_cancel(sj);
-        }
-
-        if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            shrtct_char_replace_complete(sj);
-        }
-
-        if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-            shrtct_char_waiting_cancel(sj);
-        }
-
-        if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
-            search_replace_complete(sj);
-        }
-
-        if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_SUBSTRING) {
-            search_cancel(sj);
-        }
-
-        if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
-            disable_multicusor(sj);
-            return;
-        }
-
-        gint first_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_first_pos, 0);
-        gint last_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_last_pos, 0);
-
-        gint lines_on_screen = last_line_on_screen - first_line_on_screen;
-
-        sj->first_line_on_screen = first_line_on_screen;
-        sj->lines_on_screen = lines_on_screen;
-        sj->last_line_on_screen = last_line_on_screen;
-        sj->first_position = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line_on_screen, 0);
-        sj->last_position = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, last_line_on_screen, 0);
-
-        gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
-
-        sj->cache = g_string_new(screen_lines);
-        sj->buffer = g_string_new(screen_lines);
-        sj->replace_cache = g_string_new(screen_lines);
-
-        sj->search_word_pos = -1;
-        sj->search_word_pos_first = -1;
-        sj->search_word_pos_last = -1;
-        sj->search_change_made = FALSE;
-        sj->cursor_in_word = FALSE;
-        sj->delete_added_bracket = FALSE;
-        sj->replace_len = 0;
-        sj->replace_instant = FALSE;
-
-        g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
-        sj->words = sj->multicursor_words;
-
-        for (gint i = 0; i < sj->words->len; i++) {
-            Word *word = &g_array_index(sj->words, Word, i);
-            word->valid_search = TRUE;
-            sj->search_results_count += 1;
-            word->replace_pos = word->starting_doc - sj->first_position;
-        }
-
-        multicursor_replace(sj, TRUE);
-        return;
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
+        multicursor_replace(sj);
+    } else if (sj->multicursor_enabled == MC_REPLACING) {
+        multicursor_end(sj);
     }
 
     if (sj->current_mode == JM_SEARCH) {
@@ -334,13 +320,10 @@ static void replace(ShortcutJump *sj) {
         replace_substring_init(sj, FALSE);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         shrtct_char_replace_cancel(sj);
-        sj->current_mode = JM_NONE;
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
         shrtct_char_waiting_cancel(sj);
-        sj->current_mode = JM_NONE;
     } else if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_replace_cancel(sj);
-        sj->current_mode = JM_NONE;
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         replace_shortcut_char_init(sj, FALSE);
     } else if (sj->current_mode == JM_NONE) {
@@ -356,9 +339,9 @@ static void replace(ShortcutJump *sj) {
  */
 void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
     replace(sj);
 }
+
 /**
  * @brief Provides a keybinding callback for entering word search replacement mode.
  *
@@ -370,7 +353,6 @@ void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) {
  */
 gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
     replace(sj);
     return TRUE;
 }

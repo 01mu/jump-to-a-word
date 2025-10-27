@@ -31,6 +31,7 @@
 #include "shortcut_common.h"
 #include "shortcut_line.h"
 #include "shortcut_word.h"
+#include "util.h"
 
 /**
  * @brief Line settings used in the plugin configuration and line options windows.
@@ -79,29 +80,8 @@ const struct {
  */
 static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
     sj->range_is_set = FALSE;
-
-    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
-        sj->current_mode == JM_LINE) {
-        shrtct_cancel(sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shrtct_char_replace_complete(sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shrtct_char_waiting_cancel(sj);
-    }
-
-    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_replace_complete(sj);
-    }
-
-    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_SUBSTRING) {
-        search_cancel(sj);
-    }
+    end_actions(sj);
 }
 
 /**
@@ -588,7 +568,8 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     tt = "Use proper case matching when jumping to or searching for text";
     WIDGET_CONF_BOOL_TOGGLE(search_case_sensitive, "Case sensiti_ve", tt);
 
-    tt = "Lower case chars match both lower and upper case chars, upper case chars only match upper case chars";
+    tt = "Lower case chars match both lower and upper case chars, upper case "
+         "chars only match upper case chars";
     WIDGET_CONF_BOOL_TOGGLE(search_smart_case, "Use smartcase matchin_g", tt);
 
     g_signal_connect(sj->config_widgets->search_case_sensitive, "toggled", G_CALLBACK(smart_case_toggle_cb), dialog);
@@ -695,7 +676,7 @@ ShortcutJump *init_data(const GeanyPlugin *plugin) {
     sj->gdk_colors = g_new0(Colors, 1);
     sj->tl_window = g_new0(TextLineWindow, 1);
 
-    sj->multicursor_enabled = FALSE;
+    sj->multicursor_enabled = MC_DISABLED;
     sj->multicursor_first_pos = 0;
     sj->multicursor_last_pos = 0;
 

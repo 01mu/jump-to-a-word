@@ -30,7 +30,6 @@ typedef struct {
     gint padding;
     gint bytes;
     gint replace_pos;
-    gboolean replacing;
     gboolean valid_search;
     gboolean shortcut_marked;
     gboolean is_hidden_neighbor;
@@ -71,6 +70,12 @@ typedef enum {
     JM_MULTICURSOR_REPLACING,
     JM_NONE,
 } JumpMode;
+
+typedef enum {
+    MC_DISABLED,
+    MC_ACCEPTING,
+    MC_REPLACING,
+} MulticusrorMode;
 
 typedef enum {
     TX_DO_NOTHING,
@@ -273,7 +278,9 @@ typedef struct {
     gboolean option_mod;
     JumpMode current_mode;
 
-    gboolean multicursor_enabled;
+    MulticusrorMode multicursor_enabled;
+    GString * multicursor_eol_message;
+    gint multicusor_eol_message_line;
     gint multicursor_first_pos;
     gint multicursor_last_pos;
 } ShortcutJump;
