@@ -230,7 +230,7 @@ typedef struct {
 
     GArray *markers;           // the markers on the screen
     GArray *words;             // every word on screen
-    GArray *multicursor_words; // words marked during a multicusror session
+    GArray *multicursor_words; // words marked during a multicursor session
     GArray *lf_positions;      /* the number of times a "\n" was shifted forward before a line
      line        original string len: 9  replaced (pattern len of 2 overwrites [LF] so we shift) len: 12     total LF shifts
      1           a[LF]                   DE[LF]                                                               1

@@ -159,7 +159,7 @@ void annotation_display_multicusor_enabled_message(ShortcutJump *sj) {
  */
 void annotation_display_accepting_multicursor(ShortcutJump *sj) {
     if (sj->config_settings->show_annotations) {
-        gchar *s = "Accepting multicusror input";
+        gchar *s = "Accepting multicursor input";
 
         annotation_clear(sj->sci, sj->multicusor_eol_message_line);
         g_string_printf(sj->multicursor_eol_message, s, sj->search_results_count,
