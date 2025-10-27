@@ -279,7 +279,7 @@ typedef struct {
     JumpMode current_mode;
 
     MulticusrorMode multicursor_enabled;
-    GString * multicursor_eol_message;
+    GString *multicursor_eol_message;
     gint multicusor_eol_message_line;
     gint multicursor_first_pos;
     gint multicursor_last_pos;
