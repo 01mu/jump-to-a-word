@@ -214,7 +214,6 @@ static void multicursor_replace(ShortcutJump *sj) {
     sj->cache = g_string_new(screen_lines);
     sj->buffer = g_string_new(screen_lines);
     sj->replace_cache = g_string_new(screen_lines);
-    sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
 
     gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);

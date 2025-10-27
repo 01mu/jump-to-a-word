@@ -54,7 +54,6 @@ void multicursor_end(ShortcutJump *sj) {
 
     if (sj->multicursor_enabled == MC_REPLACING) {
         disconnect_key_press_action(sj);
-        g_array_free(sj->lf_positions, TRUE);
     }
 
     scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
