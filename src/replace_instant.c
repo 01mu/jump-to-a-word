@@ -166,7 +166,37 @@ gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
 static void multicursor_replace(ShortcutJump *sj) {
+    if (sj->multicursor_words->len == 0) {
+        multicursor_end(sj);
+        ui_set_statusbar(TRUE, _("No multicursor strings to replace"));
+        return;
+    }
+
     end_actions(sj);
+
+    g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
+    sj->words = sj->multicursor_words;
+
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word *word = &g_array_index(sj->words, Word, i);
+        word->replace_pos = word->starting_doc - sj->first_position;
+
+        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
+
+        if (word->starting_doc <= sj->multicursor_first_pos) {
+            sj->multicursor_first_pos = word->starting_doc;
+        }
+
+        if (word->starting_doc >= sj->multicursor_last_pos) {
+            sj->multicursor_last_pos = word->starting_doc;
+        }
+
+        if (sj->config_settings->replace_action == RA_INSERT_END) {
+            word->replace_pos += word->word->len;
+        }
+    }
 
     gint first_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_first_pos, 0);
     gint last_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_last_pos, 0);
@@ -186,47 +216,10 @@ static void multicursor_replace(ShortcutJump *sj) {
     sj->replace_cache = g_string_new(screen_lines);
     sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
 
-    g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
-    sj->words = sj->multicursor_words;
-    sj->search_results_count = 0;
-
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word *word = &g_array_index(sj->words, Word, i);
-        sj->search_results_count += 1;
-        word->replace_pos = word->starting_doc - sj->first_position;
-    }
-
-    if (sj->search_results_count == 0) {
-        multicursor_end(sj);
-        ui_set_statusbar(TRUE, _("No substrings to replace"));
-        return;
-    }
-
     gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
     sj->multicusor_eol_message_line = line;
     sj->current_cursor_pos = pos;
-
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting_doc, word.word->len);
-
-        if (word.valid_search) {
-            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
-        }
-    }
-
-    if (sj->config_settings->replace_action == RA_INSERT_END) {
-        for (gint i = 0; i < sj->words->len; i++) {
-            Word *word = &g_array_index(sj->words, Word, i);
-
-            if (word->valid_search) {
-                word->replace_pos += word->word->len;
-            }
-        }
-    }
 
     sj->current_mode = JM_MULTICURSOR_REPLACING;
     sj->multicursor_enabled = MC_REPLACING;

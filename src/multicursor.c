@@ -166,13 +166,5 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
         }
     }
 
-    if (multicursor_word.starting_doc <= sj->multicursor_first_pos) {
-        sj->multicursor_first_pos = multicursor_word.starting_doc;
-    }
-
-    if (multicursor_word.starting_doc >= sj->multicursor_last_pos) {
-        sj->multicursor_last_pos = multicursor_word.starting_doc;
-    }
-
     g_array_append_val(sj->multicursor_words, multicursor_word);
 }
