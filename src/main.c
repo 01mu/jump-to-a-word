@@ -296,10 +296,10 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_INTEGER(line_after, "line_after", "line_after", LA_SELECT_TO_LINE);
     SET_SETTING_INTEGER(replace_action, "replace_action", "replace_action", RA_REPLACE);
 
-    SET_SETTING_COLOR(text_color, "text_color", 0xD4D4D4);
-    SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0x1E1E1E);
+    SET_SETTING_COLOR(text_color, "text_color", 0xFFFFFF);
+    SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0xFFFFFF);
     SET_SETTING_COLOR(tag_color, "tag_color", 0xFFFFFF);
-    SET_SETTING_COLOR(highlight_color, "highlight_color", 0x00FF00);
+    SET_SETTING_COLOR(highlight_color, "highlight_color", 0xD00000);
 
     g_key_file_free(config);
 
