@@ -166,6 +166,7 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
         }
     }
 
+    ui_set_statusbar(TRUE, _("%i word%s in view."), sj->search_results_count, sj->search_results_count == 1 ? "" : "s");
     gint search_word_pos = get_search_word_pos(sj);
 
     sj->search_word_pos_first = get_search_word_pos_first(sj);
@@ -345,8 +346,6 @@ void search_init(ShortcutJump *sj, gboolean instant_replace) {
     connect_click_action(sj, on_click_event_search);
 
     annotation_display_search(sj);
-
-    ui_set_statusbar(TRUE, _("%i word%s in view"), sj->words->len, sj->words->len == 1 ? "" : "s");
 }
 
 /**

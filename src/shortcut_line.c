@@ -191,7 +191,7 @@ void shrtct_line_init(ShortcutJump *sj) {
     connect_key_press_action(sj, shrtct_on_key_press);
     connect_click_action(sj, shrtct_on_click_event);
 
-    ui_set_statusbar(TRUE, _("%i line%s in view"), sj->words->len, sj->words->len == 1 ? "" : "s");
+    ui_set_statusbar(TRUE, _("%i line%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
 }
 
 /**

@@ -152,6 +152,9 @@ static void mark_text(ShortcutJump *sj) {
         }
     }
 
+    ui_set_statusbar(TRUE, _("%i substring%s in view."), sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
+
     gint search_word_pos = get_search_word_pos(sj);
 
     sj->search_word_pos_first = get_search_word_pos_first(sj);

@@ -210,6 +210,12 @@ void shrtct_end(ShortcutJump *sj, gboolean was_canceled) {
  * @param gint line: The line the word is on (used when moving the marker)
  */
 void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
+    if (sj->current_mode == JM_SHORTCUT) {
+        ui_set_statusbar(TRUE, _("Word shortcut jump completed."));
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+        ui_set_statusbar(TRUE, _("Character shortcut jump completed."));
+    }
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
@@ -250,8 +256,6 @@ void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
         gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
     }
-
-    ui_set_statusbar(TRUE, _("Jump completed"));
 }
 
 /*
@@ -261,6 +265,12 @@ void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
  * @param ScintillaObject *sci: The Scintilla object
  */
 void shrtct_cancel(ShortcutJump *sj) {
+    if (sj->current_mode == JM_SHORTCUT) {
+        ui_set_statusbar(TRUE, _("Word shortcut jump canceled."));
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+        ui_set_statusbar(TRUE, _("Character shortcut jump canceled."));
+    }
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
@@ -271,7 +281,6 @@ void shrtct_cancel(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     shrtct_end(sj, TRUE);
     sj->range_is_set = FALSE;
-    ui_set_statusbar(TRUE, _("Jump canceled"));
 }
 
 /**

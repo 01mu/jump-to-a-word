@@ -72,11 +72,10 @@ void multicursor_end(ShortcutJump *sj) {
 
     sj->current_mode = JM_NONE;
     sj->multicursor_enabled = MC_DISABLED;
-
-    ui_set_statusbar(TRUE, _("Multicursor mode disabled."));
 }
 
 void multicursor_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Multicursor string replacement canceled."));
     annotation_clear(sj->sci, sj->multicusor_eol_message_line);
 
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
@@ -96,6 +95,9 @@ void multicursor_cancel(ShortcutJump *sj) {
 }
 
 void multicursor_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Multicursor string replacement completed (%i change%s made)."),
+                     sj->multicursor_words->len, sj->multicursor_words->len == 1 ? "" : "s");
+
     annotation_clear(sj->sci, sj->eol_message_line);
     scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
@@ -122,6 +124,7 @@ void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
     end_actions(sj);
 
     if (sj->multicursor_enabled == MC_ACCEPTING || sj->multicursor_enabled == MC_REPLACING) {
+        ui_set_statusbar(TRUE, _("Multicursor mode disabled."));
         multicursor_end(sj);
     } else if (sj->multicursor_enabled == MC_DISABLED) {
         multicursor_begin(sj);
@@ -143,6 +146,7 @@ gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     end_actions(sj);
 
     if (sj->multicursor_enabled == MC_ACCEPTING || sj->multicursor_enabled == MC_REPLACING) {
+        ui_set_statusbar(TRUE, _("Multicursor mode disabled."));
         multicursor_end(sj);
     } else if (sj->multicursor_enabled == MC_DISABLED) {
         multicursor_begin(sj);

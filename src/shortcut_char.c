@@ -157,7 +157,7 @@ void shrtct_char_waiting_cancel(ShortcutJump *sj) {
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
     sj->current_mode = JM_NONE;
-    ui_set_statusbar(TRUE, _("Shortcut jump canceled (no option)"));
+    ui_set_statusbar(TRUE, _("Character serach canceled."));
 }
 
 /**
@@ -203,7 +203,7 @@ void shrtct_char_replace_cancel(ShortcutJump *sj) {
     shrtct_set_to_first_visible_line(sj);
     shrtct_end(sj, FALSE);
     sj->current_mode = JM_NONE;
-    ui_set_statusbar(TRUE, _("Shortcut replacement canceled"));
+    ui_set_statusbar(TRUE, _("Character replacement canceled."));
 }
 
 /**
@@ -215,7 +215,8 @@ void shrtct_char_replace_complete(ShortcutJump *sj) {
     shtct_char_replace_end(sj);
     shrtct_set_to_first_visible_line(sj);
     shrtct_end(sj, FALSE);
-    ui_set_statusbar(TRUE, _("Shortcut replacement completed"));
+    ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
+                     sj->words->len == 1 ? "" : "s");
 }
 
 /**
@@ -288,7 +289,7 @@ void shrtct_char_init(ShortcutJump *sj, gboolean init_set, gchar init) {
         shrtct_set_after_placement(sj);
         set_shortcut_indicators(sj);
         sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
-        ui_set_statusbar(TRUE, _("%i character%s in view"), sj->words->len, sj->words->len == 1 ? "" : "s");
+        ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
     }
 
     if (!sj->in_selection) {
@@ -368,7 +369,7 @@ gboolean shrtct_char_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointe
         set_shortcut_indicators(sj);
         annotation_display_char_search(sj);
         sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
-        ui_set_statusbar(TRUE, _("%i character%s in view"), sj->words->len, sj->words->len == 1 ? "" : "s");
+        ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
         return TRUE;
     }
 

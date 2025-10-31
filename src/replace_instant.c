@@ -55,7 +55,7 @@ static gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *even
  */
 static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->words->len == 0) {
-        ui_set_statusbar(TRUE, _("No characters to replace"));
+        ui_set_statusbar(TRUE, _("No characters to replace."));
         search_cancel(sj);
         return;
     }
@@ -122,7 +122,7 @@ static void set_replace_indicators(ShortcutJump *sj, gboolean instant_replace) {
  */
 static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->search_results_count == 0) {
-        ui_set_statusbar(TRUE, _("No substrings to replace"));
+        ui_set_statusbar(TRUE, _("No substrings to replace."));
         search_cancel(sj);
         return;
     }
@@ -168,7 +168,7 @@ gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
 static void multicursor_replace(ShortcutJump *sj) {
     if (sj->multicursor_words->len == 0) {
         multicursor_end(sj);
-        ui_set_statusbar(TRUE, _("No multicursor strings to replace"));
+        ui_set_statusbar(TRUE, _("No multicursor strings to replace."));
         return;
     }
 
@@ -196,7 +196,7 @@ static void multicursor_replace(ShortcutJump *sj) {
         Word *word = &g_array_index(sj->words, Word, i);
         word->replace_pos = word->starting_doc - sj->first_position;
 
-         scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
+        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
 
         if (sj->config_settings->replace_action == RA_INSERT_END) {
             word->replace_pos += word->word->len;
@@ -229,7 +229,7 @@ static void multicursor_replace(ShortcutJump *sj) {
  */
 static void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->search_results_count == 0) {
-        ui_set_statusbar(TRUE, _("No words to replace"));
+        ui_set_statusbar(TRUE, _("No words to replace."));
         search_cancel(sj);
         return;
     }

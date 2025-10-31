@@ -262,8 +262,9 @@ void search_end(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void search_replace_cancel(ShortcutJump *sj) {
+    gchar *type = sj->current_mode == JM_REPLACE_SEARCH ? "Word" : "Substring";
+    ui_set_statusbar(TRUE, _("%s replacement canceled."), type);
     search_end(sj);
-    ui_set_statusbar(TRUE, _("Search replace canceled"));
 }
 
 /**
@@ -272,11 +273,15 @@ void search_replace_cancel(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void search_replace_complete(ShortcutJump *sj) {
+    gchar *type = sj->current_mode == JM_REPLACE_SEARCH ? "Word" : "Substring";
+    ui_set_statusbar(TRUE, _("%s replacement completed (%i change%s made)."), type, sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
     search_end(sj);
-    ui_set_statusbar(TRUE, _("Search replace completed"));
 }
 
 void search_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("%s search completed."), sj->current_mode == JM_SEARCH ? "Word" : "Substring");
+
     Word word = g_array_index(sj->words, Word, sj->search_word_pos);
 
     gint pos = word.starting;
@@ -319,8 +324,6 @@ void search_complete(ShortcutJump *sj) {
         gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
     }
-
-    ui_set_statusbar(TRUE, _("Search completed"));
 }
 
 /**
@@ -329,6 +332,7 @@ void search_complete(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void search_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("%s search canceled."), sj->current_mode == JM_SEARCH ? "Word" : "Substring");
     search_end(sj);
 
     if (sj->range_is_set) {
@@ -336,8 +340,6 @@ void search_cancel(ShortcutJump *sj) {
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
         sj->range_is_set = FALSE;
     }
-
-    ui_set_statusbar(TRUE, _("Search canceled"));
 }
 
 /**
