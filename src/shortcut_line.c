@@ -33,7 +33,11 @@
 void shrtct_line_handle_jump_action(ShortcutJump *sj, gint target) {
     gboolean line_range_jumped = FALSE;
 
-    if (sj->config_settings->line_after == LA_DO_NOTHING) {
+    if (sj->config_settings->line_after == LA_DO_NOTHING ||
+        sj->config_settings->line_after == LA_JUMP_TO_WORD_SHORTCUT ||
+        sj->config_settings->line_after == LA_JUMP_TO_SUBSTRING_SEARCH ||
+        sj->config_settings->line_after == LA_JUMP_TO_WORD_SEARCH ||
+        sj->config_settings->line_after == LA_JUMP_TO_CHARACTER_SHORTCUT) {
         gint pos_target = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, target, TRUE);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, pos_target, 0);
     }
