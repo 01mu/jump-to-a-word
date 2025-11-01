@@ -28,5 +28,6 @@ void multicursor_complete(ShortcutJump *sj);
 void multicursor_end(ShortcutJump *sj);
 void multicursor_cancel(ShortcutJump *sj);
 void multicursor_add_word(ShortcutJump *sj, Word word);
+void multicursor_add_word_selection(ShortcutJump *sj, gint start, gint end);
 
 #endif

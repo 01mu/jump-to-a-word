@@ -176,7 +176,6 @@ static void multicursor_replace(ShortcutJump *sj) {
 
     gint first_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_first_pos, 0);
     gint last_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_last_pos, 0);
-
     gint lines_on_screen = last_line_on_screen - first_line_on_screen;
 
     sj->first_line_on_screen = first_line_on_screen;
@@ -191,17 +190,31 @@ static void multicursor_replace(ShortcutJump *sj) {
     sj->words = sj->multicursor_words;
 
     scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+    sj->search_results_count = 0;
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
-        word->replace_pos = word->starting_doc - sj->first_position;
 
-        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
+        if (word->valid_search) {
+            word->replace_pos = word->starting_doc - sj->first_position;
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
 
-        if (sj->config_settings->replace_action == RA_INSERT_END) {
-            word->replace_pos += word->word->len;
+            if (sj->config_settings->replace_action == RA_INSERT_END) {
+                word->replace_pos += word->word->len;
+            }
+
+            sj->search_results_count++;
         }
     }
+
+    sj->search_word_pos = -1;
+    sj->search_word_pos_first = -1;
+    sj->search_word_pos_last = -1;
+    sj->search_change_made = FALSE;
+    sj->cursor_in_word = FALSE;
+    sj->delete_added_bracket = FALSE;
+    sj->replace_len = 0;
+    sj->replace_instant = FALSE;
 
     sj->cache = g_string_new(screen_lines);
     sj->buffer = g_string_new(screen_lines);
@@ -294,8 +307,10 @@ static void replace_instant_init(ShortcutJump *sj) {
 static void replace(ShortcutJump *sj) {
     if (sj->multicursor_enabled == MC_ACCEPTING) {
         multicursor_replace(sj);
+        return;
     } else if (sj->multicursor_enabled == MC_REPLACING) {
         multicursor_end(sj);
+        return;
     }
 
     if (sj->current_mode == JM_SEARCH) {

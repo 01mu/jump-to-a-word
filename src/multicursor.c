@@ -95,17 +95,23 @@ void multicursor_cancel(ShortcutJump *sj) {
 }
 
 void multicursor_complete(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Multicursor string replacement completed (%i change%s made)."),
-                     sj->multicursor_words->len, sj->multicursor_words->len == 1 ? "" : "s");
-
-    annotation_clear(sj->sci, sj->eol_message_line);
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+    gint count = 0;
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
-        gint start_pos = sj->first_position + word.replace_pos;
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, sj->replace_len + 1);
+
+        if (word.valid_search) {
+            gint start_pos = sj->first_position + word.replace_pos;
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, sj->replace_len + 1);
+            count++;
+        }
     }
+
+    ui_set_statusbar(TRUE, _("Multicursor string replacement completed (%i change%s made)."), count,
+                     count == 1 ? "" : "s");
+
+    annotation_clear(sj->sci, sj->eol_message_line);
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
@@ -155,6 +161,45 @@ gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     return TRUE;
 }
 
+void multicursor_add_word_selection(ShortcutJump *sj, gint start, gint end) {
+    Word multicursor_word;
+
+    multicursor_word.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
+    multicursor_word.starting = start;
+    multicursor_word.starting_doc = start;
+    multicursor_word.valid_search = TRUE;
+
+    gint new_word_start = multicursor_word.starting_doc;
+    gint new_word_end = multicursor_word.starting_doc + multicursor_word.word->len;
+
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word *word = &g_array_index(sj->multicursor_words, Word, i);
+
+        gint word_start = word->starting_doc;
+        gint word_end = word->starting_doc + word->word->len;
+
+        if (word->valid_search && ((new_word_start >= word_start && new_word_start <= word_end) ||
+                                   (new_word_end >= word_start && new_word_end <= word_end))) {
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting_doc, word->word->len);
+            word->valid_search = FALSE;
+        }
+    }
+
+    scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, multicursor_word.starting_doc, multicursor_word.word->len);
+
+    if (multicursor_word.starting_doc <= sj->multicursor_first_pos) {
+        sj->multicursor_first_pos = multicursor_word.starting_doc;
+    }
+
+    if (new_word_end >= sj->multicursor_last_pos) {
+        sj->multicursor_last_pos = new_word_end;
+    }
+
+    g_array_append_val(sj->multicursor_words, multicursor_word);
+}
+
 void multicursor_add_word(ShortcutJump *sj, Word word) {
     Word multicursor_word;
 
@@ -163,17 +208,27 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
     multicursor_word.starting_doc = word.starting_doc;
     multicursor_word.valid_search = TRUE;
 
-    for (gint i = 0; i < sj->multicursor_words->len; i++) {
-        Word word = g_array_index(sj->multicursor_words, Word, i);
-        gint mw = multicursor_word.starting_doc;
+    gint new_word_start = multicursor_word.starting_doc;
+    gint new_word_end = multicursor_word.starting_doc + multicursor_word.word->len;
 
-        if (mw > word.starting_doc && mw < word.starting_doc + word.word->len) {
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word *word = &g_array_index(sj->multicursor_words, Word, i);
+
+        gint word_start = word->starting_doc;
+        gint word_end = word->starting_doc + word->word->len;
+
+        if (word->valid_search && (new_word_start == word_start)) {
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting_doc, word->word->len);
+            word->valid_search = FALSE;
             return;
         }
 
-        if (word.starting_doc == mw) {
-            g_array_remove_index(sj->multicursor_words, i);
-            return;
+        if (word->valid_search && ((new_word_start > word_start && new_word_start <= word_end) ||
+                                   (new_word_end >= word_start && new_word_end <= word_end))) {
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting_doc, word->word->len);
+            word->valid_search = FALSE;
         }
     }
 
@@ -181,8 +236,8 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
         sj->multicursor_first_pos = multicursor_word.starting_doc;
     }
 
-    if (multicursor_word.starting_doc >= sj->multicursor_last_pos) {
-        sj->multicursor_last_pos = multicursor_word.starting_doc;
+    if (new_word_end >= sj->multicursor_last_pos) {
+        sj->multicursor_last_pos = new_word_end;
     }
 
     g_array_append_val(sj->multicursor_words, multicursor_word);

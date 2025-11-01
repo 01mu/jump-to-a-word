@@ -32,6 +32,7 @@
 #include "shortcut_line.h"
 #include "shortcut_word.h"
 #include "util.h"
+#include "values.h"
 
 /**
  * @brief Line settings used in the plugin configuration and line options windows.
@@ -125,6 +126,22 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
  */
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION && sj->multicursor_enabled) {
+        if (!sj->sci) {
+            set_sj_scintilla_object(sj);
+        }
+
+        gint selection_start = scintilla_send_message(sj->sci, SCI_GETSELECTIONSTART, 0, 0);
+        gint selection_end = scintilla_send_message(sj->sci, SCI_GETSELECTIONEND, 0, 0);
+
+        if (selection_start == selection_end) {
+            return TRUE;
+        }
+
+        multicursor_add_word_selection(sj, selection_start, selection_end);
+        return TRUE;
+    }
 
     if (nt->nmhdr.code == SCN_MODIFYATTEMPTRO) {
         return TRUE;

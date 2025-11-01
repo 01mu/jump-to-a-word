@@ -182,7 +182,9 @@ void shrtct_end(ShortcutJump *sj, gboolean was_canceled) {
 
         for (gint i = 0; i < sj->multicursor_words->len; i++) {
             Word word = g_array_index(sj->multicursor_words, Word, i);
-            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
+            if (word.valid_search) {
+                scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
+            }
         }
     }
 

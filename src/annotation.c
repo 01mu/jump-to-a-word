@@ -187,7 +187,8 @@ void annotation_display_replace_multicursor(ShortcutJump *sj) {
         gchar *s = "Replacing multicursor selection (%i string%s";
 
         annotation_clear(sj->sci, sj->multicusor_eol_message_line);
-        g_string_printf(sj->multicursor_eol_message, s, sj->words->len, sj->words->len == 1 ? ")" : "s)");
+        g_string_printf(sj->multicursor_eol_message, s, sj->search_results_count,
+                        sj->search_results_count == 1 ? ")" : "s)");
 
         gint text_color = sj->config_settings->text_color;
         gint search_annotation_bg_color = sj->config_settings->search_annotation_bg_color;
