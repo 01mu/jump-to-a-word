@@ -32,8 +32,6 @@ static void multicursor_begin(ShortcutJump *sj) {
     define_indicators(sj->sci, sj);
     get_view_positions(sj);
 
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-
     sj->multicursor_first_pos = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
     sj->multicursor_last_pos = 0;
 
