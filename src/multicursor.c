@@ -56,22 +56,7 @@ void multicursor_end(ShortcutJump *sj) {
     }
 
     if (sj->multicursor_enabled == MC_REPLACING) {
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
-
-        for (gint i = 0; i < sj->multicursor_words->len; i++) {
-            Word word = g_array_index(sj->multicursor_words, Word, i);
-
-            if (word.valid_search) {
-                gint start_pos = sj->first_position + word.replace_pos;
-                gint rel = sj->replace_len;
-                if (sj->replace_len == 0) {
-                    rel = word.word->len;
-                }
-
-                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, rel);
-            }
-        }
-
+        scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
         annotation_clear(sj->sci, sj->multicusor_eol_message_line);
         disconnect_key_press_action(sj);
         disconnect_click_action(sj);
@@ -79,15 +64,15 @@ void multicursor_end(ShortcutJump *sj) {
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
-        gint start_pos = sj->first_position + word.replace_pos;
-        gint rel = sj->replace_len;
+        gint start_pos = word.starting_doc;
+        gint clear_len = sj->replace_len;
         if (sj->replace_len == 0) {
-            rel = word.word->len;
+            clear_len = word.word->len;
         }
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, rel);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, clear_len);
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, rel);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, clear_len);
         g_string_free(word.word, TRUE);
     }
 
