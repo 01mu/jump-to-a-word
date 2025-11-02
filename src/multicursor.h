@@ -29,5 +29,6 @@ void multicursor_end(ShortcutJump *sj);
 void multicursor_cancel(ShortcutJump *sj);
 void multicursor_add_word(ShortcutJump *sj, Word word);
 void multicursor_add_word_selection(ShortcutJump *sj, gint start, gint end);
+gboolean on_click_event_multicursor(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 
 #endif

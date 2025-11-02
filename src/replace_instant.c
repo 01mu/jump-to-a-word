@@ -166,7 +166,14 @@ gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
 static void multicursor_replace(ShortcutJump *sj) {
-    if (sj->multicursor_words->len == 0) {
+    gint valid_count = 0;
+
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word word = g_array_index(sj->multicursor_words, Word, i);
+        valid_count += word.valid_search ? 1 : 0;
+    }
+
+    if (valid_count == 0) {
         multicursor_end(sj);
         ui_set_statusbar(TRUE, _("No multicursor strings to replace."));
         return;
@@ -229,6 +236,7 @@ static void multicursor_replace(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
     connect_key_press_action(sj, on_key_press_search_replace);
+    connect_click_action(sj, on_click_event_multicursor);
 }
 
 /**
