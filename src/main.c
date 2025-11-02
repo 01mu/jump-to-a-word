@@ -127,7 +127,7 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION && sj->multicursor_enabled) {
+    if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION && sj->multicursor_enabled == MC_ACCEPTING) {
         if (!sj->sci) {
             set_sj_scintilla_object(sj);
         }
