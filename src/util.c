@@ -371,24 +371,24 @@ gboolean handle_text_after_action(ShortcutJump *sj, gint pos, gint word_length, 
 }
 
 void end_actions(ShortcutJump *sj) {
-    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
-        sj->current_mode == JM_LINE) {
-        shrtct_cancel(sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shrtct_char_replace_complete(sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shrtct_char_waiting_cancel(sj);
-    }
-
-    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_replace_complete(sj);
-    }
-
-    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_SUBSTRING) {
+    if (sj->current_mode == JM_SEARCH) {
         search_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT) {
+        shrtct_cancel(sj);
+    } else if (sj->current_mode == JM_REPLACE_SEARCH) {
+        search_replace_complete(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+        shrtct_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+        shrtct_char_waiting_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        shrtct_char_replace_complete(sj);
+    } else if (sj->current_mode == JM_LINE) {
+        shrtct_cancel(sj);
+    } else if (sj->current_mode == JM_SUBSTRING) {
+        search_cancel(sj);
+    } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+        search_replace_complete(sj);
+    } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
     }
 }

@@ -56,14 +56,36 @@ void multicursor_end(ShortcutJump *sj) {
     }
 
     if (sj->multicursor_enabled == MC_REPLACING) {
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+
+        for (gint i = 0; i < sj->multicursor_words->len; i++) {
+            Word word = g_array_index(sj->multicursor_words, Word, i);
+
+            if (word.valid_search) {
+                gint start_pos = sj->first_position + word.replace_pos;
+                gint rel = sj->replace_len;
+                if (sj->replace_len == 0) {
+                    rel = word.word->len;
+                }
+
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, rel);
+            }
+        }
+
+        annotation_clear(sj->sci, sj->multicusor_eol_message_line);
         disconnect_key_press_action(sj);
     }
 
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting_doc, word.word->len);
+        gint start_pos = sj->first_position + word.replace_pos;
+        gint rel = sj->replace_len;
+        if (sj->replace_len == 0) {
+            rel = word.word->len;
+        }
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, rel);
         g_string_free(word.word, TRUE);
     }
 
@@ -95,20 +117,17 @@ void multicursor_cancel(ShortcutJump *sj) {
 }
 
 void multicursor_complete(ShortcutJump *sj) {
-    gint count = 0;
-
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
 
         if (word.valid_search) {
             gint start_pos = sj->first_position + word.replace_pos;
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, sj->replace_len + 1);
-            count++;
         }
     }
 
-    ui_set_statusbar(TRUE, _("Multicursor string replacement completed (%i change%s made)."), count,
-                     count == 1 ? "" : "s");
+    ui_set_statusbar(TRUE, _("Multicursor string replacement completed (%i change%s made)."), sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
 
     annotation_clear(sj->sci, sj->eol_message_line);
     scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
