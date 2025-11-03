@@ -60,6 +60,18 @@ void multicursor_end(ShortcutJump *sj) {
         disconnect_click_action(sj);
     }
 
+    if ((sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE ||
+         sj->config_settings->replace_action == RA_INSERT_NEXT_LINE) &&
+        sj->multicursor_lines && !sj->search_change_made) {
+        gint lines_removed = 0;
+        for (gint i = 0; i < sj->multicursor_lines->len; i++) {
+            Word word = g_array_index(sj->multicursor_lines, Word, i);
+            gint pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, word.line - lines_removed, 0);
+            scintilla_send_message(sj->sci, SCI_DELETERANGE, pos, 1);
+            lines_removed++;
+        }
+    }
+
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
         gint start_pos = word.starting_doc;
@@ -74,7 +86,9 @@ void multicursor_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
-    if (sj->multicursor_lines) {
+    if ((sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE ||
+         sj->config_settings->replace_action == RA_INSERT_NEXT_LINE) &&
+        sj->multicursor_lines) {
         for (gint i = 0; i < sj->multicursor_lines->len; i++) {
             Word word = g_array_index(sj->multicursor_lines, Word, i);
             g_string_free(word.word, TRUE);
