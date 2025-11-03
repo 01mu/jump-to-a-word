@@ -62,7 +62,7 @@ void multicursor_end(ShortcutJump *sj) {
 
     if ((sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE ||
          sj->config_settings->replace_action == RA_INSERT_NEXT_LINE) &&
-        sj->multicursor_lines && !sj->search_change_made) {
+        sj->multicursor_enabled == MC_REPLACING && !sj->search_change_made) {
         gint lines_removed = 0;
         for (gint i = 0; i < sj->multicursor_lines->len; i++) {
             Word word = g_array_index(sj->multicursor_lines, Word, i);
@@ -88,7 +88,7 @@ void multicursor_end(ShortcutJump *sj) {
 
     if ((sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE ||
          sj->config_settings->replace_action == RA_INSERT_NEXT_LINE) &&
-        sj->multicursor_lines) {
+        sj->multicursor_enabled == MC_REPLACING) {
         for (gint i = 0; i < sj->multicursor_lines->len; i++) {
             Word word = g_array_index(sj->multicursor_lines, Word, i);
             g_string_free(word.word, TRUE);
