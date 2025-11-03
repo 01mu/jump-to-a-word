@@ -124,6 +124,10 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     sj->range_is_set = FALSE;
     end_actions(sj);
+
+    if (sj->multicursor_enabled == MC_ACCEPTING || sj->multicursor_enabled == MC_REPLACING) {
+        multicursor_end(sj);
+    }
 }
 
 /**
