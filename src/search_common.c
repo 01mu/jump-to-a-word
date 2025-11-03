@@ -282,18 +282,21 @@ void search_replace_complete(ShortcutJump *sj) {
 void search_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("%s search completed."), sj->current_mode == JM_SEARCH ? "Word" : "Substring");
 
-    Word word = g_array_index(sj->words, Word, sj->search_word_pos);
+    if (sj->multicursor_enabled) {
+        for (gint i = 0; i < sj->words->len; i++) {
+            Word word = g_array_index(sj->words, Word, i);
+            if (word.valid_search) {
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
+                multicursor_add_word(sj, word);
+            }
+        }
+    }
 
+    Word word = g_array_index(sj->words, Word, sj->search_word_pos);
     gint pos = word.starting;
     gint line = word.line;
     gint word_length = word.word->len;
-
-    if (sj->multicursor_enabled) {
-        multicursor_add_word(sj, word);
-
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
-    }
 
     sj->previous_cursor_pos = sj->current_cursor_pos;
     scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);

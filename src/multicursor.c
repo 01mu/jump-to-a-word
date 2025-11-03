@@ -278,8 +278,8 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
             return;
         }
 
-        if (word->valid_search && ((new_word_start > word_start && new_word_start <= word_end) ||
-                                   (new_word_end >= word_start && new_word_end <= word_end))) {
+        if (word->valid_search && ((new_word_start > word_start && new_word_start < word_end) ||
+                                   (new_word_end > word_start && new_word_end < word_end))) {
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting_doc, word->word->len);
             word->valid_search = FALSE;
         }
