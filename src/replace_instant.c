@@ -40,7 +40,7 @@
  *
  * @return gboolean: FALSE if uncontrolled for key press
  */
-static gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
 
@@ -144,19 +144,6 @@ static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
 
     disconnect_key_press_action(sj);
     connect_key_press_action(sj, on_key_press_search_replace);
-}
-
-gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
-    const Word *struct_a = (const Word *)a;
-    const Word *struct_b = (const Word *)b;
-
-    if (struct_a->starting_doc < struct_b->starting_doc) {
-        return -1;
-    } else if (struct_a->starting_doc > struct_b->starting_doc) {
-        return 1;
-    } else {
-        return 0;
-    }
 }
 
 /**
@@ -310,7 +297,7 @@ static void replace_instant_init(ShortcutJump *sj) {
  *
  * @param ShortcutJump *sj: The plugin object
  */
-static void replace(ShortcutJump *sj) {
+void replace(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
         replace_word_init(sj, FALSE);
     } else if (sj->current_mode == JM_SHORTCUT) {
@@ -342,30 +329,4 @@ static void replace(ShortcutJump *sj) {
         end_actions(sj);
         multicursor_cancel(sj);
     }
-}
-
-/**
- * @brief Provides a menu callback for entering word search replacement mode.
- *
- * @param GtkMenuItem *menu_item: (unused)
- * @param gpointer user_data: The plugin data
- */
-void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-    replace(sj);
-}
-
-/**
- * @brief Provides a keybinding callback for entering word search replacement mode.
- *
- * @param GtkMenuItem *kb: (unused)
- * @param guint key_id: (unused)
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: TRUE
- */
-gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-    replace(sj);
-    return TRUE;
 }

@@ -101,6 +101,8 @@ typedef enum {
     RA_REPLACE,
     RA_INSERT_START,
     RA_INSERT_END,
+    RA_INSERT_PREVIOUS_LINE,
+    RA_INSERT_NEXT_LINE,
     RA_COUNT,
 } ReplaceAction;
 
@@ -231,16 +233,18 @@ typedef struct {
     GArray *markers;           // the markers on the screen
     GArray *words;             // every word on screen
     GArray *multicursor_words; // words marked during a multicursor session
-    GArray *lf_positions;      /* the number of times a "\n" was shifted forward before a line
-     line        original string len: 9  replaced (pattern len of 2 overwrites [LF] so we shift) len: 12     total LF shifts
-     1           a[LF]                   DE[LF]                                                               1
-     2           a[LF]                   DF[LF]                                                               2
-     3           aa[LF]                  DG[LF] (no shift)                                                    2
-     4           a[LF]                   DH[LF]                                                               3
-     5                                                                                                        3
-     This is necessary because we need to know how many LFs were shifted up until a certain line in order to accurately
-     set the cursor position after clicking somewhere on the screen to cancel a shortcut jump.
-     */
+    GArray *multicursor_lines;
+
+    GArray *lf_positions; /* the number of times a "\n" was shifted forward before a line
+line        original string len: 9  replaced (pattern len of 2 overwrites [LF] so we shift) len: 12     total LF shifts
+1           a[LF]                   DE[LF]                                                               1
+2           a[LF]                   DF[LF]                                                               2
+3           aa[LF]                  DG[LF] (no shift)                                                    2
+4           a[LF]                   DH[LF]                                                               3
+5                                                                                                        3
+This is necessary because we need to know how many LFs were shifted up until a certain line in order to accurately
+set the cursor position after clicking somewhere on the screen to cancel a shortcut jump.
+*/
 
     gboolean replace_instant; // whether we are performing an instant replace
 

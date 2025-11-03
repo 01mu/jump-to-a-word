@@ -18,6 +18,7 @@
 
 #include <plugindata.h>
 
+#include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
 #include "multicursor.h"
@@ -68,7 +69,47 @@ const struct {
     ReplaceAction type;
 } replace_conf[] = {{"Replace string", RA_REPLACE},
                     {"Insert at start of string", RA_INSERT_START},
-                    {"Insert at end of string", RA_INSERT_END}};
+                    {"Insert at end of string", RA_INSERT_END},
+                    {"Insert at previous line", RA_INSERT_PREVIOUS_LINE},
+                    {"Insert at next line", RA_INSERT_NEXT_LINE}};
+
+/**
+ * @brief Provides a menu callback for entering word search replacement mode.
+ *
+ * @param GtkMenuItem *menu_item: (unused)
+ * @param gpointer user_data: The plugin data
+ */
+void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    if (sj->config_settings->replace_action == RA_REPLACE || sj->config_settings->replace_action == RA_INSERT_START ||
+        sj->config_settings->replace_action == RA_INSERT_END) {
+        replace(sj);
+    } else if (sj->config_settings->replace_action == RA_INSERT_NEXT_LINE ||
+               sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
+        line_insert(sj);
+    }
+}
+
+/**
+ * @brief Provides a keybinding callback for entering word search replacement mode.
+ *
+ * @param GtkMenuItem *kb: (unused)
+ * @param guint key_id: (unused)
+ * @param gpointer user_data: The plugin data
+ *
+ * @return gboolean: TRUE
+ */
+gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    if (sj->config_settings->replace_action == RA_REPLACE || sj->config_settings->replace_action == RA_INSERT_START ||
+        sj->config_settings->replace_action == RA_INSERT_END) {
+        replace(sj);
+    } else if (sj->config_settings->replace_action == RA_INSERT_NEXT_LINE ||
+               sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
+        line_insert(sj);
+    }
+    return TRUE;
+}
 
 /**
  * @brief Provides a callback for either saving or closing a document, or quitting. This is necessary for shortcut
@@ -127,7 +168,8 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION && sj->multicursor_enabled == MC_ACCEPTING) {
+    if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION &&
+        sj->multicursor_enabled == MC_ACCEPTING) {
         if (!sj->sci) {
             set_sj_scintilla_object(sj);
         }

@@ -74,6 +74,14 @@ void multicursor_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
+    if (sj->multicursor_lines) {
+        for (gint i = 0; i < sj->multicursor_lines->len; i++) {
+            Word word = g_array_index(sj->multicursor_lines, Word, i);
+            g_string_free(word.word, TRUE);
+        }
+        g_array_free(sj->multicursor_lines, TRUE);
+    }
+
     g_string_free(sj->multicursor_eol_message, TRUE);
     g_array_free(sj->multicursor_words, TRUE);
 
@@ -104,6 +112,17 @@ void multicursor_cancel(ShortcutJump *sj) {
 }
 
 void multicursor_complete(ShortcutJump *sj) {
+    if (sj->multicursor_lines) {
+        for (gint i = 0; i < sj->multicursor_lines->len; i++) {
+            Word word = g_array_index(sj->multicursor_lines, Word, i);
+
+            if (word.valid_search) {
+                gint start_pos = sj->first_position + word.replace_pos;
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, sj->replace_len + 1);
+            }
+        }
+    }
+
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
 
@@ -177,6 +196,7 @@ void multicursor_add_word_selection(ShortcutJump *sj, gint start, gint end) {
     Word multicursor_word;
 
     multicursor_word.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
+    multicursor_word.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
     multicursor_word.starting = start;
     multicursor_word.starting_doc = start;
     multicursor_word.valid_search = TRUE;
@@ -222,6 +242,7 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
     Word multicursor_word;
 
     multicursor_word.word = g_string_new(word.word->str);
+    multicursor_word.line = word.line;
     multicursor_word.starting = word.starting;
     multicursor_word.starting_doc = word.starting_doc;
     multicursor_word.valid_search = TRUE;
@@ -277,4 +298,17 @@ gboolean on_click_event_multicursor(GtkWidget *widget, GdkEventButton *event, gp
     }
 
     return FALSE;
+}
+
+gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
+    const Word *struct_a = (const Word *)a;
+    const Word *struct_b = (const Word *)b;
+
+    if (struct_a->starting_doc < struct_b->starting_doc) {
+        return -1;
+    } else if (struct_a->starting_doc > struct_b->starting_doc) {
+        return 1;
+    } else {
+        return 0;
+    }
 }

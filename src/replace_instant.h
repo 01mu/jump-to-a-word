@@ -19,9 +19,9 @@
 #ifndef REPLACE_INSTANT_H
 #define REPLACE_INSTANT_H
 
-#include <geanyplugin.h>
+#include "jump_to_a_word.h"
 
-void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data);
-gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
+void replace(ShortcutJump *sj);
+gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 
 #endif

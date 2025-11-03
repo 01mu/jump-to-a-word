@@ -16,20 +16,11 @@
  *
  */
 
-#ifndef MULTICURSOR_H_
-#define MULTICURSOR_H_
+#ifndef INSERT_LINE_H_
+#define INSERT_LINE_H_
 
 #include "jump_to_a_word.h"
-#include <geanyplugin.h>
 
-void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data);
-gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
-void multicursor_complete(ShortcutJump *sj);
-void multicursor_end(ShortcutJump *sj);
-void multicursor_cancel(ShortcutJump *sj);
-void multicursor_add_word(ShortcutJump *sj, Word word);
-void multicursor_add_word_selection(ShortcutJump *sj, gint start, gint end);
-gboolean on_click_event_multicursor(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
-gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b);
+void line_insert(ShortcutJump *sj);
 
 #endif
