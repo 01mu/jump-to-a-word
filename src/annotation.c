@@ -182,6 +182,26 @@ void annotation_display_accepting_multicursor(ShortcutJump *sj) {
  *
  * @param ShortcutJump *sj: The plugin object
  */
+void annotation_display_inserting_line_multicursor(ShortcutJump *sj) {
+    if (sj->config_settings->show_annotations) {
+        gchar *s = "Inserting multicursor line (%i string%s";
+
+        annotation_clear(sj->sci, sj->multicusor_eol_message_line);
+        g_string_printf(sj->multicursor_eol_message, s, sj->search_results_count,
+                        sj->search_results_count == 1 ? ")" : "s)");
+
+        gint text_color = sj->config_settings->text_color;
+        gint search_annotation_bg_color = sj->config_settings->search_annotation_bg_color;
+
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM, 0);
+        scintilla_send_message(sj->sci, SCI_STYLESETFORE, EOLANNOTATION_STADIUM, text_color);
+        scintilla_send_message(sj->sci, SCI_STYLESETBACK, EOLANNOTATION_STADIUM, search_annotation_bg_color);
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETTEXT, sj->multicusor_eol_message_line,
+                               (sptr_t)sj->multicursor_eol_message->str);
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETSTYLEOFFSET, EOLANNOTATION_STADIUM, 0);
+    }
+}
+
 void annotation_display_replace_multicursor(ShortcutJump *sj) {
     if (sj->config_settings->show_annotations) {
         gchar *s = "Replacing multicursor selection (%i string%s";

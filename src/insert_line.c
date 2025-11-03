@@ -145,7 +145,7 @@ static void multicursor_line_insert(ShortcutJump *sj) {
 
     sj->current_mode = JM_MULTICURSOR_REPLACING;
     sj->multicursor_enabled = MC_REPLACING;
-    annotation_display_replace_multicursor(sj);
+    annotation_display_inserting_line_multicursor(sj);
     connect_key_press_action(sj, on_key_press_search_replace);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
     connect_click_action(sj, on_click_event_multicursor);

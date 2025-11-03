@@ -33,5 +33,6 @@ void annotation_display_char_search(ShortcutJump *sj);
 void annotation_clear(ScintillaObject *sci, gint eol_message_line);
 void annotation_display_multicusor_enabled_message(ShortcutJump *sj);
 void annotation_display_accepting_multicursor(ShortcutJump *sj);
+void annotation_display_inserting_line_multicursor(ShortcutJump *sj);
 
 #endif
