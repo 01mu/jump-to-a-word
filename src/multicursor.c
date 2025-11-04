@@ -250,6 +250,7 @@ void multicursor_add_word_selection(ShortcutJump *sj, gint start, gint end) {
         }
 
         if (word->valid_search && ((new_word_start >= word_start && new_word_start <= word_end) ||
+                                   (word_start >= new_word_start && word_end <= new_word_end) ||
                                    (new_word_end >= word_start && new_word_end <= word_end))) {
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting_doc, word->word->len);
             word->valid_search = FALSE;
@@ -296,8 +297,11 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
         }
 
         if (word->valid_search && ((new_word_start > word_start && new_word_start < word_end) ||
+                                   (word_start >= new_word_start && word_end <= new_word_end) ||
                                    (new_word_end > word_start && new_word_end < word_end))) {
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting_doc, word->word->len);
+            if (!(word_start >= new_word_start && word_end <= new_word_end)) {
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting_doc, word->word->len);
+            }
             word->valid_search = FALSE;
         }
     }
