@@ -71,7 +71,7 @@ void handle_action(gpointer user_data) {
 
     if (performing_string_action && mm == MC_DISABLED) {
         replace(sj);
-    } else if (performing_string_action && mm == MC_ACCEPTING) {
+    } else if (performing_string_action && mm == MC_ACCEPTING && jm == JM_NONE) {
         multicursor_replace(sj);
     } else if (performing_string_action && mm == MC_REPLACING && jm == JM_MULTICURSOR_REPLACING) {
         multicursor_cancel(sj);
