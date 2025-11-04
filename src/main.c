@@ -18,6 +18,7 @@
 
 #include <plugindata.h>
 
+#include "annotation.h"
 #include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
@@ -132,8 +133,10 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     sj->range_is_set = FALSE;
     end_actions(sj);
 
-    if (sj->multicursor_enabled == MC_ACCEPTING || sj->multicursor_enabled == MC_REPLACING) {
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
         multicursor_end(sj);
+    } else if (sj->multicursor_enabled == MC_REPLACING) {
+        multicursor_cancel(sj);
     }
 }
 
@@ -150,18 +153,31 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
 static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shrtct_char_waiting_cancel(sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
-        sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_LINE) {
-        shrtct_end(sj, FALSE);
-    }
-
-    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
-        sj->current_mode == JM_REPLACE_SUBSTRING) {
+    if (sj->current_mode == JM_SEARCH) {
         search_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT) {
+        shrtct_end(sj, FALSE);
+    } else if (sj->current_mode == JM_REPLACE_SEARCH) {
+        search_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+        shrtct_end(sj, FALSE);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+        shrtct_char_waiting_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        shrtct_end(sj, FALSE);
+    } else if (sj->current_mode == JM_LINE) {
+        shrtct_end(sj, FALSE);
+    } else if (sj->current_mode == JM_SUBSTRING) {
+        search_cancel(sj);
+    } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+        search_cancel(sj);
+    } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
+    }
+
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
+        multicursor_end(sj);
+    } else if (sj->multicursor_enabled == MC_REPLACING) {
+        multicursor_cancel(sj);
     }
 }
 

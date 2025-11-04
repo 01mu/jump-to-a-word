@@ -123,19 +123,8 @@ void multicursor_end(ShortcutJump *sj) {
 void multicursor_cancel(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Multicursor string replacement canceled."));
     annotation_clear(sj->sci, sj->multicusor_eol_message_line);
-
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-
-    if (!sj->search_change_made) {
-        scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
-    }
-
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-
     scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
-
     g_string_free(sj->cache, TRUE);
     g_string_free(sj->buffer, TRUE);
     g_string_free(sj->replace_cache, TRUE);
