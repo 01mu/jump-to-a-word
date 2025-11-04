@@ -61,6 +61,29 @@ const struct {
                  {"Select to text", TX_SELECT_TO_TEXT},
                  {"Select text range", TX_SELECT_TEXT_RANGE}};
 
+void handle_action(gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    ReplaceAction ra = sj->config_settings->replace_action;
+    MulticusrorMode mm = sj->multicursor_enabled;
+    JumpMode jm = sj->current_mode;
+    gboolean performing_string_action = ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END;
+    gboolean performing_line_action = ra == RA_INSERT_NEXT_LINE || ra == RA_INSERT_PREVIOUS_LINE;
+
+    if (performing_string_action && mm == MC_DISABLED) {
+        replace(sj);
+    } else if (performing_string_action && mm == MC_ACCEPTING) {
+        multicursor_replace(sj);
+    } else if (performing_string_action && mm == MC_REPLACING && jm == JM_MULTICURSOR_REPLACING) {
+        multicursor_cancel(sj);
+    } else if (performing_line_action && mm == MC_ACCEPTING && jm == JM_NONE) {
+        multicursor_line_insert(sj);
+    } else if (performing_line_action && mm == MC_REPLACING && jm == JM_MULTICURSOR_REPLACING) {
+        multicursor_cancel(sj);
+    } else {
+        ui_set_statusbar(TRUE, _("No action available."));
+    }
+}
+
 /**
  * @brief Replace settings used in the plugin configuration and replace options windows.
  */
@@ -79,16 +102,7 @@ const struct {
  * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
  */
-void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-    if (sj->config_settings->replace_action == RA_REPLACE || sj->config_settings->replace_action == RA_INSERT_START ||
-        sj->config_settings->replace_action == RA_INSERT_END) {
-        replace(sj);
-    } else if (sj->config_settings->replace_action == RA_INSERT_NEXT_LINE ||
-               sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
-        line_insert(sj);
-    }
-}
+void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) { handle_action(user_data); }
 
 /**
  * @brief Provides a keybinding callback for entering word search replacement mode.
@@ -100,14 +114,7 @@ void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) {
  * @return gboolean: TRUE
  */
 gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-    if (sj->config_settings->replace_action == RA_REPLACE || sj->config_settings->replace_action == RA_INSERT_START ||
-        sj->config_settings->replace_action == RA_INSERT_END) {
-        replace(sj);
-    } else if (sj->config_settings->replace_action == RA_INSERT_NEXT_LINE ||
-               sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
-        line_insert(sj);
-    }
+    handle_action(user_data);
     return TRUE;
 }
 

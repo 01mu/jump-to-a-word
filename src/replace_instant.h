@@ -23,5 +23,6 @@
 
 void replace(ShortcutJump *sj);
 gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
+void multicursor_replace(ShortcutJump *sj);
 
 #endif

@@ -21,6 +21,6 @@
 
 #include "jump_to_a_word.h"
 
-void line_insert(ShortcutJump *sj);
+void multicursor_line_insert(ShortcutJump *sj);
 
 #endif

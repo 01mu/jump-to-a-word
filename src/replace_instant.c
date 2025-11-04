@@ -152,7 +152,7 @@ static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
-static void multicursor_replace(ShortcutJump *sj) {
+void multicursor_replace(ShortcutJump *sj) {
     gint valid_count = 0;
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
@@ -318,15 +318,7 @@ void replace(ShortcutJump *sj) {
         search_replace_cancel(sj);
     } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
 
-    } else if (sj->current_mode == JM_NONE && sj->multicursor_enabled == MC_DISABLED) {
+    } else if (sj->current_mode == JM_NONE) {
         replace_instant_init(sj);
-    }
-
-    if (sj->current_mode == JM_NONE && sj->multicursor_enabled == MC_ACCEPTING) {
-        end_actions(sj);
-        multicursor_replace(sj);
-    } else if (sj->current_mode == JM_NONE && sj->multicursor_enabled == MC_REPLACING) {
-        end_actions(sj);
-        multicursor_cancel(sj);
     }
 }

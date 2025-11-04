@@ -80,7 +80,7 @@ static void set_words_from_lines(ShortcutJump *sj, GArray *lines) {
     }
 }
 
-static void multicursor_line_insert(ShortcutJump *sj) {
+void multicursor_line_insert(ShortcutJump *sj) {
     gint valid_count = 0;
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
@@ -149,10 +149,4 @@ static void multicursor_line_insert(ShortcutJump *sj) {
     connect_key_press_action(sj, on_key_press_search_replace);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
     connect_click_action(sj, on_click_event_multicursor);
-}
-
-void line_insert(ShortcutJump *sj) {
-    if (sj->current_mode == JM_NONE && sj->multicursor_enabled == MC_ACCEPTING) {
-        multicursor_line_insert(sj);
-    }
 }

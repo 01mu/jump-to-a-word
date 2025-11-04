@@ -91,6 +91,13 @@ void multicursor_end(ShortcutJump *sj) {
         sj->multicursor_enabled == MC_REPLACING) {
         for (gint i = 0; i < sj->multicursor_lines->len; i++) {
             Word word = g_array_index(sj->multicursor_lines, Word, i);
+            gint start_pos = word.starting_doc;
+            gint clear_len = sj->replace_len;
+            if (sj->replace_len == 0) {
+                clear_len = word.word->len;
+            }
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, clear_len);
             g_string_free(word.word, TRUE);
         }
         g_array_free(sj->multicursor_lines, TRUE);
