@@ -350,7 +350,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(search_from_selection, "search_from_selection", "general", TRUE);
     SET_SETTING_BOOL(search_selection_if_line, "search_selection_if_line", "general", TRUE);
 
-    SET_SETTING_BOOL(select_when_shortcut_char, "select_when_shortcut_char", "shortcut", FALSE);
+    SET_SETTING_BOOL(select_when_shortcut_char, "select_when_shortcut_char", "shortcut", TRUE);
     SET_SETTING_BOOL(shortcut_all_caps, "shortcut_all_caps", "shortcut", FALSE);
     SET_SETTING_BOOL(shortcuts_include_single_char, "shortcuts_include_single_char", "shortcut", FALSE);
     SET_SETTING_BOOL(hide_word_shortcut_jump, "hide_word_shortcut_jump", "shortcut", FALSE);
@@ -367,9 +367,9 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_INTEGER(replace_action, "replace_action", "replace_action", RA_REPLACE);
 
     SET_SETTING_COLOR(text_color, "text_color", 0xFFFFFF);
-    SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0x000000);
+    SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0x311F24);
     SET_SETTING_COLOR(tag_color, "tag_color", 0xFFFFFF);
-    SET_SETTING_COLOR(highlight_color, "highlight_color", 0xD00000);
+    SET_SETTING_COLOR(highlight_color, "highlight_color", 0x69A226);
 
     g_key_file_free(config);
 
