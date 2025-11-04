@@ -231,7 +231,6 @@ void search_end(ShortcutJump *sj) {
         sj->replace_len = 0;
         sj->search_change_made = FALSE;
 
-        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 
