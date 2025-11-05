@@ -216,12 +216,10 @@ void search_end(ShortcutJump *sj) {
             }
         }
 
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
-        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
-        scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-
-        if (!sj->search_change_made) {
-            scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
+        if (sj->search_change_made) {
+            scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+            scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
+            scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
         }
 
         margin_markers_reset(sj);

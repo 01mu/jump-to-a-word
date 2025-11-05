@@ -95,7 +95,8 @@ const struct {
                     {"Insert at start of string", RA_INSERT_START},
                     {"Insert at end of string", RA_INSERT_END},
                     {"Insert at previous line", RA_INSERT_PREVIOUS_LINE},
-                    {"Insert at next line", RA_INSERT_NEXT_LINE}};
+                    {"Insert at next line", RA_INSERT_NEXT_LINE},
+                    {"Transpose string", RA_TRANSPOSE_STRING}};
 
 /**
  * @brief Provides a menu callback for entering word search replacement mode.

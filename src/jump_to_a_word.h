@@ -103,6 +103,7 @@ typedef enum {
     RA_INSERT_END,
     RA_INSERT_PREVIOUS_LINE,
     RA_INSERT_NEXT_LINE,
+    RA_TRANSPOSE_STRING,
     RA_COUNT,
 } ReplaceAction;
 

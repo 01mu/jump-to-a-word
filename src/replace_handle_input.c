@@ -249,11 +249,11 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         return TRUE;
     }
 
-    if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
-        clear_occurances(sj);
-    }
-
     if (keychar != 0 && (g_unichar_isalpha(keychar) || is_other_char) && sj->replace_len >= 0) {
+        if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
+            clear_occurances(sj);
+        }
+
         add_character(sj, keychar);
         return TRUE;
     }
