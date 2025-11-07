@@ -44,6 +44,7 @@ static void multicursor_begin(ShortcutJump *sj) {
     annotation_display_accepting_multicursor(sj);
 
     sj->multicursor_enabled = MC_ACCEPTING;
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 
     ui_set_statusbar(TRUE, _("Multicursor mode enabled."));
 }
@@ -118,6 +119,7 @@ void multicursor_end(ShortcutJump *sj) {
 
     sj->current_mode = JM_NONE;
     sj->multicursor_enabled = MC_DISABLED;
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
 }
 
 void multicursor_cancel(ShortcutJump *sj) {
@@ -145,10 +147,13 @@ void multicursor_complete(ShortcutJump *sj) {
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
-
         if (word.valid_search) {
             gint start_pos = sj->first_position + word.replace_pos;
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, sj->replace_len + 1);
+            gint clear_len = sj->replace_len;
+            if (sj->replace_len == 0) {
+                clear_len = word.word->len;
+            }
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, clear_len);
         }
     }
 

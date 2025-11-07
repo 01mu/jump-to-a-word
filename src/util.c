@@ -175,6 +175,7 @@ void search_clear_indicators(ScintillaObject *sci, GArray *words) {
         clear_indicator_for_range(sci, INDICATOR_TAG, word.starting, word.word->len);
         clear_indicator_for_range(sci, INDICATOR_HIGHLIGHT, word.starting, word.word->len);
         clear_indicator_for_range(sci, INDICATOR_TEXT, word.starting, word.word->len);
+        clear_indicator_for_range(sci, INDICATOR_MULTICURSOR, word.starting, word.word->len);
     }
 }
 
@@ -297,6 +298,11 @@ void disconnect_click_action(ShortcutJump *sj) {
 }
 
 void reset_indicators(ShortcutJump *sj) {
+    // scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, sj->config_settings->text_color_store_style);
+    // scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_TEXT,
+    // sj->config_settings->text_color_store_outline); scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TEXT,
+    // sj->config_settings->text_color_store_fore);
+
     scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TAG, sj->config_settings->tag_color_store_style);
     scintilla_send_message(sj->sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG,
                            sj->config_settings->tag_color_store_outline);
@@ -308,6 +314,13 @@ void reset_indicators(ShortcutJump *sj) {
                            sj->config_settings->highlight_color_store_outline);
     scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT,
                            sj->config_settings->highlight_color_store_fore);
+
+    // scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_MULTICURSOR,
+    // sj->config_settings->highlight_color_store_style);
+    // scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_MULTICURSOR,
+    // sj->config_settings->highlight_color_store_outline);
+    // scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_MULTICURSOR,
+    // sj->config_settings->highlight_color_store_fore);
 }
 
 /**

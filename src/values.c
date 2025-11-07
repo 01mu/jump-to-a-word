@@ -198,7 +198,7 @@ static gint get_cursor_position(ScintillaObject *sci, gint first_position, gint 
  *
  * @return Array containing the markers as ints
  */
-static GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen) {
+GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen) {
     GArray *markers = g_array_new(FALSE, FALSE, sizeof(gint));
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {

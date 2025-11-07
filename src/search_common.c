@@ -188,47 +188,83 @@ gboolean set_search_word_pos_left_key(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void search_end(ShortcutJump *sj) {
-    reset_indicators(sj);
-
-    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, sj->config_settings->text_color_store_style);
-    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_TEXT, sj->config_settings->text_color_store_outline);
-    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color_store_fore);
-
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    JumpMode cm = sj->current_mode;
 
-    search_clear_indicators(sj->sci, sj->words);
+    if (cm == JM_SEARCH || cm == JM_SUBSTRING || cm == JM_REPLACE_SEARCH || cm == JM_REPLACE_SUBSTRING) {
+        annotation_clear(sj->sci, sj->eol_message_line);
 
-    annotation_clear(sj->sci, sj->eol_message_line);
+        for (gint i = 0; i < sj->words->len; i++) {
+            Word word = g_array_index(sj->words, Word, i);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            // scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+            // scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        }
+    }
+
+    if (cm == JM_INSERTING_LINE) {
+        if (!sj->search_change_made) {
+            gint lines_removed = 0;
+            for (gint i = 0; i < sj->multicursor_lines->len; i++) {
+                Word word = g_array_index(sj->multicursor_lines, Word, i);
+                gint pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, word.line - lines_removed, 0);
+                scintilla_send_message(sj->sci, SCI_DELETERANGE, pos, 1);
+                lines_removed++;
+            }
+        }
+
+        for (gint i = 0; i < sj->multicursor_words->len; i++) {
+            Word word = g_array_index(sj->multicursor_words, Word, i);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        }
+
+        for (gint i = 0; i < sj->multicursor_words->len; i++) {
+            Word word = g_array_index(sj->multicursor_words, Word, i);
+            g_string_free(word.word, TRUE);
+        }
+
+        g_array_free(sj->multicursor_words, TRUE);
+    }
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
         g_string_free(word.word, TRUE);
     }
 
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-
-    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
-        for (gint i = 0; i < sj->words->len; i++) {
-            Word word = g_array_index(sj->words, Word, i);
-
-            if (word.valid_search) {
-                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos, sj->replace_len + 2);
-            }
-        }
-
+    if (cm == JM_REPLACE_SEARCH || cm == JM_REPLACE_SUBSTRING || cm == JM_INSERTING_LINE) {
         if (sj->search_change_made) {
             scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
             scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
-            scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
         }
 
-        margin_markers_reset(sj);
-        g_array_free(sj->markers, TRUE);
+        if (sj->newline_was_added_for_next_line_insert) {
+            gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+            scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
+            sj->newline_was_added_for_next_line_insert = FALSE;
+        }
+
+        scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+
+        if (cm != JM_INSERTING_LINE) {
+            margin_markers_reset(sj);
+        }
 
         sj->cursor_in_word = FALSE;
         sj->replace_len = 0;
         sj->search_change_made = FALSE;
-
+        g_array_free(sj->markers, TRUE);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 
@@ -236,16 +272,12 @@ void search_end(ShortcutJump *sj) {
     sj->search_word_pos_first = -1;
     sj->search_word_pos_last = -1;
     sj->search_results_count = 0;
-
     sj->current_mode = JM_NONE;
-
-    annotation_clear(sj->sci, sj->eol_message_line);
-
     g_string_free(sj->search_query, TRUE);
     g_string_free(sj->eol_message, TRUE);
     g_array_free(sj->words, TRUE);
     g_string_free(sj->replace_cache, TRUE);
-
+    annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
 }
@@ -256,8 +288,18 @@ void search_end(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void search_replace_cancel(ShortcutJump *sj) {
-    gchar *type = sj->current_mode == JM_REPLACE_SEARCH ? "Word" : "Substring";
-    ui_set_statusbar(TRUE, _("%s replacement canceled."), type);
+    JumpMode cm = sj->current_mode;
+    gchar *type = "";
+
+    if (cm == JM_REPLACE_SEARCH) {
+        type = "Word replacement canceled.";
+    } else if (cm == JM_REPLACE_SUBSTRING) {
+        type = "Substring replacement canceled.";
+    } else if (cm == JM_INSERTING_LINE) {
+        type = "Line insertion canceled.";
+    }
+
+    ui_set_statusbar(TRUE, _("%s"), type);
     search_end(sj);
 }
 
@@ -267,8 +309,18 @@ void search_replace_cancel(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void search_replace_complete(ShortcutJump *sj) {
-    gchar *type = sj->current_mode == JM_REPLACE_SEARCH ? "Word" : "Substring";
-    ui_set_statusbar(TRUE, _("%s replacement completed (%i change%s made)."), type, sj->search_results_count,
+    JumpMode cm = sj->current_mode;
+    gchar *type = "";
+
+    if (cm == JM_REPLACE_SEARCH) {
+        type = "Word replacement completed";
+    } else if (cm == JM_REPLACE_SUBSTRING) {
+        type = "Substring replacement completed";
+    } else if (cm == JM_INSERTING_LINE) {
+        type = "Line insertion completed";
+    }
+
+    ui_set_statusbar(TRUE, _("%s (%i change%s made)."), type, sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
     search_end(sj);
 }
@@ -276,7 +328,7 @@ void search_replace_complete(ShortcutJump *sj) {
 void search_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("%s search completed."), sj->current_mode == JM_SEARCH ? "Word" : "Substring");
 
-    if (sj->multicursor_enabled) {
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
         for (gint i = 0; i < sj->words->len; i++) {
             Word word = g_array_index(sj->words, Word, i);
             if (word.valid_search) {

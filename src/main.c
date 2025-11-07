@@ -18,7 +18,6 @@
 
 #include <plugindata.h>
 
-#include "annotation.h"
 #include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
@@ -29,6 +28,7 @@
 #include "search_common.h"
 #include "search_substring.h"
 #include "search_word.h"
+#include "selection.h"
 #include "shortcut_char.h"
 #include "shortcut_common.h"
 #include "shortcut_line.h"
@@ -78,6 +78,45 @@ void handle_action(gpointer user_data) {
         multicursor_cancel(sj);
     } else if (performing_line_action && mm == MC_ACCEPTING && jm == JM_NONE) {
         multicursor_line_insert(sj);
+    } else if (performing_line_action && mm == MC_DISABLED && jm == JM_SEARCH) {
+        disconnect_key_press_action(sj);
+        disconnect_click_action(sj);
+        multicursor_line_insert_from_search(sj);
+    } else if (performing_line_action && mm == MC_DISABLED && jm == JM_SUBSTRING) {
+        disconnect_key_press_action(sj);
+        disconnect_click_action(sj);
+        multicursor_line_insert_from_search(sj);
+    } else if (performing_line_action && mm == MC_DISABLED && jm == JM_NONE) {
+        set_sj_scintilla_object(sj);
+        set_selection_info(sj);
+
+        if (!sj->in_selection) {
+            init_sj_values(sj);
+            define_indicators(sj->sci, sj);
+
+            search_get_words(sj);
+            search_set_initial_query(sj, TRUE);
+        } else {
+            if (!sj->selection_is_a_char && !sj->selection_is_a_word) {
+                sj->in_selection = FALSE;
+                init_sj_values(sj);
+                sj->markers = markers_margin_get(sj, sj->first_line_on_screen, sj->lines_on_screen);
+                search_set_initial_query_substring(sj);
+            } else {
+                init_sj_values(sj);
+                sj->markers = markers_margin_get(sj, sj->first_line_on_screen, sj->lines_on_screen);
+                search_set_initial_query_substring(sj);
+            }
+
+            define_indicators(sj->sci, sj);
+        }
+
+        if (sj->search_results_count == 0) {
+            ui_set_statusbar(TRUE, _("No strings selected for line insertion."));
+            return;
+        }
+
+        multicursor_line_insert_from_search(sj);
     } else if (performing_line_action && mm == MC_REPLACING && jm == JM_MULTICURSOR_REPLACING) {
         multicursor_cancel(sj);
     } else {

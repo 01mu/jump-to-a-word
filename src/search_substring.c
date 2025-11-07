@@ -259,7 +259,7 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If we are instantly replacing
  */
-static void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace) {
+void search_set_initial_query_substring(ShortcutJump *sj) {
     g_string_append(sj->search_query, sci_get_contents_range(sj->sci, sj->selection_start, sj->selection_end));
     mark_text(sj);
 }
@@ -282,12 +282,19 @@ void substring_init(ShortcutJump *sj, gboolean instant_replace) {
         set_selection_info(sj);
     }
 
-    init_sj_values(sj);
-    define_indicators(sj->sci, sj);
-
-    if (sj->in_selection && instant_replace) {
-        search_set_initial_query(sj, instant_replace);
+    if (sj->in_selection) {
+        if (!sj->selection_is_a_char && !sj->selection_is_a_word && sj->selection_is_a_line) {
+            sj->in_selection = FALSE;
+            init_sj_values(sj);
+            search_set_initial_query_substring(sj);
+        } else {
+            init_sj_values(sj);
+        }
+    } else {
+        init_sj_values(sj);
     }
+
+    define_indicators(sj->sci, sj);
 
     connect_key_press_action(sj, on_key_press_search_substring);
     connect_click_action(sj, on_click_event_search);

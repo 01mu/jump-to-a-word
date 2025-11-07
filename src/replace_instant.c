@@ -48,6 +48,30 @@ gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpoi
 }
 
 /**
+ * @brief Sets the indicators for a string or word being replaced.
+ *
+ * @param ShortcutJump *sj: The plugin object
+ * @param gboolean instant_replace: If instant replace mode is enabled
+ */
+static void set_replace_indicators(ShortcutJump *sj, gboolean instant_replace) {
+    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
+    annotation_clear(sj->sci, sj->eol_message_line);
+    search_clear_indicators(sj->sci, sj->words);
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+
+        if (word.valid_search) {
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
+        }
+    }
+}
+
+/**
  * @brief Begins the replacement for a selected character.
  *
  * @param ShortcutJump *sj: The plugin object
@@ -71,7 +95,8 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 
     annotation_display_replace_char(sj);
-    search_clear_indicators(sj->sci, sj->words);
+    // search_clear_indicators(sj->sci, sj->words);
+    set_replace_indicators(sj, instant_replace);
 
     if (instant_replace) {
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
@@ -87,31 +112,6 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
     }
 
     sj->current_mode = JM_SHORTCUT_CHAR_REPLACING;
-}
-
-/**
- * @brief Sets the indicators for a string or word being replaced.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gboolean instant_replace: If instant replace mode is enabled
- */
-static void set_replace_indicators(ShortcutJump *sj, gboolean instant_replace) {
-    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
-    annotation_clear(sj->sci, sj->eol_message_line);
-    search_clear_indicators(sj->sci, sj->words);
-
-    if (instant_replace) {
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-
-        for (gint i = 0; i < sj->words->len; i++) {
-            Word word = g_array_index(sj->words, Word, i);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-
-            if (word.valid_search) {
-                scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
-            }
-        }
-    }
 }
 
 /**

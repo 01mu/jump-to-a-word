@@ -266,7 +266,8 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
                 return TRUE;
             }
 
-            if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
+            if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING ||
+                sj->current_mode == JM_INSERTING_LINE) {
                 search_replace_complete(sj);
             }
 
@@ -293,7 +294,8 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
             return TRUE;
         }
 
-        if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
+        if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING ||
+            sj->current_mode == JM_INSERTING_LINE) {
             search_replace_complete(sj);
         }
 
@@ -314,7 +316,8 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         }
     }
 
-    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
+    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING ||
+        sj->current_mode == JM_INSERTING_LINE) {
         if (sj->search_change_made) {
             search_replace_complete(sj);
         } else {

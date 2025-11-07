@@ -68,6 +68,7 @@ typedef enum {
     JM_SUBSTRING,
     JM_REPLACE_SUBSTRING,
     JM_MULTICURSOR_REPLACING,
+    JM_INSERTING_LINE,
     JM_NONE,
 } JumpMode;
 
@@ -288,6 +289,8 @@ set the cursor position after clicking somewhere on the screen to cancel a short
     gint multicusor_eol_message_line;
     gint multicursor_first_pos;
     gint multicursor_last_pos;
+
+    gboolean newline_was_added_for_next_line_insert;
 } ShortcutJump;
 
 #endif

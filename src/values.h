@@ -25,5 +25,6 @@ void set_sj_scintilla_object(ShortcutJump *sj);
 void init_sj_values(ShortcutJump *sj);
 ScintillaObject *get_scintilla_object();
 void get_view_positions(ShortcutJump *sj);
+GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen);
 
 #endif
