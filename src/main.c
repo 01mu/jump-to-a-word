@@ -73,7 +73,29 @@ void handle_action(gpointer user_data) {
     gboolean performing_transpose_action = ra == RA_TRANSPOSE_STRING;
 
     if (performing_string_action && mm == MC_DISABLED) {
-        replace(sj);
+        if (jm == JM_SEARCH) {
+            replace_word_init(sj, FALSE);
+        } else if (jm == JM_SHORTCUT) {
+            shortcut_word_cancel(sj);
+        } else if (jm == JM_REPLACE_SEARCH) {
+            search_word_replace_cancel(sj);
+        } else if (jm == JM_SHORTCUT_CHAR_JUMPING) {
+            shortcut_char_jumping_cancel(sj);
+        } else if (jm == JM_SHORTCUT_CHAR_WAITING) {
+            shortcut_char_waiting_cancel(sj);
+        } else if (jm == JM_SHORTCUT_CHAR_REPLACING) {
+            shortcut_char_replacing_cancel(sj);
+        } else if (jm == JM_LINE) {
+            search_line_insertion_cancel(sj);
+        } else if (jm == JM_SUBSTRING) {
+            replace_substring_init(sj, FALSE);
+        } else if (jm == JM_REPLACE_SUBSTRING) {
+            search_substring_replace_cancel(sj);
+        } else if (jm == JM_MULTICURSOR_REPLACING) {
+
+        } else if (jm == JM_NONE) {
+            replace_instant_init(sj);
+        }
     } else if (performing_transpose_action && mm == MC_ACCEPTING && jm == JM_NONE) {
         transpose_string(sj);
     } else if (performing_string_action && mm == MC_ACCEPTING && jm == JM_NONE) {
@@ -82,11 +104,7 @@ void handle_action(gpointer user_data) {
         multicursor_cancel(sj);
     } else if (performing_line_action && mm == MC_ACCEPTING && jm == JM_NONE) {
         multicursor_line_insert(sj);
-    } else if (performing_line_action && mm == MC_DISABLED && jm == JM_SEARCH) {
-        disconnect_key_press_action(sj);
-        disconnect_click_action(sj);
-        line_insert_from_search(sj);
-    } else if (performing_line_action && mm == MC_DISABLED && jm == JM_SUBSTRING) {
+    } else if (performing_line_action && mm == MC_DISABLED && (jm == JM_SEARCH || jm == JM_SUBSTRING)) {
         disconnect_key_press_action(sj);
         disconnect_click_action(sj);
         line_insert_from_search(sj);
@@ -453,7 +471,7 @@ static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
         sj->current_mode == JM_LINE) {
-        shortcut_cancel(sj);
+        shortcut_word_cancel(sj);
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
@@ -461,7 +479,7 @@ static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replace_cancel(sj);
+        shortcut_char_replacing_cancel(sj);
     }
 
     if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||

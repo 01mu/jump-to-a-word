@@ -26,6 +26,17 @@
 #include "util.h"
 #include "values.h"
 
+void search_line_insertion_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Line insertion canceled."));
+    search_end(sj);
+}
+
+void search_line_insertion_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Line insertion completed (%i change%s made)."), sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
+    search_end(sj);
+}
+
 static void get_lines(ShortcutJump *sj, GArray *lines) {
     gint previous_line = -1;
 
@@ -169,7 +180,7 @@ static gboolean on_click_event_line_replacement(GtkWidget *widget, GdkEventButto
         if (sj->current_mode == JM_INSERTING_LINE) {
             sj->current_cursor_pos = save_cursor_position(sj);
             scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
-            search_replace_cancel(sj);
+            search_line_insertion_cancel(sj);
             return TRUE;
         }
     }

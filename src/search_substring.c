@@ -334,3 +334,14 @@ gboolean substring_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
 
     return TRUE;
 }
+
+void search_substring_replace_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Substring replacement canceled."));
+    search_end(sj);
+}
+
+void search_substring_replace_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Substring replacement completed (%i change%s made)."), sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
+    search_end(sj);
+}

@@ -19,8 +19,9 @@
 #include <plugindata.h>
 
 #include "jump_to_a_word.h"
-#include "multicursor.h"
+#include "insert_line.h"
 #include "search_common.h"
+#include "search_substring.h"
 #include "search_word.h"
 #include "shortcut_char.h"
 #include "shortcut_common.h"
@@ -345,21 +346,21 @@ void end_actions(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
         search_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT) {
-        shortcut_cancel(sj);
+        shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-        search_replace_complete(sj);
+        search_word_replace_complete(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        shortcut_cancel(sj);
+        shortcut_char_jumping_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
         shortcut_char_waiting_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replace_complete(sj);
+        shortcut_char_replacing_cancel(sj);
     } else if (sj->current_mode == JM_LINE) {
-        shortcut_cancel(sj);
+        search_line_insertion_complete(sj);
     } else if (sj->current_mode == JM_SUBSTRING) {
         search_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_replace_complete(sj);
+        search_substring_replace_complete(sj);
     } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
     }
 }

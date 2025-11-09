@@ -24,7 +24,7 @@
 #include "jump_to_a_word.h"
 
 void shortcut_end(ShortcutJump *sj, gboolean was_canceled);
-void shortcut_cancel(ShortcutJump *sj);
+void shortcut_word_cancel(ShortcutJump *sj);
 void shortcut_set_to_first_visible_line(ShortcutJump *sj);
 void shortcut_set_after_placement(ShortcutJump *sj);
 GString *shortcut_set_tags_in_buffer(GArray *words, GString *buffer, gint first_position);

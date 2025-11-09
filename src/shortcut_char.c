@@ -182,10 +182,6 @@ static void shortcut_char_replace_end(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
 
-    if (!sj->search_change_made) {
-        // scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
-    }
-
     sj->cursor_in_word = FALSE;
     sj->replace_len = 0;
     sj->search_change_made = FALSE;
@@ -198,10 +194,9 @@ static void shortcut_char_replace_end(ShortcutJump *sj) {
  *
  * @param ShortcutJump *sj: The plugin object
  */
-void shortcut_char_replace_cancel(ShortcutJump *sj) {
+void shortcut_char_replacing_cancel(ShortcutJump *sj) {
     shortcut_char_replace_end(sj);
     shortcut_set_to_first_visible_line(sj);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     shortcut_end(sj, FALSE);
     sj->current_mode = JM_NONE;
     ui_set_statusbar(TRUE, _("Character replacement canceled."));
@@ -215,8 +210,6 @@ void shortcut_char_replace_cancel(ShortcutJump *sj) {
 void shortcut_char_replace_complete(ShortcutJump *sj) {
     shortcut_char_replace_end(sj);
     shortcut_set_to_first_visible_line(sj);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
                      sj->words->len == 1 ? "" : "s");
@@ -244,12 +237,12 @@ gboolean shortcut_char_on_click_event(GtkWidget *widget, GdkEventButton *event, 
         if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
             sj->current_cursor_pos = save_cursor_position(sj);
             sj->current_cursor_pos = set_cursor_position_with_lfs(sj);
-            shortcut_cancel(sj);
+            shortcut_word_cancel(sj);
         }
 
         if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
             sj->current_cursor_pos = save_cursor_position(sj);
-            shortcut_char_replace_cancel(sj);
+            shortcut_char_replacing_cancel(sj);
         }
 
         return TRUE;
@@ -286,9 +279,9 @@ void shortcut_char_init(ShortcutJump *sj, gboolean init_set, gchar init) {
         }
 
         shortcut_char_get_chars(sj, search_char);
-        scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
 
         if (!init_set) {
+            scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
             sj->buffer = shortcut_mask_bytes(sj->words, sj->buffer, sj->first_position);
             sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
             sj->current_cursor_pos = save_cursor_position(sj);
@@ -392,4 +385,17 @@ gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event, gpoin
     }
 
     return FALSE;
+}
+
+void shortcut_char_jumping_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Character shortcut jump canceled."));
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    shortcut_set_to_first_visible_line(sj);
+    annotation_clear(sj->sci, sj->eol_message_line);
+    sj->range_is_set = FALSE;
+    shortcut_end(sj, TRUE);
 }

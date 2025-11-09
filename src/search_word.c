@@ -381,3 +381,14 @@ gboolean search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
 
     return FALSE;
 }
+
+void search_word_replace_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Word replacement canceled."));
+    search_end(sj);
+}
+
+void search_word_replace_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Word replacement completed (%i change%s made)."), sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
+    search_end(sj);
+}

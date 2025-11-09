@@ -21,8 +21,10 @@
 
 #include "jump_to_a_word.h"
 
-void replace(ShortcutJump *sj);
 gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 void multicursor_replace(ShortcutJump *sj);
+void replace_substring_init(ShortcutJump *sj, gboolean instant_replace);
+void replace_word_init(ShortcutJump *sj, gboolean instant_replace);
+void replace_instant_init(ShortcutJump *sj);
 
 #endif

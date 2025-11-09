@@ -43,7 +43,6 @@
 gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
-
     return replace_handle_input(sj, event, keychar);
 }
 
@@ -54,7 +53,6 @@ gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpoi
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
 static void set_replace_indicators(ShortcutJump *sj, gboolean instant_replace) {
-    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     search_clear_indicators(sj->sci, sj->words);
 
@@ -85,17 +83,10 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
     }
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    // scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
-
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
-
     shortcut_set_to_first_visible_line(sj);
-
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-
     annotation_display_replace_char(sj);
-    // search_clear_indicators(sj->sci, sj->words);
     set_replace_indicators(sj, instant_replace);
 
     if (instant_replace) {
@@ -120,7 +111,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
-static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
+void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->search_results_count == 0) {
         ui_set_statusbar(TRUE, _("No substrings to replace."));
         search_cancel(sj);
@@ -234,14 +225,13 @@ void multicursor_replace(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
-static void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
+void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->search_results_count == 0) {
         ui_set_statusbar(TRUE, _("No words to replace."));
         search_cancel(sj);
         return;
     }
 
-    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     set_replace_indicators(sj, instant_replace);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_display_replace(sj);
@@ -250,7 +240,6 @@ static void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->config_settings->replace_action == RA_INSERT_END) {
         for (gint i = 0; i < sj->words->len; i++) {
             Word *word = &g_array_index(sj->words, Word, i);
-
             if (word->valid_search) {
                 word->replace_pos += word->word->len;
             }
@@ -258,6 +247,7 @@ static void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
     }
 
     disconnect_key_press_action(sj);
+    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     connect_key_press_action(sj, on_key_press_search_replace);
 }
 
@@ -267,7 +257,7 @@ static void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
  *
  * @param ShortcutJump *sj: The plugin object
  */
-static void replace_instant_init(ShortcutJump *sj) {
+void replace_instant_init(ShortcutJump *sj) {
     set_sj_scintilla_object(sj);
     set_selection_info(sj);
 
@@ -276,7 +266,7 @@ static void replace_instant_init(ShortcutJump *sj) {
 
     define_indicators(sj->sci, sj);
 
-    if (sj->selection_is_a_char) {
+    if (sj->in_selection && sj->selection_is_a_char) {
         gchar to_replace = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->selection_start, 0);
         shortcut_char_init(sj, TRUE, to_replace);
         replace_shortcut_char_init(sj, TRUE);
@@ -291,35 +281,4 @@ static void replace_instant_init(ShortcutJump *sj) {
 
     substring_init(sj, TRUE);
     replace_substring_init(sj, TRUE);
-}
-
-/**
- * @brief Begins replacement for specific modes.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void replace(ShortcutJump *sj) {
-    if (sj->current_mode == JM_SEARCH) {
-        replace_word_init(sj, FALSE);
-    } else if (sj->current_mode == JM_SHORTCUT) {
-        shortcut_cancel(sj);
-    } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-        search_replace_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        shortcut_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shortcut_char_waiting_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replace_cancel(sj);
-    } else if (sj->current_mode == JM_LINE) {
-
-    } else if (sj->current_mode == JM_SUBSTRING) {
-        replace_substring_init(sj, FALSE);
-    } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_replace_cancel(sj);
-    } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
-
-    } else if (sj->current_mode == JM_NONE) {
-        replace_instant_init(sj);
-    }
 }

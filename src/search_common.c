@@ -247,6 +247,7 @@ void search_end(ShortcutJump *sj) {
         if (sj->search_change_made) {
             scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
             scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
+            scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
         }
 
         if (sj->newline_was_added_for_next_line_insert) {
@@ -254,8 +255,6 @@ void search_end(ShortcutJump *sj) {
             scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
             sj->newline_was_added_for_next_line_insert = FALSE;
         }
-
-        scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
 
         if (cm != JM_INSERTING_LINE) {
             margin_markers_reset(sj);

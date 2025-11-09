@@ -221,7 +221,7 @@ void shortcut_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) 
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    //scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
+    // scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     sj->previous_cursor_pos = sj->current_cursor_pos;
 
     if (sj->config_settings->move_marker_to_line) {
@@ -265,23 +265,17 @@ void shortcut_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) 
  *
  * @param ScintillaObject *sci: The Scintilla object
  */
-void shortcut_cancel(ShortcutJump *sj) {
-    if (sj->current_mode == JM_SHORTCUT) {
-        ui_set_statusbar(TRUE, _("Word shortcut jump canceled."));
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        ui_set_statusbar(TRUE, _("Character shortcut jump canceled."));
-    }
-
+void shortcut_word_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Word shortcut jump canceled."));
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    //scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     shortcut_set_to_first_visible_line(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
-    shortcut_end(sj, TRUE);
     sj->range_is_set = FALSE;
+    shortcut_end(sj, TRUE);
 }
 
 /**
@@ -451,7 +445,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
 
     if (event->keyval == GDK_KEY_BackSpace) {
         if (sj->search_query->len == 0) {
-            shortcut_cancel(sj);
+            shortcut_word_cancel(sj);
             return TRUE;
         }
 
@@ -465,7 +459,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
         Word word;
 
         if (sj->shortcut_single_pos == -1 && sj->current_mode != JM_LINE) {
-            shortcut_cancel(sj);
+            shortcut_word_cancel(sj);
             return TRUE;
         }
 
@@ -496,7 +490,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
         sj->shortcut_single_pos = shortcut_get_highlighted_pos(sj->sci, sj->words);
 
         if (sj->search_results_count == 0) {
-            shortcut_cancel(sj);
+            shortcut_word_cancel(sj);
             return TRUE;
         }
 
@@ -515,7 +509,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
         return TRUE;
     }
 
-    shortcut_cancel(sj);
+    shortcut_word_cancel(sj);
     return FALSE;
 }
 
@@ -571,7 +565,7 @@ gboolean shortcut_on_click_event(GtkWidget *widget, GdkEventButton *event, gpoin
     if (mouse_movement_performed(sj, event) && (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_LINE)) {
         sj->current_cursor_pos = save_cursor_position(sj);
         sj->current_cursor_pos = set_cursor_position_with_lfs(sj);
-        shortcut_cancel(sj);
+        shortcut_word_cancel(sj);
         return TRUE;
     }
 

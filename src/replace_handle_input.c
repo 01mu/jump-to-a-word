@@ -18,9 +18,11 @@
 
 #include <plugindata.h>
 
+#include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
-#include "search_common.h"
+#include "search_substring.h"
+#include "search_word.h"
 #include "shortcut_char.h"
 #include "util.h"
 
@@ -54,18 +56,6 @@ static void handle_single_backspace(ShortcutJump *sj) {
 
     sj->search_change_made = TRUE;
     sj->current_cursor_pos -= rem_to_left;
-
-    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_replace_complete(sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replace_complete(sj);
-    }
-
-    if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
-        multicursor_complete(sj);
-    }
 }
 
 /**
@@ -246,6 +236,27 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&
         !sj->search_change_made) {
         handle_single_backspace(sj);
+
+        if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
+            multicursor_complete(sj);
+        }
+
+        if (sj->current_mode == JM_REPLACE_SEARCH) {
+            search_word_replace_complete(sj);
+        }
+
+        if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+            search_substring_replace_complete(sj);
+        }
+
+        if (sj->current_mode == JM_INSERTING_LINE) {
+            search_line_insertion_complete(sj);
+        }
+
+        if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+            shortcut_char_replace_complete(sj);
+        }
+
         return TRUE;
     }
 
@@ -263,12 +274,18 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         if (sj->replace_len == 0) {
             if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
                 multicursor_complete(sj);
-                return TRUE;
             }
 
-            if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING ||
-                sj->current_mode == JM_INSERTING_LINE) {
-                search_replace_complete(sj);
+            if (sj->current_mode == JM_REPLACE_SEARCH) {
+                search_word_replace_complete(sj);
+            }
+
+            if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+                search_substring_replace_complete(sj);
+            }
+
+            if (sj->current_mode == JM_INSERTING_LINE) {
+                search_line_insertion_complete(sj);
             }
 
             if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
@@ -284,19 +301,24 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
 
     if (event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R || event->keyval == GDK_KEY_Caps_Lock ||
         event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R) {
-        sj->search_change_made = TRUE;
         return TRUE;
     }
 
     if (event->keyval == GDK_KEY_Return) {
         if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
             multicursor_complete(sj);
-            return TRUE;
         }
 
-        if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING ||
-            sj->current_mode == JM_INSERTING_LINE) {
-            search_replace_complete(sj);
+        if (sj->current_mode == JM_REPLACE_SEARCH) {
+            search_word_replace_complete(sj);
+        }
+
+        if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+            search_substring_replace_complete(sj);
+        }
+
+        if (sj->current_mode == JM_INSERTING_LINE) {
+            search_line_insertion_complete(sj);
         }
 
         if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
@@ -306,7 +328,11 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         return TRUE;
     }
 
-    sj->current_cursor_pos = sj->replace_len > 0 ? scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0) : pos_cache;
+    if (sj->replace_len > 0) {
+        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+    } else {
+        sj->current_cursor_pos = pos_cache;
+    }
 
     if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
         if (sj->search_change_made) {
@@ -316,12 +342,27 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         }
     }
 
-    if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_SUBSTRING ||
-        sj->current_mode == JM_INSERTING_LINE) {
+    if (sj->current_mode == JM_REPLACE_SEARCH) {
         if (sj->search_change_made) {
-            search_replace_complete(sj);
+            search_word_replace_complete(sj);
         } else {
-            search_replace_cancel(sj);
+            search_word_replace_cancel(sj);
+        }
+    }
+
+    if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+        if (sj->search_change_made) {
+            search_substring_replace_complete(sj);
+        } else {
+            search_substring_replace_cancel(sj);
+        }
+    }
+
+    if (sj->current_mode == JM_INSERTING_LINE) {
+        if (sj->search_change_made) {
+            search_line_insertion_complete(sj);
+        } else {
+            search_line_insertion_cancel(sj);
         }
     }
 
@@ -329,7 +370,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         if (sj->search_change_made) {
             shortcut_char_replace_complete(sj);
         } else {
-            shortcut_char_replace_cancel(sj);
+            shortcut_char_replacing_cancel(sj);
         }
     }
 
