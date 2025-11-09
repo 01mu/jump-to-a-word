@@ -106,7 +106,7 @@ void handle_action(gpointer user_data) {
             init_sj_values(sj);
             define_indicators(sj->sci, sj);
             sj->search_query = set_search_query(sj->sci, sj->selection_start, sj->selection_end, sj->search_query);
-            mark_text(sj);
+            search_get_substrings(sj);
         }
 
         line_insert_from_search(sj);
@@ -315,8 +315,8 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     gtk_widget_show(sj->main_menu_item);
 
     SET_MENU_ITEM("Jump to _Word (Shortcut)", shortcut_word_cb, sj);
-    SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shortcut_word_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj,
-                   item);
+    SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shortcut_word_kb, KB_JUMP_TO_A_WORD_SHORTCUT,
+                   sj, item);
 
     SET_MENU_ITEM("Jump to _Character (Shortcut)", shortcut_char_cb, sj);
     SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shortcut_char_kb,

@@ -127,6 +127,7 @@ static void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
         return;
     }
 
+    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     set_replace_indicators(sj, instant_replace);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_display_replace_substring(sj);
@@ -240,6 +241,7 @@ static void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
         return;
     }
 
+    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     set_replace_indicators(sj, instant_replace);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_display_replace(sj);
@@ -304,7 +306,7 @@ void replace(ShortcutJump *sj) {
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
         search_replace_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        replace_shortcut_char_init(sj, FALSE);
+        shortcut_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
         shortcut_char_waiting_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {

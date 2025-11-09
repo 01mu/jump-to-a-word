@@ -27,6 +27,6 @@ void substring_init(ShortcutJump *sj, gboolean instant_replace);
 void substring_cb(GtkMenuItem *menu_item, gpointer user_data);
 gboolean substring_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 GString *set_search_query(ScintillaObject *sci, gint selection_start, gint selection_end, GString *search_query);
-void mark_text(ShortcutJump *sj);
+void search_get_substrings(ShortcutJump *sj);
 
 #endif

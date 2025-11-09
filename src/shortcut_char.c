@@ -165,7 +165,7 @@ void shortcut_char_waiting_cancel(ShortcutJump *sj) {
  *
  * @param ShortcutJump *sj: The plugin object
  */
-static void shtct_char_replace_end(ShortcutJump *sj) {
+static void shortcut_char_replace_end(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
 
@@ -199,8 +199,9 @@ static void shtct_char_replace_end(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void shortcut_char_replace_cancel(ShortcutJump *sj) {
-    shtct_char_replace_end(sj);
+    shortcut_char_replace_end(sj);
     shortcut_set_to_first_visible_line(sj);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     shortcut_end(sj, FALSE);
     sj->current_mode = JM_NONE;
     ui_set_statusbar(TRUE, _("Character replacement canceled."));
@@ -212,8 +213,10 @@ void shortcut_char_replace_cancel(ShortcutJump *sj) {
  * @param ShortcutJump *sj: The plugin object
  */
 void shortcut_char_replace_complete(ShortcutJump *sj) {
-    shtct_char_replace_end(sj);
+    shortcut_char_replace_end(sj);
     shortcut_set_to_first_visible_line(sj);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
                      sj->words->len == 1 ? "" : "s");
@@ -283,11 +286,16 @@ void shortcut_char_init(ShortcutJump *sj, gboolean init_set, gchar init) {
         }
 
         shortcut_char_get_chars(sj, search_char);
-        sj->buffer = shortcut_mask_bytes(sj->words, sj->buffer, sj->first_position);
-        sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
-        sj->current_cursor_pos = save_cursor_position(sj);
-        shortcut_set_after_placement(sj);
-        set_shortcut_indicators(sj);
+        scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
+
+        if (!init_set) {
+            sj->buffer = shortcut_mask_bytes(sj->words, sj->buffer, sj->first_position);
+            sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
+            sj->current_cursor_pos = save_cursor_position(sj);
+            shortcut_set_after_placement(sj);
+            set_shortcut_indicators(sj);
+        }
+
         sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
         ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
     }
