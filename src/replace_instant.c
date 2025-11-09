@@ -86,7 +86,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
+    // scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
 
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
 

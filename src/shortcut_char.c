@@ -183,7 +183,7 @@ static void shtct_char_replace_end(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
 
     if (!sj->search_change_made) {
-        scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
+        // scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     }
 
     sj->cursor_in_word = FALSE;

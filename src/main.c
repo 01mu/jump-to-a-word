@@ -33,6 +33,7 @@
 #include "shortcut_common.h"
 #include "shortcut_line.h"
 #include "shortcut_word.h"
+#include "transpose_string.h"
 #include "util.h"
 #include "values.h"
 
@@ -69,9 +70,12 @@ void handle_action(gpointer user_data) {
     JumpMode jm = sj->current_mode;
     gboolean performing_string_action = ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END;
     gboolean performing_line_action = ra == RA_INSERT_NEXT_LINE || ra == RA_INSERT_PREVIOUS_LINE;
+    gboolean performing_transpose_action = ra == RA_TRANSPOSE_STRING;
 
     if (performing_string_action && mm == MC_DISABLED) {
         replace(sj);
+    } else if (performing_transpose_action && mm == MC_ACCEPTING && jm == JM_NONE) {
+        transpose_string(sj);
     } else if (performing_string_action && mm == MC_ACCEPTING && jm == JM_NONE) {
         multicursor_replace(sj);
     } else if (performing_string_action && mm == MC_REPLACING && jm == JM_MULTICURSOR_REPLACING) {

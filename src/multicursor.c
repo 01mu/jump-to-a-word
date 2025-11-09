@@ -134,17 +134,6 @@ void multicursor_cancel(ShortcutJump *sj) {
 }
 
 void multicursor_complete(ShortcutJump *sj) {
-    if (sj->multicursor_lines) {
-        for (gint i = 0; i < sj->multicursor_lines->len; i++) {
-            Word word = g_array_index(sj->multicursor_lines, Word, i);
-
-            if (word.valid_search) {
-                gint start_pos = sj->first_position + word.replace_pos;
-                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, sj->replace_len + 1);
-            }
-        }
-    }
-
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
         if (word.valid_search) {
@@ -157,20 +146,38 @@ void multicursor_complete(ShortcutJump *sj) {
         }
     }
 
-    gint changes = sj->search_results_count;
+    ReplaceAction ra = sj->config_settings->replace_action;
+    gboolean performing_string_action = ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END;
+    gboolean performing_line_action = ra == RA_INSERT_NEXT_LINE || ra == RA_INSERT_PREVIOUS_LINE;
+    gboolean performing_transpose_action = ra == RA_TRANSPOSE_STRING;
 
-    if (!sj->search_change_made) {
-        changes = 0;
+    if (performing_transpose_action) {
+        ui_set_statusbar(TRUE, _("Multicursor string transposition completed."));
+    } else if (performing_string_action) {
+        ui_set_statusbar(TRUE, _("Multicursor string replacement completed (%i change%s made)."),
+                         sj->search_results_count, sj->search_results_count == 1 ? "" : "s");
+    } else if (performing_line_action) {
+        ui_set_statusbar(TRUE, _("Multicursor line insertion completed (%i line%s inserted)."),
+                         sj->multicursor_lines->len, sj->multicursor_lines->len == 1 ? "" : "s");
     }
 
-    ui_set_statusbar(TRUE, _("Multicursor string replacement completed (%i change%s made)."), changes,
-                     changes == 1 ? "" : "s");
+    if (sj->multicursor_lines) {
+        for (gint i = 0; i < sj->multicursor_lines->len; i++) {
+            Word word = g_array_index(sj->multicursor_lines, Word, i);
+
+            if (word.valid_search) {
+                gint start_pos = sj->first_position + word.replace_pos;
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, sj->replace_len + 1);
+            }
+        }
+    }
 
     annotation_clear(sj->sci, sj->eol_message_line);
     scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+
     multicursor_end(sj);
 }
 

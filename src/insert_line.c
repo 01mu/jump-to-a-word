@@ -104,6 +104,8 @@ void multicursor_line_insert(ShortcutJump *sj) {
         return;
     }
 
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+
     sj->multicursor_lines = g_array_new(TRUE, FALSE, sizeof(Word));
     g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
     GArray *lines = g_array_new(FALSE, FALSE, sizeof(gint));
