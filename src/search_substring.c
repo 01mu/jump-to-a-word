@@ -60,7 +60,7 @@ Word get_substring_for_search(ShortcutJump *sj, gint i) {
  *
  * @param ShortcutJump *sj: The plugin object
  */
-static void mark_text(ShortcutJump *sj) {
+void mark_text(ShortcutJump *sj) {
     if (sj->delete_added_bracket) {
         scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->current_cursor_pos, 1);
         sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
@@ -259,9 +259,8 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If we are instantly replacing
  */
-void search_set_initial_query_substring(ShortcutJump *sj) {
-    g_string_append(sj->search_query, sci_get_contents_range(sj->sci, sj->selection_start, sj->selection_end));
-    mark_text(sj);
+GString *set_search_query(ScintillaObject *sci, gint selection_start, gint selection_end, GString *search_query) {
+    return g_string_append(search_query, sci_get_contents_range(sci, selection_start, selection_end));
 }
 
 /**
@@ -286,7 +285,8 @@ void substring_init(ShortcutJump *sj, gboolean instant_replace) {
         if (!sj->selection_is_a_char && !sj->selection_is_a_word && sj->selection_is_a_line) {
             sj->in_selection = FALSE;
             init_sj_values(sj);
-            search_set_initial_query_substring(sj);
+            sj->search_query = set_search_query(sj->sci, sj->selection_start, sj->selection_end, sj->search_query);
+            mark_text(sj);
         } else {
             init_sj_values(sj);
         }

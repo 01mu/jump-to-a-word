@@ -214,22 +214,6 @@ gboolean mouse_movement_performed(ShortcutJump *sj, const GdkEventButton *event)
  * @param ScintillaObject *sci: Scintilla object
  */
 void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
-    sj->config_settings->tag_color_store_style = scintilla_send_message(sci, SCI_INDICGETSTYLE, INDICATOR_TAG, 0);
-    sj->config_settings->tag_color_store_outline =
-        scintilla_send_message(sci, SCI_INDICGETOUTLINEALPHA, INDICATOR_TAG, 0);
-    sj->config_settings->tag_color_store_fore = scintilla_send_message(sci, SCI_INDICGETFORE, INDICATOR_TAG, 0);
-
-    sj->config_settings->highlight_color_store_style =
-        scintilla_send_message(sci, SCI_INDICGETSTYLE, INDICATOR_HIGHLIGHT, 0);
-    sj->config_settings->highlight_color_store_outline =
-        scintilla_send_message(sci, SCI_INDICGETALPHA, INDICATOR_HIGHLIGHT, 0);
-    sj->config_settings->highlight_color_store_fore =
-        scintilla_send_message(sci, SCI_INDICGETFORE, INDICATOR_HIGHLIGHT, 0);
-
-    sj->config_settings->text_color_store_style = scintilla_send_message(sci, SCI_INDICGETSTYLE, INDICATOR_TEXT, 0);
-    sj->config_settings->text_color_store_outline = scintilla_send_message(sci, SCI_INDICGETALPHA, INDICATOR_TEXT, 0);
-    sj->config_settings->text_color_store_fore = scintilla_send_message(sci, SCI_INDICGETFORE, INDICATOR_TEXT, 0);
-
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TAG, INDIC_FULLBOX);
     scintilla_send_message(sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG, 120);
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color);
@@ -297,32 +281,6 @@ void disconnect_click_action(ShortcutJump *sj) {
     g_signal_handler_disconnect(sj->geany_data->main_widgets->window, sj->click_handler_id);
 }
 
-void reset_indicators(ShortcutJump *sj) {
-    // scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, sj->config_settings->text_color_store_style);
-    // scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_TEXT,
-    // sj->config_settings->text_color_store_outline); scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TEXT,
-    // sj->config_settings->text_color_store_fore);
-
-    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_TAG, sj->config_settings->tag_color_store_style);
-    scintilla_send_message(sj->sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG,
-                           sj->config_settings->tag_color_store_outline);
-    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color_store_fore);
-
-    scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_HIGHLIGHT,
-                           sj->config_settings->highlight_color_store_style);
-    scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT,
-                           sj->config_settings->highlight_color_store_outline);
-    scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT,
-                           sj->config_settings->highlight_color_store_fore);
-
-    // scintilla_send_message(sj->sci, SCI_INDICSETSTYLE, INDICATOR_MULTICURSOR,
-    // sj->config_settings->highlight_color_store_style);
-    // scintilla_send_message(sj->sci, SCI_INDICSETALPHA, INDICATOR_MULTICURSOR,
-    // sj->config_settings->highlight_color_store_outline);
-    // scintilla_send_message(sj->sci, SCI_INDICSETFORE, INDICATOR_MULTICURSOR,
-    // sj->config_settings->highlight_color_store_fore);
-}
-
 /**
  * @brief Handles the action performed after jumping to a word or character using a shortcut.
  *
@@ -387,17 +345,17 @@ void end_actions(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
         search_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT) {
-        shrtct_cancel(sj);
+        shortcut_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
         search_replace_complete(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        shrtct_cancel(sj);
+        shortcut_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shrtct_char_waiting_cancel(sj);
+        shortcut_char_waiting_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shrtct_char_replace_complete(sj);
+        shortcut_char_replace_complete(sj);
     } else if (sj->current_mode == JM_LINE) {
-        shrtct_cancel(sj);
+        shortcut_cancel(sj);
     } else if (sj->current_mode == JM_SUBSTRING) {
         search_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {

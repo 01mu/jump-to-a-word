@@ -35,7 +35,7 @@
  *
  * @param ShortcutJump *sj: The plugin object
  */
-void shrtct_set_to_first_visible_line(ShortcutJump *sj) {
+void shortcut_set_to_first_visible_line(ShortcutJump *sj) {
     if (!sj->in_selection || sj->selection_is_a_word || sj->selection_is_a_char) {
         scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
     }
@@ -49,7 +49,7 @@ void shrtct_set_to_first_visible_line(ShortcutJump *sj) {
  *
  * @return gint: The number of shortcuts
  */
-gint shrtct_get_max_words(ShortcutJump *sj) {
+gint shortcut_get_max_words(ShortcutJump *sj) {
     if (sj->config_settings->shortcuts_include_single_char) {
         return 720;
     } else {
@@ -66,7 +66,7 @@ gint shrtct_get_max_words(ShortcutJump *sj) {
  *
  * @return GString *: The masked buffer
  */
-GString *shrtct_mask_bytes(GArray *words, GString *buffer, gint first_position) {
+GString *shortcut_mask_bytes(GArray *words, GString *buffer, gint first_position) {
     for (gint i = 0; i < words->len; i++) {
         Word word = g_array_index(words, Word, i);
         gint starting = word.starting - first_position;
@@ -88,7 +88,7 @@ GString *shrtct_mask_bytes(GArray *words, GString *buffer, gint first_position) 
  *
  * @return GString *: The buffer with the shortcut tags added
  */
-GString *shrtct_set_tags_in_buffer(GArray *words, GString *buffer, gint first_position) {
+GString *shortcut_set_tags_in_buffer(GArray *words, GString *buffer, gint first_position) {
     for (gint i = 0; i < words->len; i++) {
         Word word = g_array_index(words, Word, i);
         gint starting = word.starting - first_position;
@@ -111,7 +111,7 @@ GString *shrtct_set_tags_in_buffer(GArray *words, GString *buffer, gint first_po
  *
  * @return GString *: A pointer to the tag
  */
-GString *shrtct_make_tag(ShortcutJump *sj, gint position) {
+GString *shortcut_make_tag(ShortcutJump *sj, gint position) {
     if (!sj->config_settings->shortcuts_include_single_char) {
         position += 26;
     }
@@ -150,7 +150,7 @@ GString *shrtct_make_tag(ShortcutJump *sj, gint position) {
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean was_canceled: Whether the shortcut jump was canceled. This is needed for the perform after action.
  */
-void shrtct_end(ShortcutJump *sj, gboolean was_canceled) {
+void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
 
@@ -163,7 +163,6 @@ void shrtct_end(ShortcutJump *sj, gboolean was_canceled) {
 
     gboolean performing_line_after = sj->current_mode == JM_LINE ? TRUE : FALSE;
 
-    reset_indicators(sj);
     margin_markers_reset(sj);
     sj->current_mode = JM_NONE;
     sj->search_results_count = 0;
@@ -190,9 +189,9 @@ void shrtct_end(ShortcutJump *sj, gboolean was_canceled) {
 
     if (performing_line_after && !was_canceled) {
         if (sj->config_settings->line_after == LA_JUMP_TO_CHARACTER_SHORTCUT) {
-            shrtct_char_init(sj, FALSE, '0');
+            shortcut_char_init(sj, FALSE, '0');
         } else if (sj->config_settings->line_after == LA_JUMP_TO_WORD_SHORTCUT) {
-            shrtct_word_init(sj);
+            shortcut_word_init(sj);
         } else if (sj->config_settings->line_after == LA_JUMP_TO_WORD_SEARCH) {
             search_init(sj, FALSE);
         } else if (sj->config_settings->line_after == LA_JUMP_TO_SUBSTRING_SEARCH) {
@@ -211,7 +210,7 @@ void shrtct_end(ShortcutJump *sj, gboolean was_canceled) {
  * @param gint word_length: The length of the word
  * @param gint line: The line the word is on (used when moving the marker)
  */
-void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
+void shortcut_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
     if (sj->current_mode == JM_SHORTCUT) {
         ui_set_statusbar(TRUE, _("Word shortcut jump completed."));
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
@@ -236,7 +235,7 @@ void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
     }
 
     if (sj->current_mode == JM_LINE) {
-        shrtct_line_handle_jump_action(sj, line);
+        shortcut_line_handle_jump_action(sj, line);
     }
 
     gboolean clear_previous_marker = FALSE;
@@ -250,9 +249,9 @@ void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 
-    shrtct_set_to_first_visible_line(sj);
+    shortcut_set_to_first_visible_line(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
-    shrtct_end(sj, FALSE);
+    shortcut_end(sj, FALSE);
 
     if (clear_previous_marker) {
         gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
@@ -266,7 +265,7 @@ void shrtct_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
  *
  * @param ScintillaObject *sci: The Scintilla object
  */
-void shrtct_cancel(ShortcutJump *sj) {
+void shortcut_cancel(ShortcutJump *sj) {
     if (sj->current_mode == JM_SHORTCUT) {
         ui_set_statusbar(TRUE, _("Word shortcut jump canceled."));
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
@@ -279,9 +278,9 @@ void shrtct_cancel(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     // scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-    shrtct_set_to_first_visible_line(sj);
+    shortcut_set_to_first_visible_line(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
-    shrtct_end(sj, TRUE);
+    shortcut_end(sj, TRUE);
     sj->range_is_set = FALSE;
 }
 
@@ -293,7 +292,7 @@ void shrtct_cancel(ShortcutJump *sj) {
  *
  * @return gint: The number of marked words
  */
-gint shrtct_get_search_results_count(ScintillaObject *sci, GArray *words) {
+gint shortcut_get_search_results_count(ScintillaObject *sci, GArray *words) {
     gint search_results_count = 0;
 
     for (gint i = 0; i < words->len; i++) {
@@ -315,7 +314,7 @@ gint shrtct_get_search_results_count(ScintillaObject *sci, GArray *words) {
  *
  * @return gint: The index of the valid word
  */
-gint shrtct_get_highlighted_pos(ScintillaObject *sci, GArray *words) {
+gint shortcut_get_highlighted_pos(ScintillaObject *sci, GArray *words) {
     for (gint i = 0; i < words->len; i++) {
         Word word = g_array_index(words, Word, i);
 
@@ -337,7 +336,7 @@ gint shrtct_get_highlighted_pos(ScintillaObject *sci, GArray *words) {
  *
  * @return GArray *: The pointer to the original array
  */
-GArray *shrtct_mark_indicators(ScintillaObject *sci, GArray *words, GString *search_query) {
+GArray *shortcut_mark_indicators(ScintillaObject *sci, GArray *words, GString *search_query) {
     for (gint i = 0; i < words->len; i++) {
         Word *word = &g_array_index(words, Word, i);
 
@@ -374,7 +373,7 @@ GArray *shrtct_mark_indicators(ScintillaObject *sci, GArray *words, GString *sea
  *
  * @return gint: The number of bytes
  */
-gint shrtct_utf8_char_length(gchar c) {
+gint shortcut_utf8_char_length(gchar c) {
     if ((c & 0x80) == 0) {
         return 1;
     }
@@ -401,7 +400,7 @@ gint shrtct_utf8_char_length(gchar c) {
  *
  * @return gint: The amount of padding to be applied to the start of the word
  */
-gint shrtct_set_padding(ShortcutJump *sj, gint word_length) {
+gint shortcut_set_padding(ShortcutJump *sj, gint word_length) {
     if (sj->config_settings->center_shortcut) {
         return word_length >= 3 ? floor((float)word_length / 2) : 0;
     }
@@ -416,7 +415,7 @@ gint shrtct_set_padding(ShortcutJump *sj, gint word_length) {
  *
  *
  */
-static void shrtct_set_indicators(ShortcutJump *sj) {
+static void shortcut_set_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
         gint start = word.starting + word.padding;
@@ -437,14 +436,14 @@ static void shrtct_set_indicators(ShortcutJump *sj) {
  * @return gint: FALSE if no controlled for key press action was found
  */
 
-gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
+gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
 
     scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
-    sj->words = shrtct_mark_indicators(sj->sci, sj->words, sj->search_query);
-    sj->search_results_count = shrtct_get_search_results_count(sj->sci, sj->words);
-    sj->shortcut_single_pos = shrtct_get_highlighted_pos(sj->sci, sj->words);
+    sj->words = shortcut_mark_indicators(sj->sci, sj->words, sj->search_query);
+    sj->search_results_count = shortcut_get_search_results_count(sj->sci, sj->words);
+    sj->shortcut_single_pos = shortcut_get_highlighted_pos(sj->sci, sj->words);
 
     if (keychar >= 96 && keychar <= 122 && sj->config_settings->shortcut_all_caps) {
         keychar -= 32;
@@ -452,13 +451,13 @@ gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
 
     if (event->keyval == GDK_KEY_BackSpace) {
         if (sj->search_query->len == 0) {
-            shrtct_cancel(sj);
+            shortcut_cancel(sj);
             return TRUE;
         }
 
         g_string_truncate(sj->search_query, sj->search_query->len - 1);
-        sj->words = shrtct_mark_indicators(sj->sci, sj->words, sj->search_query);
-        shrtct_set_indicators(sj);
+        sj->words = shortcut_mark_indicators(sj->sci, sj->words, sj->search_query);
+        shortcut_set_indicators(sj);
         return TRUE;
     }
 
@@ -466,7 +465,7 @@ gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
         Word word;
 
         if (sj->shortcut_single_pos == -1 && sj->current_mode != JM_LINE) {
-            shrtct_cancel(sj);
+            shortcut_cancel(sj);
             return TRUE;
         }
 
@@ -485,23 +484,23 @@ gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
             multicursor_add_word(sj, word);
         }
 
-        shrtct_complete(sj, word.starting_doc, word.word->len, word.line);
+        shortcut_complete(sj, word.starting_doc, word.word->len, word.line);
         return TRUE;
     }
 
     if (keychar != 0 && g_unichar_isalnum(keychar)) {
         g_string_append_c(sj->search_query, keychar);
 
-        sj->words = shrtct_mark_indicators(sj->sci, sj->words, sj->search_query);
-        sj->search_results_count = shrtct_get_search_results_count(sj->sci, sj->words);
-        sj->shortcut_single_pos = shrtct_get_highlighted_pos(sj->sci, sj->words);
+        sj->words = shortcut_mark_indicators(sj->sci, sj->words, sj->search_query);
+        sj->search_results_count = shortcut_get_search_results_count(sj->sci, sj->words);
+        sj->shortcut_single_pos = shortcut_get_highlighted_pos(sj->sci, sj->words);
 
         if (sj->search_results_count == 0) {
-            shrtct_cancel(sj);
+            shortcut_cancel(sj);
             return TRUE;
         }
 
-        shrtct_set_indicators(sj);
+        shortcut_set_indicators(sj);
 
         if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
             Word word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
@@ -510,13 +509,13 @@ gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
                 multicursor_add_word(sj, word);
             }
 
-            shrtct_complete(sj, word.starting_doc, word.word->len, word.line);
+            shortcut_complete(sj, word.starting_doc, word.word->len, word.line);
         }
 
         return TRUE;
     }
 
-    shrtct_cancel(sj);
+    shortcut_cancel(sj);
     return FALSE;
 }
 
@@ -526,11 +525,11 @@ gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data) {
  *
  * @@param ShortcutJump *sj: The plugin object
  */
-void shrtct_set_after_placement(ShortcutJump *sj) {
+void shortcut_set_after_placement(ShortcutJump *sj) {
     gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     gint lfs_added = get_lfs(sj, current_line);
 
-    shrtct_set_to_first_visible_line(sj);
+    shortcut_set_to_first_visible_line(sj);
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->last_position - sj->first_position);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->buffer->str);
@@ -547,11 +546,11 @@ void shrtct_set_after_placement(ShortcutJump *sj) {
  *
  * @return gboolean: FALSE if uncontrolled for key press
  */
-gboolean shrtct_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+gboolean shortcut_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_LINE) {
-        return shrtct_on_key_press_action(event, sj);
+        return shortcut_on_key_press_action(event, sj);
     }
 
     return FALSE;
@@ -566,13 +565,13 @@ gboolean shrtct_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer use
  *
  * @return gboolean: FALSE if uncontrolled for click or wrong mode
  */
-gboolean shrtct_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+gboolean shortcut_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (mouse_movement_performed(sj, event) && (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_LINE)) {
         sj->current_cursor_pos = save_cursor_position(sj);
         sj->current_cursor_pos = set_cursor_position_with_lfs(sj);
-        shrtct_cancel(sj);
+        shortcut_cancel(sj);
         return TRUE;
     }
 

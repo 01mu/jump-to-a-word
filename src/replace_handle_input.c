@@ -60,7 +60,7 @@ static void handle_single_backspace(ShortcutJump *sj) {
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shrtct_char_replace_complete(sj);
+        shortcut_char_replace_complete(sj);
     }
 
     if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
@@ -272,7 +272,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
             }
 
             if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-                shrtct_char_replace_complete(sj);
+                shortcut_char_replace_complete(sj);
             }
 
             return TRUE;
@@ -300,7 +300,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         }
 
         if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            shrtct_char_replace_complete(sj);
+            shortcut_char_replace_complete(sj);
         }
 
         return TRUE;
@@ -327,9 +327,9 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         if (sj->search_change_made) {
-            shrtct_char_replace_complete(sj);
+            shortcut_char_replace_complete(sj);
         } else {
-            shrtct_char_replace_cancel(sj);
+            shortcut_char_replace_cancel(sj);
         }
     }
 

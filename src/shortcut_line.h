@@ -23,9 +23,9 @@
 
 #include "jump_to_a_word.h"
 
-void shrtct_line_init(ShortcutJump *sj);
-void shrtct_line_cb(GtkMenuItem *menu_item, gpointer user_data);
-void shrtct_line_handle_jump_action(ShortcutJump *sj, gint line);
-gboolean shrtct_line_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
+void shortcut_line_init(ShortcutJump *sj);
+void shortcut_line_cb(GtkMenuItem *menu_item, gpointer user_data);
+void shortcut_line_handle_jump_action(ShortcutJump *sj, gint line);
+gboolean shortcut_line_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 
 #endif

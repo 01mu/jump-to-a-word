@@ -85,11 +85,11 @@ void handle_action(gpointer user_data) {
     } else if (performing_line_action && mm == MC_DISABLED && jm == JM_SEARCH) {
         disconnect_key_press_action(sj);
         disconnect_click_action(sj);
-        multicursor_line_insert_from_search(sj);
+        line_insert_from_search(sj);
     } else if (performing_line_action && mm == MC_DISABLED && jm == JM_SUBSTRING) {
         disconnect_key_press_action(sj);
         disconnect_click_action(sj);
-        multicursor_line_insert_from_search(sj);
+        line_insert_from_search(sj);
     } else if (performing_line_action && mm == MC_DISABLED && jm == JM_NONE) {
         set_sj_scintilla_object(sj);
         set_selection_info(sj);
@@ -97,30 +97,19 @@ void handle_action(gpointer user_data) {
         if (!sj->in_selection) {
             init_sj_values(sj);
             define_indicators(sj->sci, sj);
-
             search_get_words(sj);
             search_set_initial_query(sj, TRUE);
         } else {
             if (!sj->selection_is_a_char && !sj->selection_is_a_word) {
                 sj->in_selection = FALSE;
-                init_sj_values(sj);
-                sj->markers = markers_margin_get(sj, sj->first_line_on_screen, sj->lines_on_screen);
-                search_set_initial_query_substring(sj);
-            } else {
-                init_sj_values(sj);
-                sj->markers = markers_margin_get(sj, sj->first_line_on_screen, sj->lines_on_screen);
-                search_set_initial_query_substring(sj);
             }
-
+            init_sj_values(sj);
             define_indicators(sj->sci, sj);
+            sj->search_query = set_search_query(sj->sci, sj->selection_start, sj->selection_end, sj->search_query);
+            mark_text(sj);
         }
 
-        if (sj->search_results_count == 0) {
-            ui_set_statusbar(TRUE, _("No strings selected for line insertion."));
-            return;
-        }
-
-        multicursor_line_insert_from_search(sj);
+        line_insert_from_search(sj);
     } else if (performing_line_action && mm == MC_REPLACING && jm == JM_MULTICURSOR_REPLACING) {
         multicursor_cancel(sj);
     } else {
@@ -200,17 +189,17 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
     if (sj->current_mode == JM_SEARCH) {
         search_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT) {
-        shrtct_end(sj, FALSE);
+        shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
         search_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        shrtct_end(sj, FALSE);
+        shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shrtct_char_waiting_cancel(sj);
+        shortcut_char_waiting_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shrtct_end(sj, FALSE);
+        shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_LINE) {
-        shrtct_end(sj, FALSE);
+        shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_SUBSTRING) {
         search_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
@@ -325,16 +314,16 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     gtk_widget_show(submenu);
     gtk_widget_show(sj->main_menu_item);
 
-    SET_MENU_ITEM("Jump to _Word (Shortcut)", shrtct_word_cb, sj);
-    SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shrtct_word_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj,
+    SET_MENU_ITEM("Jump to _Word (Shortcut)", shortcut_word_cb, sj);
+    SET_KEYBINDING("Jump to word (shortcut)", "jump_to_a_word_shortcut", shortcut_word_kb, KB_JUMP_TO_A_WORD_SHORTCUT, sj,
                    item);
 
-    SET_MENU_ITEM("Jump to _Character (Shortcut)", shrtct_char_cb, sj);
-    SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shrtct_char_kb,
+    SET_MENU_ITEM("Jump to _Character (Shortcut)", shortcut_char_cb, sj);
+    SET_KEYBINDING("Jump to character (shortcut)", "jump_to_a_char_shortcut", shortcut_char_kb,
                    KB_JUMP_TO_A_CHAR_SHORTCUT, sj, item);
 
-    SET_MENU_ITEM("Jump to _Line (Shortcut)", shrtct_line_cb, sj);
-    SET_KEYBINDING("Jump to line (shortcut)", "jump_to_a_line", shrtct_line_kb, KB_JUMP_TO_LINE, sj, item);
+    SET_MENU_ITEM("Jump to _Line (Shortcut)", shortcut_line_cb, sj);
+    SET_KEYBINDING("Jump to line (shortcut)", "jump_to_a_line", shortcut_line_kb, KB_JUMP_TO_LINE, sj, item);
 
     SET_MENU_ITEM("Jump to W_ord (Search)", search_cb, sj);
     SET_KEYBINDING("Jump to word (search)", "jump_to_a_word_search", search_kb, KB_JUMP_TO_A_WORD_SEARCH, sj, item);
@@ -464,15 +453,15 @@ static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
 
     if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
         sj->current_mode == JM_LINE) {
-        shrtct_cancel(sj);
+        shortcut_cancel(sj);
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shrtct_char_waiting_cancel(sj);
+        shortcut_char_waiting_cancel(sj);
     }
 
     if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shrtct_char_replace_cancel(sj);
+        shortcut_char_replace_cancel(sj);
     }
 
     if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||

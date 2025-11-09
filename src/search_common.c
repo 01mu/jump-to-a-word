@@ -259,12 +259,12 @@ void search_end(ShortcutJump *sj) {
 
         if (cm != JM_INSERTING_LINE) {
             margin_markers_reset(sj);
+            g_array_free(sj->markers, TRUE);
         }
 
         sj->cursor_in_word = FALSE;
         sj->replace_len = 0;
         sj->search_change_made = FALSE;
-        g_array_free(sj->markers, TRUE);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 

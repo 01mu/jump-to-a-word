@@ -30,7 +30,7 @@
  * @param ShortcutJump *sj: The plugin object
  * @param gint target: The line being jumped to either via Select To or Select Line Range
  */
-void shrtct_line_handle_jump_action(ShortcutJump *sj, gint target) {
+void shortcut_line_handle_jump_action(ShortcutJump *sj, gint target) {
     gboolean line_range_jumped = FALSE;
 
     if (sj->config_settings->line_after == LA_DO_NOTHING ||
@@ -101,7 +101,7 @@ void shrtct_line_handle_jump_action(ShortcutJump *sj, gint target) {
  *
  * @param ShortcutJump *sj: The plugin object
  */
-void shrtct_line_init(ShortcutJump *sj) {
+void shortcut_line_init(ShortcutJump *sj) {
     if (sj->current_mode != JM_NONE) {
         return;
     }
@@ -118,7 +118,7 @@ void shrtct_line_init(ShortcutJump *sj) {
     gint indent_width = get_indent_width() - 1;
 
     for (gint current_line = sj->first_line_on_screen; current_line < sj->last_line_on_screen; current_line++) {
-        if (sj->words->len == shrtct_get_max_words(sj)) {
+        if (sj->words->len == shortcut_get_max_words(sj)) {
             break;
         }
 
@@ -134,8 +134,8 @@ void shrtct_line_init(ShortcutJump *sj) {
         word.starting = pos + lfs_added;
         word.starting_doc = pos;
         word.is_hidden_neighbor = FALSE;
-        word.bytes = shrtct_utf8_char_length(word.word->str[0]);
-        word.shortcut = shrtct_make_tag(sj, sj->words->len);
+        word.bytes = shortcut_utf8_char_length(word.word->str[0]);
+        word.shortcut = shortcut_make_tag(sj, sj->words->len);
         word.line = current_line;
         word.padding = 0;
 
@@ -180,10 +180,10 @@ void shrtct_line_init(ShortcutJump *sj) {
         g_array_append_val(sj->lf_positions, lfs_added);
     }
 
-    sj->buffer = shrtct_mask_bytes(sj->words, sj->buffer, sj->first_position);
-    sj->buffer = shrtct_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
+    sj->buffer = shortcut_mask_bytes(sj->words, sj->buffer, sj->first_position);
+    sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
 
-    shrtct_set_after_placement(sj);
+    shortcut_set_after_placement(sj);
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
@@ -192,8 +192,8 @@ void shrtct_line_init(ShortcutJump *sj) {
         set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.shortcut->len);
     }
 
-    connect_key_press_action(sj, shrtct_on_key_press);
-    connect_click_action(sj, shrtct_on_click_event);
+    connect_key_press_action(sj, shortcut_on_key_press);
+    connect_click_action(sj, shortcut_on_click_event);
 
     ui_set_statusbar(TRUE, _("%i line%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
 }
@@ -204,11 +204,11 @@ void shrtct_line_init(ShortcutJump *sj) {
  * @param GtkMenuItem *menu_item: (unused)
  * @param gpointer user_data: The plugin data
  */
-void shrtct_line_cb(GtkMenuItem *menu_item, gpointer user_data) {
+void shortcut_line_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_NONE) {
-        shrtct_line_init(sj);
+        shortcut_line_init(sj);
     }
 }
 
@@ -221,11 +221,11 @@ void shrtct_line_cb(GtkMenuItem *menu_item, gpointer user_data) {
  *
  * @return gboolean: TRUE
  */
-gboolean shrtct_line_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
+gboolean shortcut_line_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_NONE) {
-        shrtct_line_init(sj);
+        shortcut_line_init(sj);
     }
 
     return TRUE;

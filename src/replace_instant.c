@@ -90,7 +90,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
 
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
 
-    shrtct_set_to_first_visible_line(sj);
+    shortcut_set_to_first_visible_line(sj);
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 
@@ -276,8 +276,7 @@ static void replace_instant_init(ShortcutJump *sj) {
 
     if (sj->selection_is_a_char) {
         gchar to_replace = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->selection_start, 0);
-
-        shrtct_char_init(sj, TRUE, to_replace);
+        shortcut_char_init(sj, TRUE, to_replace);
         replace_shortcut_char_init(sj, TRUE);
         return;
     }
@@ -301,15 +300,15 @@ void replace(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
         replace_word_init(sj, FALSE);
     } else if (sj->current_mode == JM_SHORTCUT) {
-        shrtct_cancel(sj);
+        shortcut_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
         search_replace_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         replace_shortcut_char_init(sj, FALSE);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shrtct_char_waiting_cancel(sj);
+        shortcut_char_waiting_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shrtct_char_replace_cancel(sj);
+        shortcut_char_replace_cancel(sj);
     } else if (sj->current_mode == JM_LINE) {
 
     } else if (sj->current_mode == JM_SUBSTRING) {

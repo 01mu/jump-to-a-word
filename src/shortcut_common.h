@@ -23,19 +23,19 @@
 
 #include "jump_to_a_word.h"
 
-void shrtct_end(ShortcutJump *sj, gboolean was_canceled);
-void shrtct_cancel(ShortcutJump *sj);
-void shrtct_set_to_first_visible_line(ShortcutJump *sj);
-void shrtct_set_after_placement(ShortcutJump *sj);
-GString *shrtct_set_tags_in_buffer(GArray *words, GString *buffer, gint first_position);
-GString *shrtct_mask_bytes(GArray *words, GString *buffer, gint first_position);
-GString *shrtct_make_tag(ShortcutJump *sj, gint position);
-gint shrtct_utf8_char_length(gchar c);
-gint shrtct_set_padding(ShortcutJump *sj, gint word_length);
-gint shrtct_get_max_words(ShortcutJump *sj);
-gboolean shrtct_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
-gboolean shrtct_char_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
-gboolean shrtct_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
-gint shrtct_on_key_press_action(GdkEventKey *event, gpointer user_data);
+void shortcut_end(ShortcutJump *sj, gboolean was_canceled);
+void shortcut_cancel(ShortcutJump *sj);
+void shortcut_set_to_first_visible_line(ShortcutJump *sj);
+void shortcut_set_after_placement(ShortcutJump *sj);
+GString *shortcut_set_tags_in_buffer(GArray *words, GString *buffer, gint first_position);
+GString *shortcut_mask_bytes(GArray *words, GString *buffer, gint first_position);
+GString *shortcut_make_tag(ShortcutJump *sj, gint position);
+gint shortcut_utf8_char_length(gchar c);
+gint shortcut_set_padding(ShortcutJump *sj, gint word_length);
+gint shortcut_get_max_words(ShortcutJump *sj);
+gboolean shortcut_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
+gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
+gboolean shortcut_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data);
 
 #endif

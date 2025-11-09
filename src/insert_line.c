@@ -100,7 +100,7 @@ void multicursor_line_insert(ShortcutJump *sj) {
 
     if (valid_count == 0) {
         multicursor_end(sj);
-        ui_set_statusbar(TRUE, _("No multicursor lines added."));
+        ui_set_statusbar(TRUE, _("No multicursor lines selected."));
         return;
     }
 
@@ -162,7 +162,7 @@ void multicursor_line_insert(ShortcutJump *sj) {
     connect_click_action(sj, on_click_event_multicursor);
 }
 
-gboolean on_click_event_line_replacement(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+static gboolean on_click_event_line_replacement(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (mouse_movement_performed(sj, event)) {
@@ -177,7 +177,7 @@ gboolean on_click_event_line_replacement(GtkWidget *widget, GdkEventButton *even
     return FALSE;
 }
 
-void multicursor_line_insert_from_search(ShortcutJump *sj) {
+void line_insert_from_search(ShortcutJump *sj) {
     sj->multicursor_words = sj->words;
 
     g_string_free(sj->cache, TRUE);
@@ -193,7 +193,7 @@ void multicursor_line_insert_from_search(ShortcutJump *sj) {
 
     if (valid_count == 0) {
         multicursor_end(sj);
-        ui_set_statusbar(TRUE, _("No multicursor lines added."));
+        ui_set_statusbar(TRUE, _("No strings selected."));
         return;
     }
 
