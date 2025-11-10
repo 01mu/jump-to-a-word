@@ -67,7 +67,6 @@ typedef enum {
     JM_LINE,
     JM_SUBSTRING,
     JM_REPLACE_SUBSTRING,
-    JM_MULTICURSOR_REPLACING,
     JM_INSERTING_LINE,
     JM_NONE,
 } JumpMode;

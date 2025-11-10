@@ -322,14 +322,7 @@ gboolean on_click_event_multicursor(GtkWidget *widget, GdkEventButton *event, gp
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (mouse_movement_performed(sj, event)) {
-        if (sj->multicursor_enabled == MC_ACCEPTING) {
-
-        } else if (sj->multicursor_enabled == MC_DISABLED) {
-
-        } else if (sj->multicursor_enabled == MC_REPLACING) {
-            multicursor_complete(sj);
-        }
-
+        multicursor_cancel(sj);
         return TRUE;
     }
 

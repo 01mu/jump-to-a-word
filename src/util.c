@@ -356,11 +356,12 @@ void end_actions(ShortcutJump *sj) {
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         shortcut_char_replacing_cancel(sj);
     } else if (sj->current_mode == JM_LINE) {
-        search_line_insertion_complete(sj);
+        shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_SUBSTRING) {
         search_substring_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_substring_replace_complete(sj);
-    } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
+    } else if (sj->current_mode == JM_INSERTING_LINE) {
+        search_line_insertion_cancel(sj);
     }
 }

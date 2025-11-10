@@ -86,13 +86,13 @@ void handle_action(gpointer user_data) {
         } else if (jm == JM_SHORTCUT_CHAR_REPLACING) {
             shortcut_char_replacing_cancel(sj);
         } else if (jm == JM_LINE) {
-            search_line_insertion_cancel(sj);
+            shortcut_word_cancel(sj);
         } else if (jm == JM_SUBSTRING) {
             replace_substring_init(sj, FALSE);
         } else if (jm == JM_REPLACE_SUBSTRING) {
             search_substring_replace_cancel(sj);
-        } else if (jm == JM_MULTICURSOR_REPLACING) {
-
+        } else if (jm == JM_INSERTING_LINE) {
+            search_line_insertion_cancel(sj);
         } else if (jm == JM_NONE) {
             replace_instant_init(sj);
         }
@@ -100,7 +100,7 @@ void handle_action(gpointer user_data) {
         transpose_string(sj);
     } else if (performing_string_action && mm == MC_ACCEPTING && jm == JM_NONE) {
         multicursor_replace(sj);
-    } else if (performing_string_action && mm == MC_REPLACING && jm == JM_MULTICURSOR_REPLACING) {
+    } else if (performing_string_action && mm == MC_REPLACING) {
         multicursor_cancel(sj);
     } else if (performing_line_action && mm == MC_ACCEPTING && jm == JM_NONE) {
         multicursor_line_insert(sj);
@@ -128,7 +128,7 @@ void handle_action(gpointer user_data) {
         }
 
         line_insert_from_search(sj);
-    } else if (performing_line_action && mm == MC_REPLACING && jm == JM_MULTICURSOR_REPLACING) {
+    } else if (performing_line_action && mm == MC_REPLACING) {
         multicursor_cancel(sj);
     } else {
         ui_set_statusbar(TRUE, _("No action available."));
@@ -222,7 +222,8 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
         search_substring_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_substring_replace_cancel(sj);
-    } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
+    } else if (sj->current_mode == JM_INSERTING_LINE) {
+        search_line_insertion_cancel(sj);
     }
 
     if (sj->multicursor_enabled == MC_ACCEPTING) {

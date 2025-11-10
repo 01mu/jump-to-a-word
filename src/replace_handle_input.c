@@ -237,7 +237,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         !sj->search_change_made) {
         handle_single_backspace(sj);
 
-        if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
+        if (sj->multicursor_enabled == MC_REPLACING) {
             multicursor_complete(sj);
         }
 
@@ -272,7 +272,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&
         sj->replace_len >= 0) {
         if (sj->replace_len == 0) {
-            if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
+            if (sj->multicursor_enabled == MC_REPLACING) {
                 multicursor_complete(sj);
             }
 
@@ -305,7 +305,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     }
 
     if (event->keyval == GDK_KEY_Return) {
-        if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
+        if (sj->multicursor_enabled == MC_REPLACING) {
             multicursor_complete(sj);
         }
 
@@ -334,7 +334,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         sj->current_cursor_pos = pos_cache;
     }
 
-    if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
+    if (sj->multicursor_enabled == MC_REPLACING) {
         if (sj->search_change_made) {
             multicursor_complete(sj);
         } else {

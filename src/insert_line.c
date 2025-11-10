@@ -246,7 +246,6 @@ void multicursor_line_insert(ShortcutJump *sj) {
     sj->multicusor_eol_message_line = line;
     sj->current_cursor_pos = pos;
 
-    sj->current_mode = JM_MULTICURSOR_REPLACING;
     sj->multicursor_enabled = MC_REPLACING;
     annotation_display_inserting_line_multicursor(sj);
     connect_key_press_action(sj, on_key_press_search_replace);
@@ -269,6 +268,9 @@ static gboolean on_click_event_line_replacement(GtkWidget *widget, GdkEventButto
 }
 
 void line_insert_from_search(ShortcutJump *sj) {
+    sj->multicursor_first_pos = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+    sj->multicursor_last_pos = 0;
+
     sj->multicursor_words = sj->words;
 
     g_string_free(sj->cache, TRUE);

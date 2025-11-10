@@ -209,7 +209,6 @@ void multicursor_replace(ShortcutJump *sj) {
     sj->multicusor_eol_message_line = line;
     sj->current_cursor_pos = pos;
 
-    sj->current_mode = JM_MULTICURSOR_REPLACING;
     sj->multicursor_enabled = MC_REPLACING;
     annotation_display_replace_multicursor(sj);
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
