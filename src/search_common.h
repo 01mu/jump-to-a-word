@@ -23,11 +23,6 @@
 
 #include "jump_to_a_word.h"
 
-void search_replace_complete(ShortcutJump *sj);
-void search_replace_cancel(ShortcutJump *sj);
-void search_end(ShortcutJump *sj);
-void search_complete(ShortcutJump *sj);
-void search_cancel(ShortcutJump *sj);
 gint get_search_word_pos(ShortcutJump *sj);
 gint get_search_word_pos_last(ShortcutJump *sj);
 gint get_search_word_pos_first(ShortcutJump *sj);

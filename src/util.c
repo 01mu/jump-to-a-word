@@ -18,8 +18,8 @@
 
 #include <plugindata.h>
 
-#include "jump_to_a_word.h"
 #include "insert_line.h"
+#include "jump_to_a_word.h"
 #include "search_common.h"
 #include "search_substring.h"
 #include "search_word.h"
@@ -344,7 +344,7 @@ gboolean handle_text_after_action(ShortcutJump *sj, gint pos, gint word_length, 
 
 void end_actions(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
-        search_cancel(sj);
+        search_word_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT) {
         shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
@@ -358,7 +358,7 @@ void end_actions(ShortcutJump *sj) {
     } else if (sj->current_mode == JM_LINE) {
         search_line_insertion_complete(sj);
     } else if (sj->current_mode == JM_SUBSTRING) {
-        search_cancel(sj);
+        search_substring_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_substring_replace_complete(sj);
     } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {

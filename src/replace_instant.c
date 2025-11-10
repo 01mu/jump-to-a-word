@@ -78,7 +78,7 @@ static void set_replace_indicators(ShortcutJump *sj, gboolean instant_replace) {
 static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->words->len == 0) {
         ui_set_statusbar(TRUE, _("No characters to replace."));
-        search_cancel(sj);
+        shortcut_char_replacing_cancel(sj);
         return;
     }
 
@@ -114,7 +114,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
 void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->search_results_count == 0) {
         ui_set_statusbar(TRUE, _("No substrings to replace."));
-        search_cancel(sj);
+        search_substring_cancel(sj);
         return;
     }
 
@@ -228,7 +228,7 @@ void multicursor_replace(ShortcutJump *sj) {
 void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->search_results_count == 0) {
         ui_set_statusbar(TRUE, _("No words to replace."));
-        search_cancel(sj);
+        search_word_cancel(sj);
         return;
     }
 

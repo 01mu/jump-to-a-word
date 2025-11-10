@@ -25,12 +25,13 @@
 
 void search_init(ShortcutJump *sj, gboolean instant_replace);
 void search_cb(GtkMenuItem *menu_item, gpointer user_data);
-void search_cancel(ShortcutJump *sj);
 gboolean search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 void search_mark_words(ShortcutJump *sj, gboolean instant_replace);
 void search_get_words(ShortcutJump *sj);
 void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace);
 void search_word_replace_cancel(ShortcutJump *sj);
 void search_word_replace_complete(ShortcutJump *sj);
+void search_word_cancel(ShortcutJump *sj);
+void search_word_complete(ShortcutJump *sj);
 
 #endif

@@ -30,5 +30,6 @@ GString *set_search_query(ScintillaObject *sci, gint selection_start, gint selec
 void search_get_substrings(ShortcutJump *sj);
 void search_substring_replace_cancel(ShortcutJump *sj);
 void search_substring_replace_complete(ShortcutJump *sj);
+void search_substring_cancel(ShortcutJump *sj);
 
 #endif

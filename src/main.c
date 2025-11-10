@@ -205,11 +205,11 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_SEARCH) {
-        search_cancel(sj);
+        search_word_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT) {
         shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-        search_cancel(sj);
+        search_word_replace_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
@@ -219,9 +219,9 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
     } else if (sj->current_mode == JM_LINE) {
         shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_SUBSTRING) {
-        search_cancel(sj);
+        search_substring_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_cancel(sj);
+        search_substring_replace_cancel(sj);
     } else if (sj->current_mode == JM_MULTICURSOR_REPLACING) {
     }
 
@@ -469,23 +469,7 @@ static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
 static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
     ShortcutJump *sj = (ShortcutJump *)pdata;
 
-    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING ||
-        sj->current_mode == JM_LINE) {
-        shortcut_word_cancel(sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
-        shortcut_char_waiting_cancel(sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replacing_cancel(sj);
-    }
-
-    if (sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_SUBSTRING ||
-        sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_cancel(sj);
-    }
+    end_actions(sj);
 
     if (sj->tl_window->panel) {
         gtk_widget_destroy(sj->tl_window->panel);

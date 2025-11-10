@@ -20,10 +20,134 @@
 
 #include "annotation.h"
 #include "jump_to_a_word.h"
+#include "multicursor.h"
 #include "search_common.h"
 #include "selection.h"
 #include "util.h"
 #include "values.h"
+
+void search_word_end(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    annotation_clear(sj->sci, sj->eol_message_line);
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+    }
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        g_string_free(word.word, TRUE);
+    }
+
+    if (sj->search_change_made) {
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
+        scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    }
+
+    if (sj->newline_was_added_for_next_line_insert) {
+        gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
+        sj->newline_was_added_for_next_line_insert = FALSE;
+    }
+
+    margin_markers_reset(sj);
+    g_array_free(sj->markers, TRUE);
+    sj->cursor_in_word = FALSE;
+    sj->replace_len = 0;
+    sj->search_change_made = FALSE;
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+
+    sj->search_word_pos = -1;
+    sj->search_word_pos_first = -1;
+    sj->search_word_pos_last = -1;
+    sj->search_results_count = 0;
+    sj->current_mode = JM_NONE;
+    g_string_free(sj->search_query, TRUE);
+    g_string_free(sj->eol_message, TRUE);
+    g_array_free(sj->words, TRUE);
+    g_string_free(sj->replace_cache, TRUE);
+    annotation_clear(sj->sci, sj->eol_message_line);
+    disconnect_key_press_action(sj);
+    disconnect_click_action(sj);
+}
+
+void search_word_replace_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Word replacement completed (%i change%s made)."), sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
+    search_word_end(sj);
+}
+
+void search_word_replace_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Word replacement canceled."));
+    search_word_end(sj);
+}
+
+void search_word_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Word search completed."));
+
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
+        for (gint i = 0; i < sj->words->len; i++) {
+            Word word = g_array_index(sj->words, Word, i);
+            if (word.valid_search) {
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
+                multicursor_add_word(sj, word);
+            }
+        }
+    }
+
+    Word word = g_array_index(sj->words, Word, sj->search_word_pos);
+    gint pos = word.starting;
+    gint line = word.line;
+    gint word_length = word.word->len;
+
+    sj->previous_cursor_pos = sj->current_cursor_pos;
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);
+
+    if (sj->config_settings->move_marker_to_line) {
+        GeanyDocument *doc = document_get_current();
+
+        if (!doc->is_valid) {
+            exit(1);
+        } else {
+            navqueue_goto_line(doc, doc, word.line + 1);
+        }
+    }
+
+    gboolean clear_previous_marker = FALSE;
+
+    if (sj->multicursor_enabled == MC_DISABLED) {
+        clear_previous_marker = handle_text_after_action(sj, pos, word_length, line);
+    }
+
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    }
+
+    search_word_end(sj);
+
+    if (clear_previous_marker) {
+        gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
+        scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
+    }
+}
+
+void search_word_cancel(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Word search canceled."));
+    search_word_end(sj);
+    if (sj->range_is_set) {
+        gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
+        scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
+        sj->range_is_set = FALSE;
+    }
+}
 
 /**
  * @brief Provides a filter used in word search when the setting is set to case insensitive.
@@ -202,14 +326,14 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
 
     if (event->keyval == GDK_KEY_Return) {
         if (sj->search_word_pos != -1) {
-            search_complete(sj);
+            search_word_complete(sj);
             return TRUE;
         }
     }
 
     if (event->keyval == GDK_KEY_BackSpace) {
         if (sj->search_query->len == 0) {
-            search_cancel(sj);
+            search_word_cancel(sj);
             return TRUE;
         }
 
@@ -233,7 +357,7 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
         annotation_display_search(sj);
 
         if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
-            search_complete(sj);
+            search_word_complete(sj);
         }
 
         return TRUE;
@@ -262,7 +386,7 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
         return TRUE;
     }
 
-    search_cancel(sj);
+    search_word_cancel(sj);
     return FALSE;
 }
 
@@ -380,15 +504,4 @@ gboolean search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     }
 
     return FALSE;
-}
-
-void search_word_replace_cancel(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Word replacement canceled."));
-    search_end(sj);
-}
-
-void search_word_replace_complete(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Word replacement completed (%i change%s made)."), sj->search_results_count,
-                     sj->search_results_count == 1 ? "" : "s");
-    search_end(sj);
 }
