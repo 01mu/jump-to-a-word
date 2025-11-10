@@ -469,8 +469,16 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
             gint lfs = get_lfs(sj, current_line);
 
             current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos + lfs, 0);
+            if (current_line - sj->first_line_on_screen >= sj->words->len) {
+                shortcut_word_cancel(sj);
+                return TRUE;
+            }
             word = g_array_index(sj->words, Word, current_line - sj->first_line_on_screen);
         } else {
+            if (sj->shortcut_single_pos >= sj->words->len) {
+                shortcut_word_cancel(sj);
+                return TRUE;
+            }
             word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
         }
 
