@@ -62,8 +62,6 @@ void search_word_end(ShortcutJump *sj) {
     sj->cursor_in_word = FALSE;
     sj->replace_len = 0;
     sj->search_change_made = FALSE;
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-
     sj->search_word_pos = -1;
     sj->search_word_pos_first = -1;
     sj->search_word_pos_last = -1;
