@@ -532,6 +532,7 @@ void shortcut_set_after_placement(ShortcutJump *sj) {
     gint lfs_added = get_lfs(sj, current_line);
 
     shortcut_set_to_first_visible_line(sj);
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->last_position - sj->first_position);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->buffer->str);
