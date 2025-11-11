@@ -68,71 +68,86 @@ void handle_action(gpointer user_data) {
     ReplaceAction ra = sj->config_settings->replace_action;
     MulticusrorMode mm = sj->multicursor_enabled;
     JumpMode jm = sj->current_mode;
-    gboolean performing_string_action = ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END;
-    gboolean performing_line_action = ra == RA_INSERT_NEXT_LINE || ra == RA_INSERT_PREVIOUS_LINE;
-    gboolean performing_transpose_action = ra == RA_TRANSPOSE_STRING;
 
-    if (performing_string_action && mm == MC_DISABLED) {
-        if (jm == JM_SEARCH) {
-            replace_word_init(sj, FALSE);
-        } else if (jm == JM_SHORTCUT) {
-            shortcut_word_cancel(sj);
-        } else if (jm == JM_REPLACE_SEARCH) {
-            search_word_replace_cancel(sj);
-        } else if (jm == JM_SHORTCUT_CHAR_JUMPING) {
-            shortcut_char_jumping_cancel(sj);
-        } else if (jm == JM_SHORTCUT_CHAR_WAITING) {
-            shortcut_char_waiting_cancel(sj);
-        } else if (jm == JM_SHORTCUT_CHAR_REPLACING) {
-            shortcut_char_replacing_cancel(sj);
-        } else if (jm == JM_LINE) {
-            shortcut_word_cancel(sj);
-        } else if (jm == JM_SUBSTRING) {
-            replace_substring_init(sj, FALSE);
-        } else if (jm == JM_REPLACE_SUBSTRING) {
-            search_substring_replace_cancel(sj);
-        } else if (jm == JM_INSERTING_LINE) {
-            search_line_insertion_cancel(sj);
-        } else if (jm == JM_NONE) {
-            replace_instant_init(sj);
-        }
-    } else if (performing_transpose_action && mm == MC_ACCEPTING && jm == JM_NONE) {
-        transpose_string(sj);
-    } else if (performing_string_action && mm == MC_ACCEPTING && jm == JM_NONE) {
-        multicursor_replace(sj);
-    } else if (performing_string_action && mm == MC_REPLACING) {
-        multicursor_cancel(sj);
-    } else if (performing_line_action && mm == MC_ACCEPTING && jm == JM_NONE) {
-        multicursor_line_insert(sj);
-    } else if (performing_line_action && mm == MC_DISABLED && (jm == JM_SEARCH || jm == JM_SUBSTRING)) {
-        disconnect_key_press_action(sj);
-        disconnect_click_action(sj);
-        line_insert_from_search(sj);
-    } else if (performing_line_action && mm == MC_DISABLED && jm == JM_NONE) {
-        set_sj_scintilla_object(sj);
-        set_selection_info(sj);
-
-        if (!sj->in_selection) {
-            init_sj_values(sj);
-            define_indicators(sj->sci, sj);
-            search_get_words(sj);
-            search_set_initial_query(sj, TRUE);
-        } else {
-            if (!sj->selection_is_a_char && !sj->selection_is_a_word) {
-                sj->in_selection = FALSE;
+    if (ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END) {
+        if (mm == MC_DISABLED) {
+            if (jm == JM_SEARCH) {
+                replace_word_init(sj, FALSE);
+                return;
+            } else if (jm == JM_SHORTCUT) {
+                shortcut_word_cancel(sj);
+                return;
+            } else if (jm == JM_REPLACE_SEARCH) {
+                search_word_replace_cancel(sj);
+                return;
+            } else if (jm == JM_SHORTCUT_CHAR_JUMPING) {
+                shortcut_char_jumping_cancel(sj);
+                return;
+            } else if (jm == JM_SHORTCUT_CHAR_WAITING) {
+                shortcut_char_waiting_cancel(sj);
+                return;
+            } else if (jm == JM_SHORTCUT_CHAR_REPLACING) {
+                shortcut_char_replacing_cancel(sj);
+                return;
+            } else if (jm == JM_LINE) {
+                shortcut_word_cancel(sj);
+                return;
+            } else if (jm == JM_SUBSTRING) {
+                replace_substring_init(sj, FALSE);
+                return;
+            } else if (jm == JM_REPLACE_SUBSTRING) {
+                search_substring_replace_cancel(sj);
+                return;
+            } else if (jm == JM_INSERTING_LINE) {
+                search_line_insertion_cancel(sj);
+                return;
+            } else if (jm == JM_NONE) {
+                replace_instant_init(sj);
+                return;
             }
-            init_sj_values(sj);
-            define_indicators(sj->sci, sj);
-            sj->search_query = set_search_query(sj->sci, sj->selection_start, sj->selection_end, sj->search_query);
-            search_get_substrings(sj);
+        } else if (mm == MC_ACCEPTING) {
+            if (jm == JM_NONE) {
+                multicursor_replace(sj);
+                return;
+            }
+        } else if (mm == MC_REPLACING) {
+            multicursor_cancel(sj);
+            return;
         }
-
-        line_insert_from_search(sj);
-    } else if (performing_line_action && mm == MC_REPLACING) {
-        multicursor_cancel(sj);
-    } else {
-        ui_set_statusbar(TRUE, _("No action available."));
+    } else if (ra == RA_INSERT_NEXT_LINE || ra == RA_INSERT_PREVIOUS_LINE) {
+        if (mm == MC_DISABLED) {
+            if (jm == JM_NONE) {
+                set_sj_scintilla_object(sj);
+                set_selection_info(sj);
+                get_query_for_line_insert(sj);
+                define_indicators(sj->sci, sj);
+                line_insert_from_search(sj);
+                return;
+            } else if (jm == JM_SEARCH || jm == JM_SUBSTRING) {
+                disconnect_key_press_action(sj);
+                disconnect_click_action(sj);
+                line_insert_from_search(sj);
+                return;
+            }
+        } else if (mm == MC_ACCEPTING) {
+            if (jm == JM_NONE) {
+                multicursor_line_insert(sj);
+                return;
+            }
+        } else if (mm == MC_REPLACING) {
+            multicursor_cancel(sj);
+            return;
+        }
+    } else if (ra == RA_TRANSPOSE_STRING) {
+        if (mm == MC_ACCEPTING) {
+            if (jm == JM_NONE) {
+                transpose_string(sj);
+                return;
+            }
+        }
     }
+
+    ui_set_statusbar(TRUE, _("No action available."));
 }
 
 /**
@@ -194,8 +209,8 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
 /**
  * @brief Provides a callback for when a reload is triggered either from a manual reload or from the file being
  * edited from an outside program. In shortcut mode we end the jump and free memory instead of canceling. This is
- * necessary because we don't want to reinsert the cached text at a certain location if we don't know what edits were
- * made from the other program.
+ * necessary because we don't want to reinsert the cached text at a certain location if we don't know what edits
+ * were made from the other program.
  *
  * @param GObject *obj: (unused)
  * @param GeanyDocument *doc: (unused)

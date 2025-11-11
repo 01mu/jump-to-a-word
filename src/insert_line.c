@@ -22,7 +22,10 @@
 #include "jump_to_a_word.h"
 #include "multicursor.h"
 #include "replace_instant.h"
+#include "search_substring.h"
+#include "search_word.h"
 #include "util.h"
+#include "values.h"
 
 void search_line_insertion_end(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
@@ -331,4 +334,19 @@ void line_insert_from_search(ShortcutJump *sj) {
     connect_key_press_action(sj, on_key_press_search_replace);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
     connect_click_action(sj, on_click_event_line_replacement);
+}
+
+void get_query_for_line_insert(ShortcutJump *sj) {
+    if (sj->in_selection) {
+        if (!sj->selection_is_a_char && !sj->selection_is_a_word && sj->selection_is_a_line) {
+            sj->in_selection = FALSE;
+            init_sj_values(sj);
+            sj->search_query = set_search_query(sj->sci, sj->selection_start, sj->selection_end, sj->search_query);
+            search_get_substrings(sj);
+        }
+    } else {
+        init_sj_values(sj);
+        search_get_words(sj);
+        search_set_initial_query(sj, TRUE);
+    }
 }

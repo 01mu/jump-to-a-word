@@ -25,5 +25,6 @@ void multicursor_line_insert(ShortcutJump *sj);
 void line_insert_from_search(ShortcutJump *sj);
 void search_line_insertion_cancel(ShortcutJump *sj);
 void search_line_insertion_complete(ShortcutJump *sj);
+void get_query_for_line_insert(ShortcutJump *sj);
 
 #endif
