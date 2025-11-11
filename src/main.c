@@ -25,7 +25,6 @@
 #include "preferences.h"
 #include "previous_cursor.h"
 #include "replace_instant.h"
-#include "search_common.h"
 #include "search_substring.h"
 #include "search_word.h"
 #include "selection.h"
