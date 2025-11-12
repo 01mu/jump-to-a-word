@@ -102,11 +102,11 @@ void disconnect_click_action(ShortcutJump *sj) {
 
 void end_actions(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
-        search_word_jump_cancel(sj);
+        search_word_end(sj);
     } else if (sj->current_mode == JM_SHORTCUT_WORD) {
         shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-        search_word_replace_complete(sj);
+        search_word_end(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         shortcut_char_jumping_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
