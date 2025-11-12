@@ -20,7 +20,7 @@
 
 #include "jump_to_a_word.h"
 
-void shortcut_line_handle_after_action(ShortcutJump *sj, gint target) {
+void handle_line_after_action(ShortcutJump *sj, gint target) {
     gboolean line_range_jumped = FALSE;
     LineAfter la = sj->config_settings->line_after;
 

@@ -43,7 +43,7 @@ void shortcut_line_complete(ShortcutJump *sj, gint pos, gint word_length, gint l
         }
     }
 
-    shortcut_line_handle_after_action(sj, line);
+    handle_line_after_action(sj, line);
     shortcut_set_to_first_visible_line(sj);
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Line jump completed."));

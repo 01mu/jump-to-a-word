@@ -23,6 +23,6 @@
 
 #include "jump_to_a_word.h"
 
-void shortcut_line_handle_after_action(ShortcutJump *sj, gint line);
+void handle_line_after_action(ShortcutJump *sj, gint line);
 
 #endif
