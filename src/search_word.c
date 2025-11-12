@@ -57,20 +57,32 @@ void search_word_end(ShortcutJump *sj) {
     }
 
     margin_markers_reset(sj);
-    g_array_free(sj->markers, TRUE);
-    sj->cursor_in_word = FALSE;
-    sj->replace_len = 0;
-    sj->search_change_made = FALSE;
+
+    g_string_free(sj->eol_message, TRUE);
+    g_string_free(sj->search_query, TRUE);
+
+    sj->search_results_count = 0;
     sj->search_word_pos = -1;
     sj->search_word_pos_first = -1;
     sj->search_word_pos_last = -1;
-    sj->search_results_count = 0;
-    sj->current_mode = JM_NONE;
-    g_string_free(sj->search_query, TRUE);
-    g_string_free(sj->eol_message, TRUE);
-    g_array_free(sj->words, TRUE);
+    sj->search_change_made = FALSE;
+    sj->cursor_in_word = FALSE;
+    sj->delete_added_bracket = FALSE;
+    sj->replace_len = 0;
+    sj->replace_instant = FALSE;
+
+    g_string_free(sj->cache, TRUE);
+    g_string_free(sj->buffer, TRUE);
     g_string_free(sj->replace_cache, TRUE);
+
+    g_array_free(sj->lf_positions, TRUE);
+    g_array_free(sj->words, TRUE);
+    g_array_free(sj->markers, TRUE);
+
     annotation_clear(sj->sci, sj->eol_message_line);
+
+    sj->current_mode = JM_NONE;
+
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
 }
@@ -445,12 +457,7 @@ void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace) {
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
 void search_init(ShortcutJump *sj, gboolean instant_replace) {
-    if (sj->current_mode != JM_NONE) {
-        return;
-    }
-
     sj->current_mode = JM_SEARCH;
-
     set_sj_scintilla_object(sj);
 
     if (!instant_replace) {
@@ -459,13 +466,10 @@ void search_init(ShortcutJump *sj, gboolean instant_replace) {
 
     init_sj_values(sj);
     define_indicators(sj->sci, sj);
-
     search_get_words(sj);
     search_set_initial_query(sj, instant_replace);
-
     connect_key_press_action(sj, on_key_press_search_word);
     connect_click_action(sj, on_click_event_search);
-
     annotation_display_search(sj);
 }
 

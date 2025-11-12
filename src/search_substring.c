@@ -57,20 +57,32 @@ void search_substring_end(ShortcutJump *sj) {
     }
 
     margin_markers_reset(sj);
-    g_array_free(sj->markers, TRUE);
-    sj->cursor_in_word = FALSE;
-    sj->replace_len = 0;
-    sj->search_change_made = FALSE;
+
+    g_string_free(sj->eol_message, TRUE);
+    g_string_free(sj->search_query, TRUE);
+
+    sj->search_results_count = 0;
     sj->search_word_pos = -1;
     sj->search_word_pos_first = -1;
     sj->search_word_pos_last = -1;
-    sj->search_results_count = 0;
-    sj->current_mode = JM_NONE;
-    g_string_free(sj->search_query, TRUE);
-    g_string_free(sj->eol_message, TRUE);
-    g_array_free(sj->words, TRUE);
+    sj->search_change_made = FALSE;
+    sj->cursor_in_word = FALSE;
+    sj->delete_added_bracket = FALSE;
+    sj->replace_len = 0;
+    sj->replace_instant = FALSE;
+
+    g_string_free(sj->cache, TRUE);
+    g_string_free(sj->buffer, TRUE);
     g_string_free(sj->replace_cache, TRUE);
+
+    g_array_free(sj->lf_positions, TRUE);
+    g_array_free(sj->words, TRUE);
+    g_array_free(sj->markers, TRUE);
+
     annotation_clear(sj->sci, sj->eol_message_line);
+
+    sj->current_mode = JM_NONE;
+
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
 }
