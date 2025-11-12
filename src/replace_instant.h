@@ -23,7 +23,7 @@
 
 gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 void multicursor_replace(ShortcutJump *sj);
-void replace_substring_init(ShortcutJump *sj, gboolean instant_replace);
+void replace_substring_init(ShortcutJump *sj);
 void replace_word_init(ShortcutJump *sj, gboolean instant_replace);
 void replace_instant_init(ShortcutJump *sj);
 

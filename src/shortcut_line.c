@@ -24,32 +24,24 @@
 #include "util.h"
 #include "values.h"
 
-/**
- * @brief Perform the line jump action after jumping to a line jump shortcut.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gint target: The line being jumped to either via Select To or Select Line Range
- */
-void shortcut_line_handle_jump_action(ShortcutJump *sj, gint target) {
+void shortcut_line_handle_after_action(ShortcutJump *sj, gint target) {
     gboolean line_range_jumped = FALSE;
+    LineAfter la = sj->config_settings->line_after;
 
-    if (sj->config_settings->line_after == LA_DO_NOTHING ||
-        sj->config_settings->line_after == LA_JUMP_TO_WORD_SHORTCUT ||
-        sj->config_settings->line_after == LA_JUMP_TO_SUBSTRING_SEARCH ||
-        sj->config_settings->line_after == LA_JUMP_TO_WORD_SEARCH ||
-        sj->config_settings->line_after == LA_JUMP_TO_CHARACTER_SHORTCUT) {
+    if (la == LA_DO_NOTHING || la == LA_JUMP_TO_WORD_SHORTCUT || la == LA_JUMP_TO_SUBSTRING_SEARCH ||
+        la == LA_JUMP_TO_WORD_SEARCH || la == LA_JUMP_TO_CHARACTER_SHORTCUT) {
         gint pos_target = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, target, TRUE);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, pos_target, 0);
     }
 
-    if (sj->config_settings->line_after == LA_SELECT_LINE) {
+    if (la == LA_SELECT_LINE) {
         gint pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, target, TRUE);
         gint line_length = scintilla_send_message(sj->sci, SCI_LINELENGTH, target, TRUE);
 
         scintilla_send_message(sj->sci, SCI_SETSEL, pos, pos + line_length);
     }
 
-    if (sj->config_settings->line_after == LA_SELECT_TO_LINE) {
+    if (la == LA_SELECT_TO_LINE) {
         gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
 
         gint pos_current = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, current_line, TRUE);
@@ -64,7 +56,7 @@ void shortcut_line_handle_jump_action(ShortcutJump *sj, gint target) {
         }
     }
 
-    if (sj->config_settings->line_after == LA_SELECT_LINE_RANGE && sj->range_is_set) {
+    if (la == LA_SELECT_LINE_RANGE && sj->range_is_set) {
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->range_first_pos, 0);
 
         gint first_line = sj->range_first_pos < target ? sj->range_first_pos : target;
@@ -82,7 +74,7 @@ void shortcut_line_handle_jump_action(ShortcutJump *sj, gint target) {
         line_range_jumped = TRUE;
     }
 
-    if (sj->config_settings->line_after == LA_SELECT_LINE_RANGE && !sj->range_is_set) {
+    if (la == LA_SELECT_LINE_RANGE && !sj->range_is_set) {
         scintilla_send_message(sj->sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
         scintilla_send_message(sj->sci, SCI_MARKERADD, target, 0);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
@@ -96,16 +88,58 @@ void shortcut_line_handle_jump_action(ShortcutJump *sj, gint target) {
     }
 }
 
-/**
- * @brief Begins jump to line mode and controls for new line characters.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void shortcut_line_init(ShortcutJump *sj) {
-    if (sj->current_mode != JM_NONE) {
-        return;
+void shortcut_line_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+
+    sj->previous_cursor_pos = sj->current_cursor_pos;
+
+    if (sj->config_settings->move_marker_to_line) {
+        GeanyDocument *doc = document_get_current();
+        if (!doc->is_valid) {
+            exit(1);
+        } else {
+            navqueue_goto_line(doc, doc, line + 1);
+        }
     }
 
+    shortcut_line_handle_after_action(sj, line);
+    shortcut_set_to_first_visible_line(sj);
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Line jump completed."));
+}
+
+void shortcut_line_cancel(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    shortcut_set_to_first_visible_line(sj);
+    sj->range_is_set = FALSE;
+    shortcut_end(sj, TRUE);
+    ui_set_statusbar(TRUE, _("Line jump canceled."));
+}
+
+static gboolean shortcut_line_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    return shortcut_on_key_press_action(event, sj);
+}
+
+static gboolean shortcut_line_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    if (mouse_movement_performed(sj, event)) {
+        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+        sj->current_cursor_pos = set_cursor_position_with_lfs(sj);
+        shortcut_line_cancel(sj);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+void shortcut_line_init(ShortcutJump *sj) {
     sj->current_mode = JM_LINE;
     set_sj_scintilla_object(sj);
     set_selection_info(sj);
@@ -113,7 +147,6 @@ void shortcut_line_init(ShortcutJump *sj) {
     define_indicators(sj->sci, sj);
 
     gint lfs_added = 0;
-
     gint prev_line = sj->first_line_on_screen;
     gint indent_width = get_indent_width() - 1;
 
@@ -134,7 +167,7 @@ void shortcut_line_init(ShortcutJump *sj) {
         word.starting = pos + lfs_added;
         word.starting_doc = pos;
         word.is_hidden_neighbor = FALSE;
-        word.bytes = shortcut_utf8_char_length(word.word->str[0]);
+        word.bytes = shortcut_get_utf8_char_length(word.word->str[0]);
         word.shortcut = shortcut_make_tag(sj, sj->words->len);
         word.line = current_line;
         word.padding = 0;
@@ -184,26 +217,12 @@ void shortcut_line_init(ShortcutJump *sj) {
     sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
 
     shortcut_set_after_placement(sj);
-
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
-
-        set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting + word.padding, word.shortcut->len);
-        set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.shortcut->len);
-    }
-
-    connect_key_press_action(sj, shortcut_on_key_press);
-    connect_click_action(sj, shortcut_on_click_event);
-
+    shortcut_set_indicators(sj);
+    connect_key_press_action(sj, shortcut_line_on_key_press);
+    connect_click_action(sj, shortcut_line_on_click_event);
     ui_set_statusbar(TRUE, _("%i line%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
 }
 
-/**
- * @brief Provides a menu callback for jumping to a line.
- *
- * @param GtkMenuItem *menu_item: (unused)
- * @param gpointer user_data: The plugin data
- */
 void shortcut_line_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
@@ -212,21 +231,10 @@ void shortcut_line_cb(GtkMenuItem *menu_item, gpointer user_data) {
     }
 }
 
-/**
- * @brief Provides a keybinding callback for jumping to a line.
- *
- * @param GtkMenuItem *kb: (unused)
- * @param guint key_id: (unused)
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: TRUE
- */
 gboolean shortcut_line_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
     if (sj->current_mode == JM_NONE) {
         shortcut_line_init(sj);
     }
-
     return TRUE;
 }

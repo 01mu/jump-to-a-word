@@ -50,9 +50,8 @@ gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpoi
  * @brief Sets the indicators for a string or word being replaced.
  *
  * @param ShortcutJump *sj: The plugin object
- * @param gboolean instant_replace: If instant replace mode is enabled
  */
-static void set_replace_indicators(ShortcutJump *sj, gboolean instant_replace) {
+static void set_replace_indicators(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     search_clear_indicators(sj->sci, sj->words);
 
@@ -75,7 +74,7 @@ static void set_replace_indicators(ShortcutJump *sj, gboolean instant_replace) {
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
-static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replace) {
+static void replace_shortcut_char_init(ShortcutJump *sj) {
     if (sj->words->len == 0) {
         ui_set_statusbar(TRUE, _("No characters to replace."));
         shortcut_char_replacing_cancel(sj);
@@ -87,18 +86,14 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
     shortcut_set_to_first_visible_line(sj);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_display_replace_char(sj);
-    set_replace_indicators(sj, instant_replace);
 
-    if (instant_replace) {
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
-        for (gint i = 0; i < sj->words->len; i++) {
-            Word word = g_array_index(sj->words, Word, i);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting_doc, 1);
-
-            if (word.valid_search) {
-                scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, 1);
-            }
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting_doc, 1);
+        if (word.valid_search) {
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, 1);
         }
     }
 
@@ -111,7 +106,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj, gboolean instant_replac
  * @param ShortcutJump *sj: The plugin object
  * @param gboolean instant_replace: If instant replace mode is enabled
  */
-void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
+void replace_substring_init(ShortcutJump *sj) {
     if (sj->search_results_count == 0) {
         ui_set_statusbar(TRUE, _("No substrings to replace."));
         search_substring_cancel(sj);
@@ -119,7 +114,7 @@ void replace_substring_init(ShortcutJump *sj, gboolean instant_replace) {
     }
 
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
-    set_replace_indicators(sj, instant_replace);
+    set_replace_indicators(sj);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_display_replace_substring(sj);
     sj->current_mode = JM_REPLACE_SUBSTRING;
@@ -231,7 +226,7 @@ void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
         return;
     }
 
-    set_replace_indicators(sj, instant_replace);
+    set_replace_indicators(sj);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_display_replace(sj);
     sj->current_mode = JM_REPLACE_SEARCH;
@@ -259,25 +254,21 @@ void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
 void replace_instant_init(ShortcutJump *sj) {
     set_sj_scintilla_object(sj);
     set_selection_info(sj);
-
     sj->current_cursor_pos = save_cursor_position(sj);
     sj->replace_instant = TRUE;
-
     define_indicators(sj->sci, sj);
 
-    if (sj->in_selection && sj->selection_is_a_char) {
-        gchar to_replace = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->selection_start, 0);
-        shortcut_char_init(sj, TRUE, to_replace);
-        replace_shortcut_char_init(sj, TRUE);
-        return;
-    }
-
-    if (!sj->in_selection) {
+    if (sj->in_selection) {
+        if (sj->selection_is_a_char) {
+            gchar query = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->selection_start, 0);
+            shortcut_char_init_with_query(sj, query);
+            replace_shortcut_char_init(sj);
+        } else {
+            substring_init(sj, TRUE);
+            replace_substring_init(sj);
+        }
+    } else {
         search_init(sj, TRUE);
         replace_word_init(sj, TRUE);
-        return;
     }
-
-    substring_init(sj, TRUE);
-    replace_substring_init(sj, TRUE);
 }

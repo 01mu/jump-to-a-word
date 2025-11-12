@@ -26,17 +26,88 @@
 #include "util.h"
 #include "values.h"
 
-/**
- * @brief Gets every char that matches the search query and assigns them tags for jumping.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gchar search_char: The char to search for
- */
-void shortcut_char_get_chars(ShortcutJump *sj, gchar search_char) {
-    if (sj->current_mode != JM_SHORTCUT_CHAR_WAITING) {
-        return;
+void shortcut_char_jumping_cancel(ShortcutJump *sj) {
+    shortcut_set_to_first_visible_line(sj);
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    annotation_clear(sj->sci, sj->eol_message_line);
+    sj->range_is_set = FALSE;
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Character jump canceled."));
+}
+
+void shortcut_char_jumping_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+
+    sj->previous_cursor_pos = sj->current_cursor_pos;
+
+    if (sj->config_settings->move_marker_to_line) {
+        GeanyDocument *doc = document_get_current();
+        if (!doc->is_valid) {
+            exit(1);
+        } else {
+            navqueue_goto_line(doc, doc, line + 1);
+        }
     }
 
+    if (sj->multicursor_enabled == MC_DISABLED) {
+        handle_text_after_action(sj, pos, word_length, line);
+    }
+
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    }
+
+    shortcut_set_to_first_visible_line(sj);
+    annotation_clear(sj->sci, sj->eol_message_line);
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Character jump completed."));
+}
+
+void shortcut_char_waiting_cancel(ShortcutJump *sj) {
+    annotation_clear(sj->sci, sj->eol_message_line);
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Character serach canceled."));
+}
+
+static void shortcut_char_replacing_end(ShortcutJump *sj) {
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        if (word.valid_search) {
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position, 1);
+        }
+    }
+
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+}
+
+void shortcut_char_replacing_cancel(ShortcutJump *sj) {
+    shortcut_set_to_first_visible_line(sj);
+    shortcut_char_replacing_end(sj);
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Character replacement canceled."));
+}
+
+void shortcut_char_replacing_complete(ShortcutJump *sj) {
+    shortcut_set_to_first_visible_line(sj);
+    shortcut_char_replacing_end(sj);
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
+                     sj->words->len == 1 ? "" : "s");
+}
+
+static void shortcut_char_get_chars(ShortcutJump *sj, gchar query) {
     gint lfs_added = 0;
     gint toggle = 1;
     gint added = 0;
@@ -63,7 +134,7 @@ void shortcut_char_get_chars(ShortcutJump *sj, gchar search_char) {
 
         gchar current_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, i, TRUE);
 
-        if (current_char != search_char) {
+        if (current_char != query) {
             continue;
         }
 
@@ -80,7 +151,7 @@ void shortcut_char_get_chars(ShortcutJump *sj, gchar search_char) {
             ignore_hidden_neighbor_skip = TRUE;
         }
 
-        if (current_char == search_char && prev_char == current_char && toggle == 0 && !ignore_hidden_neighbor_skip) {
+        if (current_char == query && prev_char == current_char && toggle == 0 && !ignore_hidden_neighbor_skip) {
             GString *ch = g_string_new("");
             g_string_insert_c(ch, 0, current_char);
             word.word = ch;
@@ -88,7 +159,7 @@ void shortcut_char_get_chars(ShortcutJump *sj, gchar search_char) {
             word.is_hidden_neighbor = TRUE;
             word.starting = i + lfs_added;
             word.starting_doc = i;
-            word.bytes = shortcut_utf8_char_length(word.word->str[0]);
+            word.bytes = shortcut_get_utf8_char_length(word.word->str[0]);
             word.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, i, 0);
             word.padding = shortcut_set_padding(sj, word.word->len);
             word.replace_pos = i - sj->first_position;
@@ -104,7 +175,7 @@ void shortcut_char_get_chars(ShortcutJump *sj, gchar search_char) {
         word.is_hidden_neighbor = FALSE;
         word.starting = i + lfs_added;
         word.starting_doc = i;
-        word.bytes = shortcut_utf8_char_length(word.word->str[0]);
+        word.bytes = shortcut_get_utf8_char_length(word.word->str[0]);
         word.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, i, 0);
         word.padding = shortcut_set_padding(sj, word.word->len);
         word.replace_pos = i - sj->first_position;
@@ -139,109 +210,18 @@ void shortcut_char_get_chars(ShortcutJump *sj, gchar search_char) {
     sj->search_results_count = sj->words->len;
 }
 
-/**
- * @brief Clears the memory allocated during an incomplete shortcut jump (when a search query was not provided). This
- * is needed because the words array and other variables that are usually allocated during a char search are not.
- * During JM_SHORTCUT_CHAR_JUMPING we call the standard shortcut_cancel.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void shortcut_char_waiting_cancel(ShortcutJump *sj) {
-    annotation_clear(sj->sci, sj->eol_message_line);
-    g_string_free(sj->eol_message, TRUE);
-    g_string_free(sj->search_query, TRUE);
-    g_string_free(sj->cache, TRUE);
-    g_string_free(sj->buffer, TRUE);
-    g_array_free(sj->lf_positions, TRUE);
-    g_array_free(sj->words, TRUE);
-    disconnect_key_press_action(sj);
-    disconnect_click_action(sj);
-    sj->current_mode = JM_NONE;
-    ui_set_statusbar(TRUE, _("Character serach canceled."));
-}
-
-/**
- * @brief Clears the indicators used during a character replacement and writes the buffer to the screen.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-static void shortcut_char_replace_end(ShortcutJump *sj) {
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
-
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-
-        if (word.valid_search) {
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position,
-                                   sj->replace_len + 2);
-        }
-    }
-
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-
-    sj->cursor_in_word = FALSE;
-    sj->replace_len = 0;
-    sj->search_change_made = FALSE;
-
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-}
-
-/**
- * @brief Displays  message for canceled shortcut char replacement and frees memory.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void shortcut_char_replacing_cancel(ShortcutJump *sj) {
-    shortcut_char_replace_end(sj);
-    shortcut_set_to_first_visible_line(sj);
-    shortcut_end(sj, FALSE);
-    sj->current_mode = JM_NONE;
-    ui_set_statusbar(TRUE, _("Character replacement canceled."));
-}
-
-/**
- * @brief Displays message for completed shortcut jump and frees memory.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void shortcut_char_replace_complete(ShortcutJump *sj) {
-    shortcut_char_replace_end(sj);
-    shortcut_set_to_first_visible_line(sj);
-    shortcut_end(sj, FALSE);
-    ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
-                     sj->words->len == 1 ? "" : "s");
-}
-
-/**
- * @brief Handles click event for shortcut char jump. If the search was no completed we clear the initalized values and
- * free memory.
- *
- * @param GtkWidget *widget: (unused)
- * @param GdkEventButton *event: Click event
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: FALSE if uncontrolled for click or wrong mode
- */
-gboolean shortcut_char_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+static gboolean shortcut_char_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (mouse_movement_performed(sj, event)) {
-        if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+        if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
             shortcut_char_waiting_cancel(sj);
-            annotation_clear(sj->sci, sj->eol_message_line);
-        }
-
-        if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-            sj->current_cursor_pos = save_cursor_position(sj);
+        } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+            sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
             sj->current_cursor_pos = set_cursor_position_with_lfs(sj);
-            shortcut_word_cancel(sj);
-        }
-
-        if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            sj->current_cursor_pos = save_cursor_position(sj);
+            shortcut_char_jumping_cancel(sj);
+        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+            sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
             shortcut_char_replacing_cancel(sj);
         }
 
@@ -251,111 +231,16 @@ gboolean shortcut_char_on_click_event(GtkWidget *widget, GdkEventButton *event, 
     return FALSE;
 }
 
-/**
- * @brief Begins shortcut jump to character mode.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gboolean init_set: Whether we are using an initial value (see replace_instant_init)
- * @param gchar init: The highlighted character
- */
-void shortcut_char_init(ShortcutJump *sj, gboolean init_set, gchar init) {
-    sj->current_mode = JM_SHORTCUT_CHAR_WAITING;
-    set_sj_scintilla_object(sj);
-
-    if (!init_set) {
-        set_selection_info(sj);
-    }
-
-    init_sj_values(sj);
-    define_indicators(sj->sci, sj);
-
-    if (sj->in_selection && sj->selection_is_a_char && sj->config_settings->use_selected_word_or_char) {
-        gchar search_char;
-
-        if (init_set) {
-            search_char = init;
-        } else {
-            search_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->selection_start, sj->selection_end);
-        }
-
-        shortcut_char_get_chars(sj, search_char);
-
-        if (!init_set) {
-            scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
-            sj->buffer = shortcut_mask_bytes(sj->words, sj->buffer, sj->first_position);
-            sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
-            sj->current_cursor_pos = save_cursor_position(sj);
-            shortcut_set_after_placement(sj);
-            set_shortcut_indicators(sj);
-        }
-
-        sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
-        ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
-    }
-
-    if (!sj->in_selection) {
-        annotation_display_shortcut_char(sj);
-    }
-
-    connect_key_press_action(sj, shortcut_char_on_key_press);
-    connect_click_action(sj, shortcut_char_on_click_event);
-}
-
-/**
- * @brief Provides a menu callback for performing a shortcut character jump.
- *
- * @param GtkMenuItem *menu_item: (unused)
- * @param gpointer user_data: The plugin data
- */
-void shortcut_char_cb(GtkMenuItem *menu_item, gpointer user_data) {
+static gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
+    gunichar query = gdk_keyval_to_unicode(event->keyval);
 
-    if (sj->current_mode == JM_NONE) {
-        shortcut_char_init(sj, FALSE, '0');
-    }
-}
-
-/**
- * @brief Provides a keybinding callback for performing a shortcut character jump.
- *
- * @param GtkMenuItem *kb: (unused)
- * @param guint key_id: (unused)
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: TRUE
- */
-gboolean shortcut_char_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-
-    if (sj->current_mode == JM_NONE) {
-        shortcut_char_init(sj, FALSE, '0');
-        return TRUE;
-    }
-
-    return TRUE;
-}
-
-/**
- * @brief Handles key presses for a shortcut char jump: if we are waiting for a search query we set that char to
- * search_char and proceed to find every instance of the char with shortcut_char_get_chars. If we have a completed
- * search query, we are in jumping mode, and we perform the standard tag jump.
- *
- * @param GtkWidget *widget: (unused)
- * @param GdkEventKey *event: Keypress event
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: FALSE if uncontrolled for key press
- */
-gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-    gunichar search_char = gdk_keyval_to_unicode(event->keyval);
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+    if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
         if (mod_key_pressed(event)) {
             return TRUE;
         }
 
-        shortcut_char_get_chars(sj, search_char);
+        shortcut_char_get_chars(sj, query);
 
         if (sj->words->len == 0) {
             shortcut_char_waiting_cancel(sj);
@@ -365,37 +250,87 @@ gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event, gpoin
 
         sj->buffer = shortcut_mask_bytes(sj->words, sj->buffer, sj->first_position);
         sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
-        sj->current_cursor_pos = save_cursor_position(sj);
+        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
         shortcut_set_after_placement(sj);
-        set_shortcut_indicators(sj);
-        annotation_display_char_search(sj);
+        shortcut_set_indicators(sj);
         sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
         ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
-        return TRUE;
-    }
 
-    if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+        annotation_display_char_search(sj);
+        return TRUE;
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         annotation_clear(sj->sci, sj->eol_message_line);
         return shortcut_on_key_press_action(event, sj);
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         annotation_clear(sj->sci, sj->eol_message_line);
-        return replace_handle_input(sj, event, search_char);
+        return replace_handle_input(sj, event, query);
     }
 
     return FALSE;
 }
 
-void shortcut_char_jumping_cancel(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Character shortcut jump canceled."));
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-    shortcut_set_to_first_visible_line(sj);
-    annotation_clear(sj->sci, sj->eol_message_line);
-    sj->range_is_set = FALSE;
-    shortcut_end(sj, TRUE);
+void shortcut_char_init_with_query(ShortcutJump *sj, gchar query) {
+    sj->current_mode = JM_SHORTCUT_CHAR_ACCEPTING;
+    set_sj_scintilla_object(sj);
+    init_sj_values(sj);
+    define_indicators(sj->sci, sj);
+
+    if (sj->in_selection) {
+        if (sj->selection_is_a_char && sj->config_settings->use_selected_word_or_char) {
+            shortcut_char_get_chars(sj, query);
+
+            sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
+            ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
+        }
+    } else {
+        annotation_display_shortcut_char(sj);
+    }
+
+    connect_key_press_action(sj, shortcut_char_on_key_press);
+    connect_click_action(sj, shortcut_char_on_click_event);
+}
+
+void shortcut_char_init(ShortcutJump *sj) {
+    sj->current_mode = JM_SHORTCUT_CHAR_ACCEPTING;
+    set_sj_scintilla_object(sj);
+    set_selection_info(sj);
+    init_sj_values(sj);
+    define_indicators(sj->sci, sj);
+
+    if (sj->in_selection) {
+        if (sj->selection_is_a_char && sj->config_settings->use_selected_word_or_char) {
+            gchar query = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->selection_start, sj->selection_end);
+            shortcut_char_get_chars(sj, query);
+
+            sj->buffer = shortcut_mask_bytes(sj->words, sj->buffer, sj->first_position);
+            sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
+            sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+            shortcut_set_after_placement(sj);
+            shortcut_set_indicators(sj);
+
+            sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
+            ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
+        }
+    } else {
+        annotation_display_shortcut_char(sj);
+    }
+
+    connect_key_press_action(sj, shortcut_char_on_key_press);
+    connect_click_action(sj, shortcut_char_on_click_event);
+}
+
+void shortcut_char_cb(GtkMenuItem *menu_item, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    if (sj->current_mode == JM_NONE) {
+        shortcut_char_init(sj);
+    }
+}
+
+gboolean shortcut_char_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    if (sj->current_mode == JM_NONE) {
+        shortcut_char_init(sj);
+        return TRUE;
+    }
+    return TRUE;
 }

@@ -73,7 +73,7 @@ void handle_action(gpointer user_data) {
             if (jm == JM_SEARCH) {
                 replace_word_init(sj, FALSE);
                 return;
-            } else if (jm == JM_SHORTCUT) {
+            } else if (jm == JM_SHORTCUT_WORD) {
                 shortcut_word_cancel(sj);
                 return;
             } else if (jm == JM_REPLACE_SEARCH) {
@@ -82,7 +82,7 @@ void handle_action(gpointer user_data) {
             } else if (jm == JM_SHORTCUT_CHAR_JUMPING) {
                 shortcut_char_jumping_cancel(sj);
                 return;
-            } else if (jm == JM_SHORTCUT_CHAR_WAITING) {
+            } else if (jm == JM_SHORTCUT_CHAR_ACCEPTING) {
                 shortcut_char_waiting_cancel(sj);
                 return;
             } else if (jm == JM_SHORTCUT_CHAR_REPLACING) {
@@ -92,7 +92,7 @@ void handle_action(gpointer user_data) {
                 shortcut_word_cancel(sj);
                 return;
             } else if (jm == JM_SUBSTRING) {
-                replace_substring_init(sj, FALSE);
+                replace_substring_init(sj);
                 return;
             } else if (jm == JM_REPLACE_SUBSTRING) {
                 search_substring_replace_cancel(sj);
@@ -220,13 +220,13 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
 
     if (sj->current_mode == JM_SEARCH) {
         search_word_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT) {
+    } else if (sj->current_mode == JM_SHORTCUT_WORD) {
         shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
         search_word_replace_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         shortcut_end(sj, FALSE);
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
         shortcut_char_waiting_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         shortcut_end(sj, FALSE);
@@ -283,7 +283,7 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
     }
 
     if (nt->modificationType & (SC_MOD_INSERTTEXT)) {
-        if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING || sj->current_mode == JM_SUBSTRING) {
+        if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) {
             if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
                 strcmp(nt->text, "\'") == 0 || strcmp(nt->text, "\"") == 0 || strcmp(nt->text, "`") == 0 ||
                 strcmp(nt->text, ")") == 0) {

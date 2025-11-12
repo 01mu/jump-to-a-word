@@ -201,7 +201,7 @@ static gint get_cursor_position(ScintillaObject *sci, gint first_position, gint 
 GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen) {
     GArray *markers = g_array_new(FALSE, FALSE, sizeof(gint));
 
-    if (sj->current_mode == JM_SHORTCUT || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+    if (sj->current_mode == JM_SHORTCUT_WORD || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         if (sj->range_is_set) {
             gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
 

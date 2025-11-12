@@ -20,11 +20,10 @@
 
 #include "insert_line.h"
 #include "jump_to_a_word.h"
-#include "search_common.h"
 #include "search_substring.h"
 #include "search_word.h"
 #include "shortcut_char.h"
-#include "shortcut_common.h"
+#include "shortcut_word.h"
 
 /**
  * @brief Sets indicators for a given range.
@@ -57,29 +56,13 @@ void clear_indicator_for_range(ScintillaObject *sci, Indicator type, gint starti
  *
  * @param ShortcutJump *sj: The plugin object
  */
-void set_shortcut_indicators(ShortcutJump *sj) {
+void shortcut_set_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
 
         if (!word.is_hidden_neighbor) {
             set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting + word.padding, word.shortcut->len);
             set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.shortcut->len);
-        }
-    }
-}
-
-/**
- * @brief Sets the indicators for valid words.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void set_word_indicators(ShortcutJump *sj) {
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
-
-        if (!word.is_hidden_neighbor) {
-            set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting + word.padding, word.word->len);
-            set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.word->len);
         }
     }
 }
@@ -345,13 +328,13 @@ gboolean handle_text_after_action(ShortcutJump *sj, gint pos, gint word_length, 
 void end_actions(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
         search_word_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT) {
+    } else if (sj->current_mode == JM_SHORTCUT_WORD) {
         shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
         search_word_replace_complete(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         shortcut_char_jumping_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_WAITING) {
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
         shortcut_char_waiting_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         shortcut_char_replacing_cancel(sj);

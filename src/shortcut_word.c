@@ -18,20 +18,73 @@
 
 #include <plugindata.h>
 
+#include "annotation.h"
 #include "jump_to_a_word.h"
 #include "selection.h"
 #include "shortcut_common.h"
 #include "util.h"
 #include "values.h"
 
-/**
- * @brief Places spaces over the word to hide it if that setting is enabled.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param GArray *words: The word array
- * @param GString *buffer: The buffer of the text on screen
- * @param gint first_position: The first position on the screen
- */
+void shortcut_word_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+
+    sj->previous_cursor_pos = sj->current_cursor_pos;
+
+    if (sj->config_settings->move_marker_to_line) {
+        GeanyDocument *doc = document_get_current();
+        if (!doc->is_valid) {
+            exit(1);
+        } else {
+            navqueue_goto_line(doc, doc, line + 1);
+        }
+    }
+
+    if (sj->multicursor_enabled == MC_DISABLED) {
+        handle_text_after_action(sj, pos, word_length, line);
+    }
+
+    if (sj->multicursor_enabled == MC_ACCEPTING) {
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    }
+
+    shortcut_set_to_first_visible_line(sj);
+    annotation_clear(sj->sci, sj->eol_message_line);
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Word jump completed."));
+}
+
+void shortcut_word_cancel(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    shortcut_set_to_first_visible_line(sj);
+    annotation_clear(sj->sci, sj->eol_message_line);
+    sj->range_is_set = FALSE;
+    shortcut_end(sj, FALSE);
+    ui_set_statusbar(TRUE, _("Word jump canceled."));
+}
+
+static gboolean shortcut_word_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    return shortcut_on_key_press_action(event, sj);
+}
+
+static gboolean shortcut_word_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    if (mouse_movement_performed(sj, event)) {
+        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+        sj->current_cursor_pos = set_cursor_position_with_lfs(sj);
+        shortcut_word_cancel(sj);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 static GString *shortcut_word_hide_word(const ShortcutJump *sj, GArray *words, GString *buffer, gint first_position) {
     for (gint i = 0; i < words->len; i++) {
         Word word = g_array_index(words, Word, i);
@@ -45,24 +98,14 @@ static GString *shortcut_word_hide_word(const ShortcutJump *sj, GArray *words, G
     return buffer;
 }
 
-/**
- * @brief Assigns every word on the screen to the words struct, inits line feed and marker arrays, sets
- * configuration for indicators, and activates key press and click signals.
- *
- *  @param ShortcutJump *sj: The plugin object
- */
 void shortcut_word_init(ShortcutJump *sj) {
-    if (sj->current_mode != JM_NONE) {
-        return;
-    }
-
-    sj->current_mode = JM_SHORTCUT;
+    sj->current_mode = JM_SHORTCUT_WORD;
     set_sj_scintilla_object(sj);
     set_selection_info(sj);
     init_sj_values(sj);
     define_indicators(sj->sci, sj);
 
-    gint prev_line = 0;
+    gint prev_line;
 
     if (sj->in_selection && sj->config_settings->search_from_selection) {
         prev_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->first_position, 0);
@@ -90,7 +133,7 @@ void shortcut_word_init(ShortcutJump *sj) {
         word.starting = start + lfs_added;
         word.starting_doc = start;
         word.is_hidden_neighbor = FALSE;
-        word.bytes = shortcut_utf8_char_length(word.word->str[0]);
+        word.bytes = shortcut_get_utf8_char_length(word.word->str[0]);
         word.shortcut = shortcut_make_tag(sj, sj->words->len);
         word.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
         word.padding = shortcut_set_padding(sj, word.word->len);
@@ -130,26 +173,12 @@ void shortcut_word_init(ShortcutJump *sj) {
     sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
 
     shortcut_set_after_placement(sj);
-
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
-
-        set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting + word.padding, word.shortcut->len);
-        set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.shortcut->len);
-    }
-
-    connect_key_press_action(sj, shortcut_on_key_press);
-    connect_click_action(sj, shortcut_on_click_event);
-
+    shortcut_set_indicators(sj);
+    connect_key_press_action(sj, shortcut_word_on_key_press);
+    connect_click_action(sj, shortcut_word_on_click_event);
     ui_set_statusbar(TRUE, _("%i word%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
 }
 
-/**
- * @brief Provides a menu callback for performing a shortcut jump.
- *
- * @param GtkMenuItem *menu_item: (unused)
- * @param gpointer user_data: The plugin data
- */
 void shortcut_word_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
@@ -158,15 +187,6 @@ void shortcut_word_cb(GtkMenuItem *menu_item, gpointer user_data) {
     }
 }
 
-/**
- * @brief Provides a keybinding callback for performing a shortcut jump.
- *
- * @param GtkMenuItem *kb: (unused)
- * @param guint key_id: (unused)
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: TRUE
- */
 gboolean shortcut_word_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
