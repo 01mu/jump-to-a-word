@@ -25,16 +25,6 @@
 #include "shortcut_char.h"
 #include "shortcut_word.h"
 
-void set_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting, gint length) {
-    scintilla_send_message(sci, SCI_SETINDICATORCURRENT, type, 0);
-    scintilla_send_message(sci, SCI_INDICATORFILLRANGE, starting, length);
-}
-
-void clear_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting, gint length) {
-    scintilla_send_message(sci, SCI_SETINDICATORCURRENT, type, 0);
-    scintilla_send_message(sci, SCI_INDICATORCLEARRANGE, starting, length);
-}
-
 gint get_lfs(ShortcutJump *sj, gint current_line) {
     if (sj->in_selection && sj->selection_is_a_line) {
         return 0;
@@ -63,16 +53,6 @@ gint get_indent_width() {
         exit(1);
     }
     return doc->editor->indent_width;
-}
-
-void search_clear_indicators(ScintillaObject *sci, GArray *words) {
-    for (gint i = 0; i < words->len; i++) {
-        Word word = g_array_index(words, Word, i);
-        clear_indicator_for_range(sci, INDICATOR_TAG, word.starting, word.word->len);
-        clear_indicator_for_range(sci, INDICATOR_HIGHLIGHT, word.starting, word.word->len);
-        clear_indicator_for_range(sci, INDICATOR_TEXT, word.starting, word.word->len);
-        clear_indicator_for_range(sci, INDICATOR_MULTICURSOR, word.starting, word.word->len);
-    }
 }
 
 gboolean mod_key_pressed(const GdkEventKey *event) {
@@ -172,7 +152,7 @@ gboolean handle_text_after_action(ShortcutJump *sj, gint pos, gint word_length, 
 
 void end_actions(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
-        search_word_cancel(sj);
+        search_word_jump_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_WORD) {
         shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
@@ -186,7 +166,7 @@ void end_actions(ShortcutJump *sj) {
     } else if (sj->current_mode == JM_LINE) {
         shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_SUBSTRING) {
-        search_substring_cancel(sj);
+        search_substring_jump_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_substring_replace_complete(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
