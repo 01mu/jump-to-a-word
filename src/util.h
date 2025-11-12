@@ -36,7 +36,6 @@ gint get_lfs(ShortcutJump *sj, gint current_line);
 gint get_indent_width();
 gboolean mouse_movement_performed(ShortcutJump *sj, GdkEventButton *event);
 gboolean mod_key_pressed(GdkEventKey *event);
-void reset_indicators(ShortcutJump *sj);
 gboolean handle_text_after_action(ShortcutJump *sj, gint pos, gint word_length, gint line);
 void end_actions(ShortcutJump *sj);
 
