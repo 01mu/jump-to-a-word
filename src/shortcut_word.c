@@ -63,6 +63,7 @@ void shortcut_word_cancel(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     shortcut_set_to_first_visible_line(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
