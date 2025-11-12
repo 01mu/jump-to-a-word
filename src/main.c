@@ -98,7 +98,7 @@ void handle_action(gpointer user_data) {
                 search_substring_replace_cancel(sj);
                 return;
             } else if (jm == JM_INSERTING_LINE) {
-                search_line_insertion_cancel(sj);
+                line_insert_cancel(sj);
                 return;
             } else if (jm == JM_NONE) {
                 replace_instant_init(sj);
@@ -118,7 +118,7 @@ void handle_action(gpointer user_data) {
             if (jm == JM_NONE) {
                 set_sj_scintilla_object(sj);
                 set_selection_info(sj);
-                get_query_for_line_insert(sj);
+                line_insert_set_query(sj);
                 define_indicators(sj->sci, sj);
                 line_insert_from_search(sj);
                 return;
@@ -130,7 +130,7 @@ void handle_action(gpointer user_data) {
             }
         } else if (mm == MC_ACCEPTING) {
             if (jm == JM_NONE) {
-                multicursor_line_insert(sj);
+                line_insert_from_multicursor(sj);
                 return;
             }
         } else if (mm == MC_REPLACING) {
@@ -237,7 +237,7 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_substring_replace_cancel(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
-        search_line_insertion_cancel(sj);
+        line_insert_cancel(sj);
     }
 
     if (sj->multicursor_enabled == MC_ACCEPTING) {

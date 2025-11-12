@@ -250,7 +250,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         }
 
         if (sj->current_mode == JM_INSERTING_LINE) {
-            search_line_insertion_complete(sj);
+            line_insert_complete(sj);
         }
 
         if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
@@ -285,7 +285,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
             }
 
             if (sj->current_mode == JM_INSERTING_LINE) {
-                search_line_insertion_complete(sj);
+                line_insert_complete(sj);
             }
 
             if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
@@ -318,7 +318,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         }
 
         if (sj->current_mode == JM_INSERTING_LINE) {
-            search_line_insertion_complete(sj);
+            line_insert_complete(sj);
         }
 
         if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
@@ -360,9 +360,9 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
 
     if (sj->current_mode == JM_INSERTING_LINE) {
         if (sj->search_change_made) {
-            search_line_insertion_complete(sj);
+            line_insert_complete(sj);
         } else {
-            search_line_insertion_cancel(sj);
+            line_insert_cancel(sj);
         }
     }
 

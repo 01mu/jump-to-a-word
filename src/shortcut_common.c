@@ -27,6 +27,7 @@
 #include "shortcut_line.h"
 #include "shortcut_word.h"
 #include "util.h"
+#include "values.h"
 
 void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     for (gint i = 0; i < sj->words->len; i++) {

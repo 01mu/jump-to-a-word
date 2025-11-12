@@ -224,6 +224,29 @@ GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lin
     return markers;
 }
 
+void margin_markers_reset(ShortcutJump *sj) {
+    gint last_line_in_doc = scintilla_send_message(sj->sci, SCI_GETLINECOUNT, 0, 0);
+
+    for (gint i = 0; i < sj->lines_on_screen; i++) {
+        gint marker = g_array_index(sj->markers, gint, i);
+        scintilla_send_message(sj->sci, SCI_MARKERADDSET, i + sj->first_line_on_screen, marker);
+    }
+
+    if (sj->last_line_on_screen == last_line_in_doc) {
+        gint ll_markers = scintilla_send_message(sj->sci, SCI_MARKERGET, last_line_in_doc, 0);
+
+        for (gint i = 0; i < sj->lines_on_screen - 1; i++) {
+            gint marker = g_array_index(sj->markers, gint, i);
+            scintilla_send_message(sj->sci, SCI_MARKERADDSET, i + sj->first_line_on_screen, marker);
+        }
+
+        scintilla_send_message(sj->sci, SCI_MARKERDELETE, last_line_in_doc - 1, -1);
+        scintilla_send_message(sj->sci, SCI_MARKERADDSET, last_line_in_doc, ll_markers);
+    } else {
+        scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->last_line_on_screen, -1);
+    }
+}
+
 void get_view_positions(ShortcutJump *sj) {
     gint first_line_on_screen = get_first_line_on_screen(sj);
     gint lines_on_screen = get_number_of_lines_on_screen(sj);

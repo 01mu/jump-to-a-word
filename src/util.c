@@ -40,9 +40,13 @@ gint get_lfs(ShortcutJump *sj, gint current_line) {
         return 0;
     }
 
-    gint line = sj->in_selection && sj->config_settings->search_from_selection
-                    ? scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->first_position, 0) + 1
-                    : sj->first_line_on_screen;
+    gint line;
+
+    if (sj->in_selection && sj->config_settings->search_from_selection) {
+        line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->first_position, 0) + 1;
+    } else {
+        line = sj->first_line_on_screen;
+    }
 
     return g_array_index(sj->lf_positions, gint, current_line - line);
 }
@@ -51,29 +55,6 @@ gint set_cursor_position_with_lfs(ShortcutJump *sj) {
     gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     gint lfs = get_lfs(sj, current_line);
     return sj->current_cursor_pos - lfs;
-}
-
-void margin_markers_reset(ShortcutJump *sj) {
-    gint last_line_in_doc = scintilla_send_message(sj->sci, SCI_GETLINECOUNT, 0, 0);
-
-    for (gint i = 0; i < sj->lines_on_screen; i++) {
-        gint marker = g_array_index(sj->markers, gint, i);
-        scintilla_send_message(sj->sci, SCI_MARKERADDSET, i + sj->first_line_on_screen, marker);
-    }
-
-    if (sj->last_line_on_screen == last_line_in_doc) {
-        gint ll_markers = scintilla_send_message(sj->sci, SCI_MARKERGET, last_line_in_doc, 0);
-
-        for (gint i = 0; i < sj->lines_on_screen - 1; i++) {
-            gint marker = g_array_index(sj->markers, gint, i);
-            scintilla_send_message(sj->sci, SCI_MARKERADDSET, i + sj->first_line_on_screen, marker);
-        }
-
-        scintilla_send_message(sj->sci, SCI_MARKERDELETE, last_line_in_doc - 1, -1);
-        scintilla_send_message(sj->sci, SCI_MARKERADDSET, last_line_in_doc, ll_markers);
-    } else {
-        scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->last_line_on_screen, -1);
-    }
 }
 
 gint get_indent_width() {
@@ -87,7 +68,6 @@ gint get_indent_width() {
 void search_clear_indicators(ScintillaObject *sci, GArray *words) {
     for (gint i = 0; i < words->len; i++) {
         Word word = g_array_index(words, Word, i);
-
         clear_indicator_for_range(sci, INDICATOR_TAG, word.starting, word.word->len);
         clear_indicator_for_range(sci, INDICATOR_HIGHLIGHT, word.starting, word.word->len);
         clear_indicator_for_range(sci, INDICATOR_TEXT, word.starting, word.word->len);
@@ -210,6 +190,6 @@ void end_actions(ShortcutJump *sj) {
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_substring_replace_complete(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
-        search_line_insertion_cancel(sj);
+        line_insert_cancel(sj);
     }
 }
