@@ -18,6 +18,7 @@
 
 #include <plugindata.h>
 
+#include "action_text_after.h"
 #include "annotation.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
