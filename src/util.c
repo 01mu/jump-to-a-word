@@ -116,9 +116,9 @@ void end_actions(ShortcutJump *sj) {
     } else if (sj->current_mode == JM_LINE) {
         shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_SUBSTRING) {
-        search_substring_jump_cancel(sj);
+        search_substring_end(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_substring_replace_complete(sj);
+        search_substring_end(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
         line_insert_cancel(sj);
     }

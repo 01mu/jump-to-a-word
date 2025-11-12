@@ -23,6 +23,7 @@
 
 #include "jump_to_a_word.h"
 
+void search_substring_end(ShortcutJump *sj);
 void search_substring_set_query(ShortcutJump *sj);
 void search_substring_get_substrings(ShortcutJump *sj);
 void search_substring_replace_complete(ShortcutJump *sj);
