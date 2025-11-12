@@ -366,3 +366,13 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
 
     return FALSE;
 }
+
+void shortcut_set_indicators(ShortcutJump *sj) {
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        if (!word.is_hidden_neighbor) {
+            set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting + word.padding, word.shortcut->len);
+            set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.shortcut->len);
+        }
+    }
+}

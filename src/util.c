@@ -35,17 +35,6 @@ void clear_indicator_for_range(ScintillaObject *sci, Indicator type, gint starti
     scintilla_send_message(sci, SCI_INDICATORCLEARRANGE, starting, length);
 }
 
-void shortcut_set_indicators(ShortcutJump *sj) {
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
-
-        if (!word.is_hidden_neighbor) {
-            set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting + word.padding, word.shortcut->len);
-            set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.shortcut->len);
-        }
-    }
-}
-
 gint get_lfs(ShortcutJump *sj, gint current_line) {
     if (sj->in_selection && sj->selection_is_a_line) {
         return 0;
@@ -61,7 +50,6 @@ gint get_lfs(ShortcutJump *sj, gint current_line) {
 gint set_cursor_position_with_lfs(ShortcutJump *sj) {
     gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     gint lfs = get_lfs(sj, current_line);
-
     return sj->current_cursor_pos - lfs;
 }
 

@@ -23,7 +23,6 @@
 
 #include "jump_to_a_word.h"
 
-void shortcut_set_indicators(ShortcutJump *sj);
 void connect_key_press_action(ShortcutJump *sj, KeyPressCallback function);
 void set_indicator_for_range(ScintillaObject *sci, Indicator type, gint starting, gint length);
 void connect_click_action(ShortcutJump *sj, ClickCallback function);
