@@ -485,7 +485,6 @@ static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
  */
 static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
     ShortcutJump *sj = (ShortcutJump *)pdata;
-
     end_actions(sj);
 
     if (sj->tl_window->panel) {

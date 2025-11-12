@@ -68,8 +68,6 @@ static void search_substring_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
-    margin_markers_reset(sj);
-
     g_string_free(sj->eol_message, TRUE);
     g_string_free(sj->search_query, TRUE);
 
@@ -104,6 +102,7 @@ void search_substring_replace_complete(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     ui_set_statusbar(TRUE, _("Substring replacement completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
+    margin_markers_reset(sj);
     search_substring_end(sj);
 }
 
@@ -111,6 +110,7 @@ void search_substring_replace_cancel(ShortcutJump *sj) {
     search_substring_clear_replace_indicators(sj);
     search_substring_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    margin_markers_reset(sj);
     search_substring_end(sj);
     ui_set_statusbar(TRUE, _("Substring replacement canceled."));
 }
@@ -157,6 +157,7 @@ static void search_substring_jump_complete(ShortcutJump *sj) {
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 
+    margin_markers_reset(sj);
     search_substring_end(sj);
 
     if (clear_previous_marker) {
@@ -171,11 +172,11 @@ void search_substring_jump_cancel(ShortcutJump *sj) {
     search_substring_clear_jump_indicators(sj);
     search_substring_end(sj);
 
-    if (sj->range_is_set) {
-        gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
-        scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
-        sj->range_is_set = FALSE;
-    }
+    // if (sj->range_is_set) {
+    // gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
+    // scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
+    // sj->range_is_set = FALSE;
+    //}
 
     ui_set_statusbar(TRUE, _("Substring search canceled."));
 }

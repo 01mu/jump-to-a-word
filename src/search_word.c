@@ -175,11 +175,11 @@ void search_word_jump_cancel(ShortcutJump *sj) {
     search_word_clear_jump_indicators(sj);
     search_word_end(sj);
 
-    if (sj->range_is_set) {
-        gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
-        scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
-        sj->range_is_set = FALSE;
-    }
+    // if (sj->range_is_set) {
+    // gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
+    // scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
+    // sj->range_is_set = FALSE;
+    //}
 
     ui_set_statusbar(TRUE, _("Word search canceled."));
 }
