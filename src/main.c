@@ -219,7 +219,7 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_SEARCH) {
-        search_word_cancel(sj);
+        search_word_jump_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_WORD) {
         shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
@@ -233,7 +233,7 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
     } else if (sj->current_mode == JM_LINE) {
         shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_SUBSTRING) {
-        search_substring_cancel(sj);
+        search_substring_jump_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_substring_replace_cancel(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
@@ -358,11 +358,13 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_MENU_ITEM("Jump to _Line (Shortcut)", shortcut_line_cb, sj);
     SET_KEYBINDING("Jump to line (shortcut)", "jump_to_a_line", shortcut_line_kb, KB_JUMP_TO_LINE, sj, item);
 
-    SET_MENU_ITEM("Jump to W_ord (Search)", search_cb, sj);
-    SET_KEYBINDING("Jump to word (search)", "jump_to_a_word_search", search_kb, KB_JUMP_TO_A_WORD_SEARCH, sj, item);
+    SET_MENU_ITEM("Jump to W_ord (Search)", search_word_cb, sj);
+    SET_KEYBINDING("Jump to word (search)", "jump_to_a_word_search", search_word_kb, KB_JUMP_TO_A_WORD_SEARCH, sj,
+                   item);
 
-    SET_MENU_ITEM("Jump to _Substring (Search)", substring_cb, sj);
-    SET_KEYBINDING("Jump to substring (search)", "jump_to_a_substring", substring_kb, KB_JUMP_TO_A_SUBSTRING, sj, item);
+    SET_MENU_ITEM("Jump to _Substring (Search)", search_substring_cb, sj);
+    SET_KEYBINDING("Jump to substring (search)", "jump_to_a_substring", search_substring_kb, KB_JUMP_TO_A_SUBSTRING, sj,
+                   item);
 
     SET_MENU_ITEM("Jump to _Previous Cursor Position", jump_to_previous_cursor_cb, sj);
     SET_KEYBINDING("Jump to previous cursor position", "jump_to_previous_cursor", jump_to_previous_cursor_kb,

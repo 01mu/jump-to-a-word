@@ -26,29 +26,44 @@
 #include "util.h"
 #include "values.h"
 
-void search_word_end(ShortcutJump *sj) {
+static void search_word_clear_replace_indicators(ShortcutJump *sj) {
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        if (word.valid_search) {
+            gint start = sj->first_position + word.replace_pos;
+            gint len = sj->replace_len;
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+        }
+    }
+}
+
+static void search_word_clear_jump_indicators(ShortcutJump *sj) {
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        if (word.valid_search) {
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        }
+    }
+}
+
+static void search_word_end(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-    }
-
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
         g_string_free(word.word, TRUE);
     }
-
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 
     if (sj->newline_was_added_for_next_line_insert) {
         gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
@@ -88,18 +103,23 @@ void search_word_end(ShortcutJump *sj) {
 }
 
 void search_word_replace_complete(ShortcutJump *sj) {
+    search_word_clear_replace_indicators(sj);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     ui_set_statusbar(TRUE, _("Word replacement completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
     search_word_end(sj);
 }
 
 void search_word_replace_cancel(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Word replacement canceled."));
+    search_word_clear_replace_indicators(sj);
+    search_word_clear_jump_indicators(sj);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     search_word_end(sj);
+    ui_set_statusbar(TRUE, _("Word replacement canceled."));
 }
 
-void search_word_complete(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Word search completed."));
+void search_word_jump_complete(ShortcutJump *sj) {
+    search_word_clear_jump_indicators(sj);
 
     if (sj->multicursor_enabled == MC_ACCEPTING) {
         for (gint i = 0; i < sj->words->len; i++) {
@@ -146,46 +166,33 @@ void search_word_complete(ShortcutJump *sj) {
         gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
     }
+
+    ui_set_statusbar(TRUE, _("Word search completed."));
 }
 
-void search_word_cancel(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Word search canceled."));
+void search_word_jump_cancel(ShortcutJump *sj) {
+    search_word_clear_jump_indicators(sj);
     search_word_end(sj);
+
     if (sj->range_is_set) {
         gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
         sj->range_is_set = FALSE;
     }
+
+    ui_set_statusbar(TRUE, _("Word search canceled."));
 }
 
-/**
- * @brief Provides a filter used in word search when the setting is set to case insensitive.
-
-  * @param const gchar *word: The word we are searching (haystack)
-  * @param const gchar *search_query: The search query (needle)
-  *
-  * @returns gboolean: TRUE if the needle exists FALSE otherwise
- */
-gboolean search_case_insensitive_match(const gchar *word, const gchar *search_query) {
-    return g_ascii_strncasecmp(word, search_query, strlen(search_query)) == 0;
-}
-
-/**
- * @brief Resets indicators and info from the previous search, begins a new search, sets the highlight indicator for the
- * first result, and sets the indexes for the first and last valid search words in the words array (used for wrapping).
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gboolean instant_replace: If instant replace mode is enabled
- */
-void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
+static void search_word_mark_words(ShortcutJump *sj, gboolean instant_replace) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
-
         word->valid_search = FALSE;
-
-        clear_indicator_for_range(sj->sci, INDICATOR_TAG, word->starting, word->word->len);
-        clear_indicator_for_range(sj->sci, INDICATOR_HIGHLIGHT, word->starting, word->word->len);
-        clear_indicator_for_range(sj->sci, INDICATOR_TEXT, word->starting, word->word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting, word->word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting, word->word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word->starting, word->word->len);
     }
 
     sj->search_results_count = 0;
@@ -198,7 +205,6 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
             if (strcmp(word->word->str, sj->search_query->str) == 0) {
                 word->valid_search = TRUE;
             }
-
             continue;
         }
 
@@ -206,7 +212,6 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
             if (strcmp(word->word->str, sj->search_query->str) == 0) {
                 word->valid_search = TRUE;
             }
-
             continue;
         }
 
@@ -270,7 +275,7 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
         }
 
         if (!sj->config_settings->search_case_sensitive && sj->config_settings->search_start_from_beginning) {
-            if (search_case_insensitive_match(word->word->str, sj->search_query->str)) {
+            if (g_ascii_strncasecmp(word->word->str, sj->search_query->str, strlen(sj->search_query->str)) == 0) {
                 word->valid_search = TRUE;
             }
         }
@@ -290,41 +295,28 @@ void search_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
-
         if (word.valid_search) {
             sj->search_results_count += 1;
-
-            set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting, word.word->len);
-            set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
         }
     }
 
-    ui_set_statusbar(TRUE, _("%i word%s in view."), sj->search_results_count, sj->search_results_count == 1 ? "" : "s");
     gint search_word_pos = get_search_word_pos(sj);
-
     sj->search_word_pos_first = get_search_word_pos_first(sj);
     sj->search_word_pos = search_word_pos == -1 ? sj->search_word_pos_first : search_word_pos;
-
     if (sj->search_results_count > 0) {
         Word word = g_array_index(sj->words, Word, sj->search_word_pos);
-
-        set_indicator_for_range(sj->sci, INDICATOR_HIGHLIGHT, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
     }
-
     sj->search_word_pos_last = get_search_word_pos_last(sj);
+
+    ui_set_statusbar(TRUE, _("%i word%s in view."), sj->search_results_count, sj->search_results_count == 1 ? "" : "s");
 }
 
-/**
- * @brief Handles key presses for a search jump: jumps to selected word with Return, removes the last char from the
- * search query with Backspace, performs navigation of tagged words with Left and Right, and handles search replace
- * mode key key input.
- *
- * @param GtkWidget *widget: (unused)
- * @param GdkEventKey *event: Keypress event
- * @param gpointer user_data: The plugin data
- *
- * @return gint: FALSE if no controlled for key press action was found
- */
 static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
@@ -335,24 +327,35 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
 
     if (event->keyval == GDK_KEY_Return) {
         if (sj->search_word_pos != -1) {
-            search_word_complete(sj);
+            search_word_jump_complete(sj);
             return TRUE;
         }
     }
 
     if (event->keyval == GDK_KEY_BackSpace) {
         if (sj->search_query->len == 0) {
-            search_word_cancel(sj);
+            search_word_jump_cancel(sj);
             return TRUE;
         }
 
         g_string_truncate(sj->search_query, sj->search_query->len - 1);
 
         if (sj->search_query->len > 0) {
-            search_mark_words(sj, FALSE);
+            search_word_mark_words(sj, FALSE);
         } else {
             sj->search_results_count = 0;
-            search_clear_indicators(sj->sci, sj->words);
+
+            for (gint i = 0; i < sj->words->len; i++) {
+                Word word = g_array_index(sj->words, Word, i);
+                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_HIGHLIGHT, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_TEXT, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_MULTICURSOR, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            }
         }
 
         annotation_display_search(sj);
@@ -362,11 +365,11 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
     if (keychar != 0 && (g_unichar_isalpha(keychar) || is_other_char)) {
         g_string_append_c(sj->search_query, keychar);
 
-        search_mark_words(sj, FALSE);
+        search_word_mark_words(sj, FALSE);
         annotation_display_search(sj);
 
         if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
-            search_word_complete(sj);
+            search_word_jump_complete(sj);
         }
 
         return TRUE;
@@ -395,16 +398,11 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
         return TRUE;
     }
 
-    search_word_cancel(sj);
+    search_word_jump_cancel(sj);
     return FALSE;
 }
 
-/**
- * @brief Sets all the words within a range to the words array.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void search_get_words(ShortcutJump *sj) {
+void search_word_get_words(ShortcutJump *sj) {
     for (gint i = 0; i < sj->last_position - sj->first_position; i++) {
         gint start = scintilla_send_message(sj->sci, SCI_WORDSTARTPOSITION, sj->first_position + i, TRUE);
         gint end = scintilla_send_message(sj->sci, SCI_WORDENDPOSITION, sj->first_position + i, TRUE);
@@ -426,14 +424,7 @@ void search_get_words(ShortcutJump *sj) {
     }
 }
 
-/**
- * @brief Sets the inital query used in a word search based on selection. If a word is highlighted we use it for
- * searching if use_selected_word_or_char is enabled. During an instant replace the word under the cursor is replaced.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gboolean instant_replace: Whether we are instant replacing
- */
-void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace) {
+void search_word_set_query(ShortcutJump *sj, gboolean instant_replace) {
     gint start = scintilla_send_message(sj->sci, SCI_WORDSTARTPOSITION, sj->current_cursor_pos, TRUE);
     gint end = scintilla_send_message(sj->sci, SCI_WORDENDPOSITION, sj->current_cursor_pos, TRUE);
     gchar *current_word = start != end ? sci_get_contents_range(sj->sci, start, end) : "";
@@ -443,66 +434,35 @@ void search_set_initial_query(ShortcutJump *sj, gboolean instant_replace) {
 
     if ((current_word && strlen(current_word) > 0) && (ps || instant_replace)) {
         g_string_append(sj->search_query, current_word);
-        search_mark_words(sj, instant_replace);
+        search_word_mark_words(sj, instant_replace);
     }
 }
 
-/**
- * @brief Assigns every word on the screen to the words struct, sets configuration for indicators, and activates key
- * press and click signals. In the event that we are performing an instant search, we set the appropriate starting
- * and ending positions (the earliest and latest indexes of words in the array that match a query) and the initial
- * position. This process is also triggered if we are using use_current_word.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gboolean instant_replace: If instant replace mode is enabled
- */
-void search_init(ShortcutJump *sj, gboolean instant_replace) {
+void search_word_init(ShortcutJump *sj, gboolean instant_replace) {
     sj->current_mode = JM_SEARCH;
     set_sj_scintilla_object(sj);
-
-    if (!instant_replace) {
-        set_selection_info(sj);
-    }
-
-    init_sj_values(sj);
+    set_selection_info(sj);
     define_indicators(sj->sci, sj);
-    search_get_words(sj);
-    search_set_initial_query(sj, instant_replace);
+    init_sj_values(sj);
+    search_word_get_words(sj);
+    search_word_set_query(sj, instant_replace);
     connect_key_press_action(sj, on_key_press_search_word);
     connect_click_action(sj, on_click_event_search);
     annotation_display_search(sj);
 }
 
-/**
- * @brief Provides a menu callback for performing a search jump.
- *
- * @param GtkMenuItem *menu_item: (unused)
- * @param gpointer user_data: The plugin data
- */
-void search_cb(GtkMenuItem *menu_item, gpointer user_data) {
+void search_word_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
     if (sj->current_mode == JM_NONE) {
-        search_init(sj, FALSE);
+        search_word_init(sj, FALSE);
     }
 }
 
-/**
- * @brief Provides a keybinding callback for performing a search jump.
- *
- * @param GtkMenuItem *kb: (unused)
- * @param guint key_id: (unused)
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: TRUE
- */
-gboolean search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
+gboolean search_word_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
     if (sj->current_mode == JM_NONE) {
-        search_init(sj, FALSE);
+        search_word_init(sj, FALSE);
         return TRUE;
     }
-
     return FALSE;
 }

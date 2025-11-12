@@ -26,10 +26,21 @@
 #include "util.h"
 #include "values.h"
 
-void search_substring_end(ShortcutJump *sj) {
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    annotation_clear(sj->sci, sj->eol_message_line);
+static void search_substring_clear_replace_indicators(ShortcutJump *sj) {
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        gint start = sj->first_position + word.replace_pos;
+        gint len = sj->replace_len;
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+    }
+}
 
+static void search_substring_clear_jump_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
@@ -39,21 +50,21 @@ void search_substring_end(ShortcutJump *sj) {
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
         scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
     }
+}
 
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
-        g_string_free(word.word, TRUE);
-    }
-
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+static void search_substring_end(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    annotation_clear(sj->sci, sj->eol_message_line);
 
     if (sj->newline_was_added_for_next_line_insert) {
         gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
         scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
         sj->newline_was_added_for_next_line_insert = FALSE;
+    }
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        g_string_free(word.word, TRUE);
     }
 
     margin_markers_reset(sj);
@@ -88,18 +99,23 @@ void search_substring_end(ShortcutJump *sj) {
 }
 
 void search_substring_replace_complete(ShortcutJump *sj) {
+    search_substring_clear_replace_indicators(sj);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     ui_set_statusbar(TRUE, _("Substring replacement completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
     search_substring_end(sj);
 }
 
 void search_substring_replace_cancel(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Substring replacement canceled."));
+    search_substring_clear_replace_indicators(sj);
+    search_substring_clear_jump_indicators(sj);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     search_substring_end(sj);
+    ui_set_statusbar(TRUE, _("Substring replacement canceled."));
 }
 
-void search_substring_complete(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Substring search completed."));
+static void search_substring_jump_complete(ShortcutJump *sj) {
+    search_substring_clear_jump_indicators(sj);
 
     if (sj->multicursor_enabled == MC_ACCEPTING) {
         for (gint i = 0; i < sj->words->len; i++) {
@@ -146,32 +162,31 @@ void search_substring_complete(ShortcutJump *sj) {
         gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
     }
+
+    ui_set_statusbar(TRUE, _("Substring search completed."));
 }
 
-void search_substring_cancel(ShortcutJump *sj) {
-    ui_set_statusbar(TRUE, _("Substring search canceled."));
+void search_substring_jump_cancel(ShortcutJump *sj) {
+    search_substring_clear_jump_indicators(sj);
     search_substring_end(sj);
+
     if (sj->range_is_set) {
         gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->range_first_pos, 0);
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, line, -1);
         sj->range_is_set = FALSE;
     }
+
+    ui_set_statusbar(TRUE, _("Substring search canceled."));
 }
 
-/**
- * @brief Returns the substring searched for during a substring search.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gint i: The starting position of the substring within the visible text
- *
- * @return Word: The substring
- */
-Word get_substring_for_search(ShortcutJump *sj, gint i) {
-    Word data;
+void search_substring_set_query(ShortcutJump *sj) {
+    g_string_append(sj->search_query, sci_get_contents_range(sj->sci, sj->selection_start, sj->selection_end));
+}
 
+static Word search_substring_make_word(ShortcutJump *sj, gint i) {
+    Word data;
     gint start = sj->first_position + i;
     gint end = sj->first_position + i + sj->search_query->len;
-
     data.word = g_string_new(sci_get_contents_range(sj->sci, start, end));
     data.starting = start;
     data.starting_doc = start;
@@ -183,16 +198,10 @@ Word get_substring_for_search(ShortcutJump *sj, gint i) {
     data.bytes = 0;
     data.shortcut_marked = FALSE;
     data.is_hidden_neighbor = FALSE;
-
     return data;
 }
 
-/**
- * @brief Marks every occurace of the substring, clears the words array, and sets indicators.
- *
- * @param ShortcutJump *sj: The plugin object
- */
-void search_get_substrings(ShortcutJump *sj) {
+void search_substring_get_substrings(ShortcutJump *sj) {
     if (sj->delete_added_bracket) {
         scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->current_cursor_pos, 1);
         sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
@@ -202,11 +211,12 @@ void search_get_substrings(ShortcutJump *sj) {
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
-
-        clear_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting, word.word->len);
-        clear_indicator_for_range(sj->sci, INDICATOR_HIGHLIGHT, word.starting, word.word->len);
-        clear_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting, word.word->len);
-
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
         g_string_free(word.word, TRUE);
     }
 
@@ -219,7 +229,7 @@ void search_get_substrings(ShortcutJump *sj) {
 
         while (z) {
             gint i = z - sj->buffer->str;
-            Word data = get_substring_for_search(sj, i);
+            Word data = search_substring_make_word(sj, i);
 
             g_array_append_val(sj->words, data);
             sj->search_results_count += 1;
@@ -248,7 +258,7 @@ void search_get_substrings(ShortcutJump *sj) {
                      (!g_unichar_isalpha(needle_char) && needle_char == haystack_char));
 
             if (k - 1 == sj->search_query->len) {
-                Word data = get_substring_for_search(sj, i);
+                Word data = search_substring_make_word(sj, i);
 
                 sj->search_results_count += 1;
                 g_array_append_val(sj->words, data);
@@ -264,7 +274,7 @@ void search_get_substrings(ShortcutJump *sj) {
 
         while ((b = g_strstr_len(b, -1, query_lower))) {
             gint i = b - buffer_lower;
-            Word data = get_substring_for_search(sj, i);
+            Word data = search_substring_make_word(sj, i);
 
             g_array_append_val(sj->words, data);
             sj->search_results_count += 1;
@@ -277,39 +287,28 @@ void search_get_substrings(ShortcutJump *sj) {
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
-
         if (word.valid_search) {
-            set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting, sj->search_query->len);
-            set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting, sj->search_query->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
         }
     }
 
-    ui_set_statusbar(TRUE, _("%i substring%s in view."), sj->search_results_count,
-                     sj->search_results_count == 1 ? "" : "s");
-
     gint search_word_pos = get_search_word_pos(sj);
-
     sj->search_word_pos_first = get_search_word_pos_first(sj);
     sj->search_word_pos = search_word_pos == -1 ? sj->search_word_pos_first : search_word_pos;
-
     if (sj->search_results_count > 0) {
         Word word = g_array_index(sj->words, Word, sj->search_word_pos);
-
-        set_indicator_for_range(sj->sci, INDICATOR_HIGHLIGHT, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
     }
-
     sj->search_word_pos_last = get_search_word_pos_last(sj);
+
+    ui_set_statusbar(TRUE, _("%i substring%s in view."), sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
 }
 
-/**
- * @brief Handles key press event during a substring jump.
- *
- * @param GtkWidget *widget: (unused)
- * @param GdkEventKey *event: Keypress event
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: FALSE if uncontrolled for key press
- */
 static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
@@ -320,24 +319,35 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
 
     if (event->keyval == GDK_KEY_Return) {
         if (sj->search_word_pos != -1) {
-            search_substring_complete(sj);
+            search_substring_jump_complete(sj);
             return TRUE;
         }
     }
 
     if (event->keyval == GDK_KEY_BackSpace) {
         if (sj->search_query->len == 0) {
-            search_substring_cancel(sj);
+            search_substring_jump_cancel(sj);
             return TRUE;
         }
 
         g_string_truncate(sj->search_query, sj->search_query->len - 1);
 
         if (sj->search_query->len > 0) {
-            search_get_substrings(sj);
+            search_substring_get_substrings(sj);
         } else {
             sj->search_results_count = 0;
-            search_clear_indicators(sj->sci, sj->words);
+
+            for (gint i = 0; i < sj->words->len; i++) {
+                Word word = g_array_index(sj->words, Word, i);
+                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_HIGHLIGHT, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_TEXT, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_MULTICURSOR, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+            }
         }
 
         annotation_display_substring(sj);
@@ -347,11 +357,11 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
     if (keychar != 0 && (g_unichar_isalpha(keychar) || is_other_char)) {
         g_string_append_c(sj->search_query, keychar);
 
-        search_get_substrings(sj);
+        search_substring_get_substrings(sj);
         annotation_display_substring(sj);
 
         if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
-            search_substring_complete(sj);
+            search_substring_jump_complete(sj);
         }
 
         return TRUE;
@@ -381,44 +391,22 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
         return TRUE;
     }
 
-    search_substring_cancel(sj);
+    search_substring_jump_cancel(sj);
     return FALSE;
 }
 
-/**
- * @brief Sets the initial query if we are in a selection. The selected query will mark every occurance on the page.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gboolean instant_replace: If we are instantly replacing
- */
-GString *set_search_query(ScintillaObject *sci, gint selection_start, gint selection_end, GString *search_query) {
-    return g_string_append(search_query, sci_get_contents_range(sci, selection_start, selection_end));
-}
-
-/**
- * @brief Begins the substring jump or replacement, defines indicators, and sets key and mouse movements.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gboolean instant_replace: If we are instantly replacing
- */
-void substring_init(ShortcutJump *sj, gboolean instant_replace) {
-    if (sj->current_mode != JM_NONE) {
-        return;
-    }
-
+void serach_substring_init(ShortcutJump *sj) {
     sj->current_mode = JM_SUBSTRING;
     set_sj_scintilla_object(sj);
-
-    if (!instant_replace) {
-        set_selection_info(sj);
-    }
+    set_selection_info(sj);
+    define_indicators(sj->sci, sj);
 
     if (sj->in_selection) {
         if (!sj->selection_is_a_char && !sj->selection_is_a_word && sj->selection_is_a_line) {
             sj->in_selection = FALSE;
             init_sj_values(sj);
-            sj->search_query = set_search_query(sj->sci, sj->selection_start, sj->selection_end, sj->search_query);
-            search_get_substrings(sj);
+            search_substring_set_query(sj);
+            search_substring_get_substrings(sj);
         } else {
             init_sj_values(sj);
         }
@@ -426,43 +414,23 @@ void substring_init(ShortcutJump *sj, gboolean instant_replace) {
         init_sj_values(sj);
     }
 
-    define_indicators(sj->sci, sj);
-
     connect_key_press_action(sj, on_key_press_search_substring);
     connect_click_action(sj, on_click_event_search);
     annotation_display_substring(sj);
 }
 
-/**
- * @brief Provides a menu callback for performing a substring jump.
- *
- * @param GtkMenuItem *menu_item: (unused)
- * @param gpointer user_data: The plugin data
- */
-void substring_cb(GtkMenuItem *menu_item, gpointer user_data) {
+void search_substring_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
     if (sj->current_mode == JM_NONE) {
-        substring_init(sj, FALSE);
+        serach_substring_init(sj);
     }
 }
 
-/**
- * @brief Provides a keybinding callback for performing a substirng jump.
- *
- * @param GtkMenuItem *kb: (unused)
- * @param guint key_id: (unused)
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: TRUE
- */
-gboolean substring_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
+gboolean search_substring_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
     if (sj->current_mode == JM_NONE) {
-        substring_init(sj, FALSE);
+        serach_substring_init(sj);
         return TRUE;
     }
-
     return TRUE;
 }

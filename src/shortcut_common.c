@@ -77,9 +77,9 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
         } else if (sj->config_settings->line_after == LA_JUMP_TO_WORD_SHORTCUT) {
             shortcut_word_init(sj);
         } else if (sj->config_settings->line_after == LA_JUMP_TO_WORD_SEARCH) {
-            search_init(sj, FALSE);
+            search_word_init(sj, FALSE);
         } else if (sj->config_settings->line_after == LA_JUMP_TO_SUBSTRING_SEARCH) {
-            substring_init(sj, FALSE);
+            serach_substring_init(sj);
         }
     }
 }
@@ -372,8 +372,10 @@ void shortcut_set_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
         if (!word.is_hidden_neighbor) {
-            set_indicator_for_range(sj->sci, INDICATOR_TAG, word.starting + word.padding, word.shortcut->len);
-            set_indicator_for_range(sj->sci, INDICATOR_TEXT, word.starting + word.padding, word.shortcut->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting + word.padding, word.shortcut->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting + word.padding, word.shortcut->len);
         }
     }
 }

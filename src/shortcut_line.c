@@ -93,6 +93,7 @@ void shortcut_line_complete(ShortcutJump *sj, gint pos, gint word_length, gint l
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
 
     sj->previous_cursor_pos = sj->current_cursor_pos;
 

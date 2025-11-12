@@ -21,39 +21,19 @@
 
 #include "jump_to_a_word.h"
 
-/**
- * @brief Returns the Scintilla object from the current document.
- *
- * @return ScintillaObject *: The current Scintilla object
- */
 ScintillaObject *get_scintilla_object() {
     GeanyDocument *doc = document_get_current();
-
     if (!doc->is_valid) {
         exit(1);
     }
-
     return doc->editor->sci;
 }
 
-/**
- * @brief Sets the current Scintilla object to the value in the plugin object.
- *
- * @param ShortcutJump *sj: The plugin object
- */
 void set_sj_scintilla_object(ShortcutJump *sj) {
     ScintillaObject *sci = get_scintilla_object();
     sj->sci = sci;
 }
 
-/**
- * @brief Gets the first line on screen (0 index), derived fron the first visible line. This is needed to control for
- * wrapped lines.
- *
- * @param ShortcutJump *sj: The plugin object
- *
- * @return gint: The first line on screen (0 index)
- */
 static gint get_first_line_on_screen(ShortcutJump *sj) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
@@ -73,13 +53,6 @@ static gint get_first_line_on_screen(ShortcutJump *sj) {
     return scintilla_send_message(sj->sci, SCI_DOCLINEFROMVISIBLE, first_visible_line, 0);
 }
 
-/**
- * @brief Gets the nmber of lines on screen, controlling for whether we are in a selection.
- *
- * @param ScintillaObject *sci: The Scintilla object
- *
- * @return gint: The first line on screen (0 index)
- */
 static gint get_number_of_lines_on_screen(ShortcutJump *sj) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
@@ -100,14 +73,6 @@ static gint get_number_of_lines_on_screen(ShortcutJump *sj) {
     return scintilla_send_message(sj->sci, SCI_LINESONSCREEN, 0, 0);
 }
 
-/**
- * @brief Gets the first position on the screen. If we are only tagging the current line we limit the range.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gint first_line_on_screen: The first line on the screen
- *
- * @return gint: The first position on the screen
- */
 static gint get_first_position(ShortcutJump *sj, gint first_line_on_screen) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
@@ -131,14 +96,6 @@ static gint get_first_position(ShortcutJump *sj, gint first_line_on_screen) {
     return scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line_on_screen, 0);
 }
 
-/**
- * @brief Gets the last position on the screen. If we are only tagging the current line we limit the range.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gint first_line_on_screen: The last line on the screen
- *
- * @return gint: The last position on the screen
- */
 static gint get_last_position(ShortcutJump *sj, gint last_line_on_screen) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
@@ -168,16 +125,6 @@ static gint get_last_position(ShortcutJump *sj, gint last_line_on_screen) {
     return p;
 }
 
-/**
- * @brief Sets the current cursor position and places the cursor at the center of the screen if the cursor is outside of
- * the current view before performing a search or shortcut jump.
- *
- * @param ScintillaObject *sci: The Scintilla object
- * @param gint first_position: The first position on the screen
- * @param gint last_position: The last position on the screen
- *
- * @return gint: The current cursor position
- */
 static gint get_cursor_position(ScintillaObject *sci, gint first_position, gint last_position) {
     gint current_cursor_pos = scintilla_send_message(sci, SCI_GETCURRENTPOS, 0, 0);
 
@@ -188,16 +135,6 @@ static gint get_cursor_position(ScintillaObject *sci, gint first_position, gint 
     return current_cursor_pos;
 }
 
-/**
- * @brief Returns an array containing the markers that appear on the margin so they can be reinserted later. This is
- * necessary because they are displaced when the buffer is inserted.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param gint first_line_on_screen: The first line on screen, used as an offset
- * @param gint lines_on_screen: Number of lines on screen
- *
- * @return Array containing the markers as ints
- */
 GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen) {
     GArray *markers = g_array_new(FALSE, FALSE, sizeof(gint));
 
@@ -263,12 +200,6 @@ void get_view_positions(ShortcutJump *sj) {
     sj->current_cursor_pos = current_cursor_pos;
 }
 
-/**
- * @brief Inits values used in the main plugin object. This function is called once for every type of jump. The *_end
- * functions free memory allocated.
- *
- * @param ShortcutJump *sj: The plugin object
- */
 void init_sj_values(ShortcutJump *sj) {
     if (!sj->sci) {
         ScintillaObject *sci = get_scintilla_object();

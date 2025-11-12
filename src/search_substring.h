@@ -23,13 +23,13 @@
 
 #include "jump_to_a_word.h"
 
-void substring_init(ShortcutJump *sj, gboolean instant_replace);
-void substring_cb(GtkMenuItem *menu_item, gpointer user_data);
-gboolean substring_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
-GString *set_search_query(ScintillaObject *sci, gint selection_start, gint selection_end, GString *search_query);
-void search_get_substrings(ShortcutJump *sj);
-void search_substring_replace_cancel(ShortcutJump *sj);
+void search_substring_set_query(ShortcutJump *sj);
+void search_substring_get_substrings(ShortcutJump *sj);
 void search_substring_replace_complete(ShortcutJump *sj);
-void search_substring_cancel(ShortcutJump *sj);
+void search_substring_replace_cancel(ShortcutJump *sj);
+void search_substring_jump_cancel(ShortcutJump *sj);
+void serach_substring_init(ShortcutJump *sj);
+void search_substring_cb(GtkMenuItem *menu_item, gpointer user_data);
+gboolean search_substring_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
 
 #endif

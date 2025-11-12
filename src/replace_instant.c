@@ -55,7 +55,18 @@ gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpoi
  */
 static void set_replace_indicators(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
-    search_clear_indicators(sj->sci, sj->words);
+
+    for (gint i = 0; i < sj->words->len; i++) {
+        Word word = g_array_index(sj->words, Word, i);
+        scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_TAG, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_HIGHLIGHT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_TEXT, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+        scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_MULTICURSOR, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+    }
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
@@ -111,7 +122,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj) {
 void replace_substring_init(ShortcutJump *sj) {
     if (sj->search_results_count == 0) {
         ui_set_statusbar(TRUE, _("No substrings to replace."));
-        search_substring_cancel(sj);
+        search_substring_jump_cancel(sj);
         return;
     }
 
@@ -224,7 +235,7 @@ void multicursor_replace(ShortcutJump *sj) {
 void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
     if (sj->search_results_count == 0) {
         ui_set_statusbar(TRUE, _("No words to replace."));
-        search_word_cancel(sj);
+        search_word_jump_cancel(sj);
         return;
     }
 
@@ -266,11 +277,11 @@ void replace_instant_init(ShortcutJump *sj) {
             shortcut_char_init_with_query(sj, query);
             replace_shortcut_char_init(sj);
         } else {
-            substring_init(sj, TRUE);
+            serach_substring_init(sj);
             replace_substring_init(sj);
         }
     } else {
-        search_init(sj, TRUE);
+        search_word_init(sj, TRUE);
         replace_word_init(sj, TRUE);
     }
 }

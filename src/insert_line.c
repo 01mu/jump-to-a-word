@@ -31,12 +31,12 @@ void line_insert_set_query(ShortcutJump *sj) {
     if (sj->in_selection) {
         sj->in_selection = FALSE;
         init_sj_values(sj);
-        sj->search_query = set_search_query(sj->sci, sj->selection_start, sj->selection_end, sj->search_query);
-        search_get_substrings(sj);
+        search_substring_set_query(sj);
+        search_substring_get_substrings(sj);
     } else {
         init_sj_values(sj);
-        search_get_words(sj);
-        search_set_initial_query(sj, TRUE);
+        search_word_get_words(sj);
+        search_word_set_query(sj, TRUE);
     }
 }
 

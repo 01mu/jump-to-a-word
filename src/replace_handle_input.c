@@ -139,8 +139,10 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
             gint start = sj->first_position + word.replace_pos;
             gint len = sj->replace_len + 1;
 
-            clear_indicator_for_range(sj->sci, INDICATOR_TAG, start, len);
-            set_indicator_for_range(sj->sci, INDICATOR_TAG, start, len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, start, len);
         }
     }
 
@@ -195,8 +197,10 @@ static void remove_character(ShortcutJump *sj) {
             gint start = sj->first_position + word.replace_pos;
             gint len = sj->replace_len - 1;
 
-            clear_indicator_for_range(sj->sci, INDICATOR_TAG, start, len);
-            set_indicator_for_range(sj->sci, INDICATOR_TAG, start, len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, start, len);
         }
     }
 
