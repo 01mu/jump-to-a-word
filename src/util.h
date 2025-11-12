@@ -34,7 +34,6 @@ void clear_indicator_for_range(ScintillaObject *sci, Indicator type, gint starti
 void disconnect_key_press_action(ShortcutJump *sj);
 void disconnect_click_action(ShortcutJump *sj);
 gint set_cursor_position_with_lfs(ShortcutJump *sj);
-gint save_cursor_position(ShortcutJump *sj);
 gint get_lfs(ShortcutJump *sj, gint current_line);
 gint get_indent_width();
 gboolean mouse_movement_performed(ShortcutJump *sj, GdkEventButton *event);

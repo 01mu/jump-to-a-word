@@ -193,7 +193,7 @@ gboolean on_click_event_search(GtkWidget *widget, GdkEventButton *event, gpointe
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (mouse_movement_performed(sj, event)) {
-        sj->current_cursor_pos = save_cursor_position(sj);
+        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
         scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
 
         if (sj->current_mode == JM_SEARCH) {

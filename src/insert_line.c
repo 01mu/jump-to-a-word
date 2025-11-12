@@ -260,7 +260,7 @@ static gboolean on_click_event_line_replacement(GtkWidget *widget, GdkEventButto
 
     if (mouse_movement_performed(sj, event)) {
         if (sj->current_mode == JM_INSERTING_LINE) {
-            sj->current_cursor_pos = save_cursor_position(sj);
+            sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
             scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
             search_line_insertion_cancel(sj);
             return TRUE;

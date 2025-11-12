@@ -254,7 +254,7 @@ void replace_word_init(ShortcutJump *sj, gboolean instant_replace) {
 void replace_instant_init(ShortcutJump *sj) {
     set_sj_scintilla_object(sj);
     set_selection_info(sj);
-    sj->current_cursor_pos = save_cursor_position(sj);
+    sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     sj->replace_instant = TRUE;
     define_indicators(sj->sci, sj);
 
