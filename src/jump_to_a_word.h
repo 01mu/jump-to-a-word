@@ -216,46 +216,37 @@ typedef struct {
     gint current_cursor_pos;
     gint previous_cursor_pos;
 
-    GString *cache;         // original text on screen before shortcuts are displayed
-    GString *buffer;        // text with shortcuts positioned over words
-    GString *replace_cache; // the cached text being updated when chars are added or removed during replacement
+    GString *cache;
+    GString *buffer;
+    GString *replace_cache;
 
-    GArray *markers;           // the markers on the screen
-    GArray *words;             // every word on screen
-    GArray *multicursor_words; // words marked during a multicursor session
+    GArray *markers;
+    GArray *words;
+    GArray *multicursor_words;
     GArray *multicursor_lines;
 
-    GArray *lf_positions; /* the number of times a "\n" was shifted forward before a line
-line        original string len: 9  replaced (pattern len of 2 overwrites [LF] so we shift) len: 12     total LF shifts
-1           a[LF]                   DE[LF]                                                               1
-2           a[LF]                   DF[LF]                                                               2
-3           aa[LF]                  DG[LF] (no shift)                                                    2
-4           a[LF]                   DH[LF]                                                               3
-5                                                                                                        3
-This is necessary because we need to know how many LFs were shifted up until a certain line in order to accurately
-set the cursor position after clicking somewhere on the screen to cancel a shortcut jump.
-*/
+    GArray *lf_positions;
 
-    gboolean replace_instant; // whether we are performing an instant replace
+    gboolean replace_instant;
 
-    gboolean range_is_set;  // whether we are performing a line or word range selection jump
-    gint range_first_pos;   // the position of the first range line or word
-    gint range_word_length; // the length of the first word used in a selection range
+    gboolean range_is_set;
+    gint range_first_pos;
+    gint range_word_length;
 
-    GString *search_query;     // query used during a jump
-    gint search_results_count; // marked words during search
-    gint shortcut_single_pos;  // index of highlighted word
+    GString *search_query;
+    gint search_results_count;
+    gint shortcut_single_pos;
 
-    GString *eol_message;  // end of line annotation message used during a word search
-    gint eol_message_line; // line end of line annotation will appear on
+    GString *eol_message;
+    gint eol_message_line;
 
-    gint search_word_pos;       // index of currently highlighted word during a word search
-    gint search_word_pos_first; // index of first word in words array that matches a query
-    gint search_word_pos_last;  // index of last word in words array that matches a query
+    gint search_word_pos;
+    gint search_word_pos_first;
+    gint search_word_pos_last;
 
-    gboolean cursor_in_word;     // whether the cursor appears within a word (used for resetting the cursor position)
-    gboolean search_change_made; // check if a change has been made to the search string
-    gint replace_len;            // the length of the replacement for a set of serach words
+    gboolean cursor_in_word;
+    gboolean search_change_made;
+    gint replace_len;
 
     gboolean delete_added_bracket;
 
