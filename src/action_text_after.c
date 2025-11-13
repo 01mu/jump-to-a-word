@@ -54,6 +54,7 @@ gboolean handle_text_after_action(ShortcutJump *sj, gint pos, gint word_length, 
     }
 
     if (sj->config_settings->text_after == TX_SELECT_TEXT_RANGE && !sj->range_is_set) {
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
         scintilla_send_message(sj->sci, SCI_MARKERDEFINE, 0, SC_MARK_SHORTARROW);
         scintilla_send_message(sj->sci, SCI_MARKERADD, line, 0);
         sj->range_first_pos = pos;
