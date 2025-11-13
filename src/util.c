@@ -22,7 +22,7 @@
 #include "jump_to_a_word.h"
 #include "search_substring.h"
 #include "search_word.h"
-#include "shortcut_char.h"
+#include "shortcut_common.h"
 #include "shortcut_word.h"
 
 gint get_lfs(ShortcutJump *sj, gint current_line) {
@@ -104,15 +104,27 @@ void end_actions(ShortcutJump *sj) {
     if (sj->current_mode == JM_SEARCH) {
         search_word_end(sj);
     } else if (sj->current_mode == JM_SHORTCUT_WORD) {
-        shortcut_word_cancel(sj);
+        scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+        scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+        scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+        shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
         search_word_end(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        shortcut_char_jumping_cancel(sj);
+        scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
+        scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+        scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+        shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
-        shortcut_char_waiting_cancel(sj);
+        shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replacing_cancel(sj);
+        shortcut_end(sj, FALSE);
     } else if (sj->current_mode == JM_LINE) {
         shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_SUBSTRING) {
@@ -120,6 +132,6 @@ void end_actions(ShortcutJump *sj) {
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
         search_substring_end(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
-        line_insert_cancel(sj);
+        line_insert_end(sj);
     }
 }
