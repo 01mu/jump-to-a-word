@@ -299,6 +299,7 @@ void shortcut_char_init(ShortcutJump *sj) {
     set_selection_info(sj);
     init_sj_values(sj);
     define_indicators(sj->sci, sj);
+    annotation_display_shortcut_char(sj);
 
     if (sj->in_selection) {
         if (sj->selection_is_a_char && sj->config_settings->use_selected_word_or_char) {
@@ -314,8 +315,6 @@ void shortcut_char_init(ShortcutJump *sj) {
             sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
             ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
         }
-    } else {
-        annotation_display_shortcut_char(sj);
     }
 
     connect_key_press_action(sj, shortcut_char_on_key_press);
