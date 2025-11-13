@@ -95,6 +95,7 @@ void search_word_end(ShortcutJump *sj) {
 
 void search_word_replace_complete(ShortcutJump *sj) {
     search_word_clear_replace_indicators(sj);
+    search_word_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     ui_set_statusbar(TRUE, _("Word replacement completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");

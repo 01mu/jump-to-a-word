@@ -56,6 +56,8 @@ static void handle_single_backspace(ShortcutJump *sj) {
 
     sj->search_change_made = TRUE;
     sj->current_cursor_pos -= rem_to_left;
+
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }
 
 /**
