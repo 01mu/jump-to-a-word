@@ -20,24 +20,9 @@
 
 #include "jump_to_a_word.h"
 
-/**
- * @brief Returns the int value from a GTK color type. Used when updaing the settings file. The color is in BGR.
- *
- * @param const GdkColor *color: GTK color struct
-
- * @return guint32 val: Integer value of the color
- */
 static guint32 configure_color_to_int(const GdkColor *color) {
     return (((color->blue / 0x101) << 16) | ((color->green / 0x101) << 8) | ((color->red / 0x101) << 0));
 }
-
-/**
- * @brief Updates the settings file. This can either be triggered from the main configuration window or when changing
- * the line or text action from their menus.
- *
- * @param SettingSource source: Either from configration or from a line or text action change
- * @param ShortcutJump *sj: The plugin object
- */
 
 void update_settings(SettingSource source, ShortcutJump *sj) {
 #define UPDATE_BOOL(name, name_str, category)                                                                          \
@@ -45,7 +30,6 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
         if (source == SOURCE_SETTINGS_CHANGE) {                                                                        \
             sj->config_settings->name = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(sj->config_widgets->name));     \
         }                                                                                                              \
-                                                                                                                       \
         g_key_file_set_boolean(config, category, name_str, sj->config_settings->name);                                 \
     }                                                                                                                  \
     G_STMT_END
@@ -55,7 +39,6 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
         if (source == SOURCE_SETTINGS_CHANGE) {                                                                        \
             sj->config_settings->name = gtk_combo_box_get_active(GTK_COMBO_BOX(sj->config_widgets->name));             \
         }                                                                                                              \
-                                                                                                                       \
         g_key_file_set_integer(config, category, name_str, sj->config_settings->name);                                 \
     }                                                                                                                  \
     G_STMT_END
@@ -67,7 +50,6 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
             gtk_color_button_get_color(GTK_COLOR_BUTTON(sj->config_widgets->name), &sj->gdk_colors->gdk);              \
             sj->config_settings->name = configure_color_to_int(&sj->gdk_colors->gdk);                                  \
         }                                                                                                              \
-                                                                                                                       \
         g_key_file_set_integer(config, "colors", name_str, sj->config_settings->name);                                 \
         G_GNUC_END_IGNORE_DEPRECATIONS                                                                                 \
     }                                                                                                                  \
