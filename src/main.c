@@ -29,7 +29,6 @@
 #include "search_word.h"
 #include "selection.h"
 #include "shortcut_char.h"
-#include "shortcut_common.h"
 #include "shortcut_line.h"
 #include "shortcut_word.h"
 #include "transpose_string.h"
