@@ -27,7 +27,6 @@
 #include "shortcut_line.h"
 #include "shortcut_word.h"
 #include "util.h"
-#include "values.h"
 
 void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     for (gint i = 0; i < sj->words->len; i++) {
@@ -46,20 +45,28 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
         in_line_jump_mode = FALSE;
     }
 
-    margin_markers_reset(sj);
-
     sj->current_mode = JM_NONE;
 
+    g_string_free(sj->eol_message, TRUE);
     g_string_free(sj->search_query, TRUE);
+
+    sj->search_results_count = 0;
+    sj->search_word_pos = -1;
+    sj->search_word_pos_first = -1;
+    sj->search_word_pos_last = -1;
+    sj->search_change_made = FALSE;
+    sj->cursor_in_word = FALSE;
+    sj->delete_added_bracket = FALSE;
+    sj->replace_len = 0;
+    sj->replace_instant = FALSE;
+
     g_string_free(sj->cache, TRUE);
     g_string_free(sj->buffer, TRUE);
     g_string_free(sj->replace_cache, TRUE);
+
     g_array_free(sj->lf_positions, TRUE);
     g_array_free(sj->words, TRUE);
     g_array_free(sj->markers, TRUE);
-
-    disconnect_key_press_action(sj);
-    disconnect_click_action(sj);
 
     if (sj->multicursor_enabled == MC_ACCEPTING) {
         for (gint i = 0; i < sj->multicursor_words->len; i++) {

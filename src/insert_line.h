@@ -26,5 +26,6 @@ void line_insert_from_search(ShortcutJump *sj);
 void line_insert_cancel(ShortcutJump *sj);
 void line_insert_complete(ShortcutJump *sj);
 void line_insert_set_query(ShortcutJump *sj);
+void line_insert_end(ShortcutJump *sj);
 
 #endif

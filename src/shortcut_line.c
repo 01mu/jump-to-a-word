@@ -45,6 +45,9 @@ void shortcut_line_complete(ShortcutJump *sj, gint pos, gint word_length, gint l
 
     handle_line_after_action(sj, line);
     shortcut_set_to_first_visible_line(sj);
+    margin_markers_reset(sj);
+    disconnect_key_press_action(sj);
+    disconnect_click_action(sj);
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Line jump completed."));
 }
@@ -58,6 +61,9 @@ void shortcut_line_cancel(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     shortcut_set_to_first_visible_line(sj);
     sj->range_is_set = FALSE;
+    margin_markers_reset(sj);
+    disconnect_key_press_action(sj);
+    disconnect_click_action(sj);
     shortcut_end(sj, TRUE);
     ui_set_statusbar(TRUE, _("Line jump canceled."));
 }

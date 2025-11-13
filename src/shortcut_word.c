@@ -54,6 +54,9 @@ void shortcut_word_complete(ShortcutJump *sj, gint pos, gint word_length, gint l
 
     shortcut_set_to_first_visible_line(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
+    margin_markers_reset(sj);
+    disconnect_key_press_action(sj);
+    disconnect_click_action(sj);
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Word jump completed."));
 }
@@ -68,6 +71,9 @@ void shortcut_word_cancel(ShortcutJump *sj) {
     shortcut_set_to_first_visible_line(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
     sj->range_is_set = FALSE;
+    margin_markers_reset(sj);
+    disconnect_key_press_action(sj);
+    disconnect_click_action(sj);
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Word jump canceled."));
 }
