@@ -22,7 +22,6 @@
 #include "jump_to_a_word.h"
 #include "multicursor.h"
 #include "replace_handle_input.h"
-#include "search_common.h"
 #include "search_substring.h"
 #include "search_word.h"
 #include "selection.h"

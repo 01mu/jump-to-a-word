@@ -24,7 +24,6 @@
 #include "search_substring.h"
 #include "search_word.h"
 #include "shortcut_char.h"
-#include "util.h"
 
 /**
  * @brief Controls for the user pressing a single backspace and deletes every occurance of the selected text.
