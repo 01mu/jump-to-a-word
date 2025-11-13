@@ -36,9 +36,6 @@
 #include "util.h"
 #include "values.h"
 
-/**
- * @brief Line settings used in the plugin configuration and line options windows.
- */
 const struct {
     gchar *label;
     LineAfter type;
@@ -51,9 +48,6 @@ const struct {
                  {"Jump to word (search)", LA_JUMP_TO_WORD_SEARCH},
                  {"Jump to substring (search)", LA_JUMP_TO_SUBSTRING_SEARCH}};
 
-/**
- * @brief Text settings used in the plugin configuration and text options windows.
- */
 const struct {
     gchar *label;
     TextAfter type;
@@ -61,6 +55,16 @@ const struct {
                  {"Select text", TX_SELECT_TEXT},
                  {"Select to text", TX_SELECT_TO_TEXT},
                  {"Select text range", TX_SELECT_TEXT_RANGE}};
+
+const struct {
+    gchar *label;
+    ReplaceAction type;
+} replace_conf[] = {{"Replace string", RA_REPLACE},
+                    {"Insert at start of string", RA_INSERT_START},
+                    {"Insert at end of string", RA_INSERT_END},
+                    {"Insert at previous line", RA_INSERT_PREVIOUS_LINE},
+                    {"Insert at next line", RA_INSERT_NEXT_LINE},
+                    {"Transpose string", RA_TRANSPOSE_STRING}};
 
 void handle_action(gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
@@ -149,89 +153,30 @@ void handle_action(gpointer user_data) {
     ui_set_statusbar(TRUE, _("No action available."));
 }
 
-/**
- * @brief Replace settings used in the plugin configuration and replace options windows.
- */
-const struct {
-    gchar *label;
-    ReplaceAction type;
-} replace_conf[] = {{"Replace string", RA_REPLACE},
-                    {"Insert at start of string", RA_INSERT_START},
-                    {"Insert at end of string", RA_INSERT_END},
-                    {"Insert at previous line", RA_INSERT_PREVIOUS_LINE},
-                    {"Insert at next line", RA_INSERT_NEXT_LINE},
-                    {"Transpose string", RA_TRANSPOSE_STRING}};
-
-/**
- * @brief Provides a menu callback for entering word search replacement mode.
- *
- * @param GtkMenuItem *menu_item: (unused)
- * @param gpointer user_data: The plugin data
- */
 void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) { handle_action(user_data); }
 
-/**
- * @brief Provides a keybinding callback for entering word search replacement mode.
- *
- * @param GtkMenuItem *kb: (unused)
- * @param guint key_id: (unused)
- * @param gpointer user_data: The plugin data
- *
- * @return gboolean: TRUE
- */
 gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     handle_action(user_data);
     return TRUE;
 }
 
-/**
- * @brief Provides a callback for either saving or closing a document, or quitting. This is necessary for shortcut
- * mode because we don't want to save the version of the file with the buffered shortcut text replacement. Canceling
- * the shortcut jump replaces the buffered text with the original cached text.
- *
- * @param GObject *obj: (unused)
- * @param GeanyDocument *doc: (unused)
- * @param gpointer user_data: The plugin data
- */
 static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-    sj->range_is_set = FALSE;
-    end_actions(sj);
-
-    if (sj->multicursor_enabled == MC_ACCEPTING) {
-        multicursor_end(sj);
-    } else if (sj->multicursor_enabled == MC_REPLACING) {
-        multicursor_cancel(sj);
-    }
-}
-
-/**
- * @brief Provides a callback for when a reload is triggered either from a manual reload or from the file being
- * edited from an outside program. In shortcut mode we end the jump and free memory instead of canceling. This is
- * necessary because we don't want to reinsert the cached text at a certain location if we don't know what edits
- * were made from the other program.
- *
- * @param GObject *obj: (unused)
- * @param GeanyDocument *doc: (unused)
- * @param gpointer user_data: The plugin data
- */
-static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (sj->current_mode == JM_SEARCH) {
         search_word_jump_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_WORD) {
-        shortcut_end(sj, FALSE);
+        shortcut_word_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SEARCH) {
         search_word_replace_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        shortcut_end(sj, FALSE);
+        shortcut_char_jumping_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
         shortcut_char_waiting_cancel(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_end(sj, FALSE);
+        shortcut_char_replacing_cancel(sj);
     } else if (sj->current_mode == JM_LINE) {
-        shortcut_end(sj, FALSE);
+        shortcut_line_cancel(sj);
     } else if (sj->current_mode == JM_SUBSTRING) {
         search_substring_jump_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
@@ -247,17 +192,6 @@ static void on_document_reload(GObject *obj, GeanyDocument *doc, gpointer user_d
     }
 }
 
-/**
- * @brief Provides a callback for when the editor is modified. Checks if an additional bracket was added, either by
- * Geany or the Auto-close plugin and marks it for deletion during a character jump or substring search.
- *
- * @param GObject *obj: (unused)
- * @param GeanyEditor *editor:(unused)
- * @param SCNotification *nt: Notification
- * @param gpointer user_data: The plugin object
- *
- * @return gboolean: FALSE if nothing was triggered
- */
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
@@ -296,25 +230,12 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
     return FALSE;
 }
 
-/**
- * @brief Configures a GTK color type from an int value. Used when retrieving the value from the settings file,
- * applying the colors to indicators, and updating the color of the box in the settings panel. The color is in BGR.
- *
- * @param GdkColor *color: GTK color struct
- * @param guint32 val: Integer value of the color
- */
 static void configure_color_from_int(GdkColor *color, guint32 val) {
     color->blue = ((val & 0xff0000) >> 16) * 0x101;
     color->green = ((val & 0x00ff00) >> 8) * 0x101;
     color->red = ((val & 0x0000ff) >> 0) * 0x101;
 }
 
-/**
- * @brief Sets the items that fill the menu bar listing as well as their keybindings.
- *
- * @param GeanyPlugin *plugin: Geany plugin
- * @param ShortcutJump *sj: The plugin object
- */
 static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 #define SET_MENU_ITEM(description, callback, data)                                                                     \
     G_STMT_START {                                                                                                     \
@@ -396,15 +317,6 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     gtk_container_add(GTK_CONTAINER(sj->geany_data->main_widgets->tools_menu), sj->main_menu_item);
 }
 
-/**
- * @brief Sets the configuration settings and defaults from the file.
- *
- * @param GeanyPlugin *plugin: The plugin
- * @param gpointer pdata: (unused)
- * @param ShortcutJump *sj: The plugin object
- *
- * @return gboolean: TRUE
- */
 static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, ShortcutJump *sj) {
 #define SET_SETTING_BOOL(name, name_str, category, default)                                                            \
     G_STMT_START { sj->config_settings->name = utils_get_setting_boolean(config, category, name_str, default); }       \
@@ -460,14 +372,6 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     return TRUE;
 }
 
-/**
- * @brief Inits plugin; configures menu items, sets keybindings, and loads settings from the configuration file.
- *
- * @param GeanyPlugin *plugin: Geany plugin
- * @param gpointer pdata: The plugin data
- *
- * @return gboolean: TRUE
- */
 static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
     ShortcutJump *sj = (ShortcutJump *)pdata;
 
@@ -477,12 +381,6 @@ static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
     return TRUE;
 }
 
-/**
- * @brief Cancels jumps and frees the menu and configuration files.
- *
- * @param GeanyPlugin *plugin: (unused)
- * @param gpointer pdata: The plugin data
- */
 static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
     ShortcutJump *sj = (ShortcutJump *)pdata;
     end_actions(sj);
@@ -506,13 +404,6 @@ static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
     g_free(sj);
 }
 
-/**
- * @brief Provides a callback for when the settings are updated from the settings panel.
- *
- * @param GtkDialog *dialog: (unused)
- * @param gint *response: Response type is OK or APPLY
- * @param gpointer user_data: The plugin data
- */
 static void configure_response_cb(GtkDialog *dialog, gint response, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
@@ -521,37 +412,16 @@ static void configure_response_cb(GtkDialog *dialog, gint response, gpointer use
     }
 }
 
-/**
- * @brief Toggles availability of "Even if it only exists on a single line".
- *
- * @param GtkToggleButton *toggle_button: The button that triggers the toggle
- * @param gpointer data: The dialog
- */
 static void single_line_toggle_cb(GtkToggleButton *toggle_button, gpointer data) {
     gtk_widget_set_sensitive(g_object_get_data(G_OBJECT(data), "search_selection_if_line"),
                              gtk_toggle_button_get_active(toggle_button));
 }
 
-/**
- * @brief Toggles availability of "Smart casing".
- *
- * @param GtkToggleButton *toggle_button: The button that triggers the toggle
- * @param gpointer data: The dialog
- */
 static void smart_case_toggle_cb(GtkToggleButton *toggle_button, gpointer data) {
     gtk_widget_set_sensitive(g_object_get_data(G_OBJECT(data), "search_smart_case"),
                              gtk_toggle_button_get_active(toggle_button));
 }
 
-/**
- * @brief Creates and displays the configuration menu.
- *
- * @param GeanyPlugin *plugin: The plugin
- * @param GtkDialog *dialog: Set dialog for menu
- * @param gpointer pdata: The plugin object
- *
- * @return GtkWidget *: Pointer to configuration menu container
- */
 static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pdata) {
     ShortcutJump *sj = (ShortcutJump *)pdata;
 
@@ -776,33 +646,25 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_FRAME_COLOR("Highlight color");
     WIDGET_COLOR(highlight_color, highlight_color_gdk);
 
-    // Set
+    /*
+     * Set
+     */
+
     gtk_widget_show_all(scrollbox);
     g_signal_connect(dialog, "response", G_CALLBACK(configure_response_cb), sj);
 
     return scrollbox;
 }
 
-/**
- * @brief The plugin's callbacks which are used to ensure that the shortcuts written to the screen during a jump
- * are not actually saved to the  file when it is saved or edited from an outside source.
- */
 static PluginCallback callbacks[] = {{"document-before-save", (GCallback)&on_cancel, TRUE, NULL},
                                      {"document-before-save-as", (GCallback)&on_cancel, TRUE, NULL},
                                      {"document-activate", (GCallback)&on_cancel, TRUE, NULL},
-                                     {"document-reload", (GCallback)&on_document_reload, TRUE, NULL},
+                                     {"document-reload", (GCallback)&on_cancel, TRUE, NULL},
                                      {"editor-notify", (GCallback)&on_editor_notify, TRUE, NULL},
                                      {NULL, NULL, FALSE, NULL}};
 
 void help(GeanyPlugin *plugin, void *data) { utils_open_browser("https://www.github.com/01mu/jump-to-a-word"); }
 
-/**
- * @brief Inits the plugin object that persits throughout the plugin's lifetime.
- *
- * @param GeanyPlugin *plugin: The plugin
- *
- * @return ShortcutJump *: The plugin object
- */
 ShortcutJump *init_data(const GeanyPlugin *plugin) {
     ShortcutJump *sj = g_new0(ShortcutJump, 1);
 
@@ -835,11 +697,6 @@ ShortcutJump *init_data(const GeanyPlugin *plugin) {
     return sj;
 }
 
-/**
- * @brief Loads the plugin.
- *
- * @param GeanyPlugin *plugin: The plugin
- */
 G_MODULE_EXPORT
 void geany_load_module(GeanyPlugin *plugin) {
     ShortcutJump *sj = init_data(plugin);
