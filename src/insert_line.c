@@ -97,6 +97,7 @@ void line_insert_end(ShortcutJump *sj) {
 void line_insert_cancel(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Line insertion canceled."));
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -110,6 +111,7 @@ void line_insert_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Line insertion completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -136,6 +138,7 @@ void multicursor_line_insert_end(ShortcutJump *sj) {
 void multicursor_line_insert_cancel(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Multicursor line insertion canceled."));
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -150,6 +153,7 @@ void multicursor_line_insert_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Multicursor line insertion completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
