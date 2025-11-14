@@ -30,8 +30,10 @@ ScintillaObject *get_scintilla_object() {
 }
 
 void set_sj_scintilla_object(ShortcutJump *sj) {
-    ScintillaObject *sci = get_scintilla_object();
-    sj->sci = sci;
+    if (!sj->sci) {
+        ScintillaObject *sci = get_scintilla_object();
+        sj->sci = sci;
+    }
 }
 
 static gint get_first_line_on_screen(ShortcutJump *sj) {
@@ -201,11 +203,7 @@ void get_view_positions(ShortcutJump *sj) {
 }
 
 void init_sj_values(ShortcutJump *sj) {
-    if (!sj->sci) {
-        ScintillaObject *sci = get_scintilla_object();
-        sj->sci = sci;
-    }
-
+    set_sj_scintilla_object(sj);
     get_view_positions(sj);
 
     gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);

@@ -170,9 +170,7 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
     if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION && sj->multicursor_mode == MC_ACCEPTING) {
-        if (!sj->sci) {
-            set_sj_scintilla_object(sj);
-        }
+        set_sj_scintilla_object(sj);
 
         gint selection_start = scintilla_send_message(sj->sci, SCI_GETSELECTIONSTART, 0, 0);
         gint selection_end = scintilla_send_message(sj->sci, SCI_GETSELECTIONEND, 0, 0);
