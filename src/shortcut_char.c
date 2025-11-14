@@ -279,6 +279,12 @@ static gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event
         sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
         ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
 
+        if (sj->words->len == 1 && !sj->config_settings->wait_for_enter) {
+            Word word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
+            shortcut_char_jumping_complete(sj, word.starting_doc, word.word->len, word.line);
+            return TRUE;
+        }
+
         annotation_display_char_search(sj);
         return TRUE;
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
