@@ -68,40 +68,16 @@ const struct {
 void handle_action(gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     ReplaceAction ra = sj->config_settings->replace_action;
-    MulticusrorMode mm = sj->multicursor_enabled;
+    MulticusrorMode mm = sj->multicursor_mode;
     JumpMode jm = sj->current_mode;
 
     if (ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END) {
         if (mm == MC_DISABLED) {
             if (jm == JM_SEARCH) {
-                replace_word_init(sj, FALSE);
-                return;
-            } else if (jm == JM_SHORTCUT_WORD) {
-                shortcut_word_cancel(sj);
-                return;
-            } else if (jm == JM_REPLACE_SEARCH) {
-                search_word_replace_cancel(sj);
-                return;
-            } else if (jm == JM_SHORTCUT_CHAR_JUMPING) {
-                shortcut_char_jumping_cancel(sj);
-                return;
-            } else if (jm == JM_SHORTCUT_CHAR_ACCEPTING) {
-                shortcut_char_waiting_cancel(sj);
-                return;
-            } else if (jm == JM_SHORTCUT_CHAR_REPLACING) {
-                shortcut_char_replacing_cancel(sj);
-                return;
-            } else if (jm == JM_LINE) {
-                shortcut_word_cancel(sj);
+                replace_word_init(sj);
                 return;
             } else if (jm == JM_SUBSTRING) {
                 replace_substring_init(sj);
-                return;
-            } else if (jm == JM_REPLACE_SUBSTRING) {
-                search_substring_replace_cancel(sj);
-                return;
-            } else if (jm == JM_INSERTING_LINE) {
-                line_insert_cancel(sj);
                 return;
             } else if (jm == JM_NONE) {
                 replace_instant_init(sj);
@@ -112,9 +88,6 @@ void handle_action(gpointer user_data) {
                 multicursor_replace(sj);
                 return;
             }
-        } else if (mm == MC_REPLACING) {
-            multicursor_cancel(sj);
-            return;
         }
     } else if (ra == RA_INSERT_NEXT_LINE || ra == RA_INSERT_PREVIOUS_LINE) {
         if (mm == MC_DISABLED) {
@@ -125,7 +98,12 @@ void handle_action(gpointer user_data) {
                 define_indicators(sj->sci, sj);
                 line_insert_from_search(sj);
                 return;
-            } else if (jm == JM_SEARCH || jm == JM_SUBSTRING) {
+            } else if (jm == JM_SUBSTRING) {
+                disconnect_key_press_action(sj);
+                disconnect_click_action(sj);
+                line_insert_from_search(sj);
+                return;
+            } else if (jm == JM_SEARCH) {
                 disconnect_key_press_action(sj);
                 disconnect_click_action(sj);
                 line_insert_from_search(sj);
@@ -136,9 +114,6 @@ void handle_action(gpointer user_data) {
                 line_insert_from_multicursor(sj);
                 return;
             }
-        } else if (mm == MC_REPLACING) {
-            multicursor_cancel(sj);
-            return;
         }
     } else if (ra == RA_TRANSPOSE_STRING) {
         if (mm == MC_ACCEPTING) {
@@ -182,20 +157,19 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
         search_substring_replace_cancel(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
         line_insert_cancel(sj);
+    } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+        multicursor_replace_cancel(sj);
     }
 
-    if (sj->multicursor_enabled == MC_ACCEPTING) {
+    if (sj->multicursor_mode == MC_ACCEPTING) {
         multicursor_end(sj);
-    } else if (sj->multicursor_enabled == MC_REPLACING) {
-        multicursor_cancel(sj);
     }
 }
 
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION &&
-        sj->multicursor_enabled == MC_ACCEPTING) {
+    if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION && sj->multicursor_mode == MC_ACCEPTING) {
         if (!sj->sci) {
             set_sj_scintilla_object(sj);
         }
@@ -207,7 +181,7 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
             return TRUE;
         }
 
-        multicursor_add_word_selection(sj, selection_start, selection_end);
+        multicursor_add_word_from_selection(sj, selection_start, selection_end);
         return TRUE;
     }
 
@@ -674,7 +648,7 @@ ShortcutJump *init_data(const GeanyPlugin *plugin) {
     sj->gdk_colors = g_new0(Colors, 1);
     sj->tl_window = g_new0(TextLineWindow, 1);
 
-    sj->multicursor_enabled = MC_DISABLED;
+    sj->multicursor_mode = MC_DISABLED;
     sj->multicursor_first_pos = 0;
     sj->multicursor_last_pos = 0;
 

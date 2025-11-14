@@ -54,12 +54,6 @@ static void search_substring_clear_jump_indicators(ShortcutJump *sj) {
 }
 
 void search_substring_end(ShortcutJump *sj) {
-    if (sj->newline_was_added_for_next_line_insert) {
-        gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
-        sj->newline_was_added_for_next_line_insert = FALSE;
-    }
-
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
         g_string_free(word.word, TRUE);
@@ -119,7 +113,7 @@ void search_substring_replace_cancel(ShortcutJump *sj) {
 static void search_substring_jump_complete(ShortcutJump *sj) {
     search_substring_clear_jump_indicators(sj);
 
-    if (sj->multicursor_enabled == MC_ACCEPTING) {
+    if (sj->multicursor_mode == MC_ACCEPTING) {
         for (gint i = 0; i < sj->words->len; i++) {
             Word word = g_array_index(sj->words, Word, i);
             if (word.valid_search) {
@@ -150,11 +144,11 @@ static void search_substring_jump_complete(ShortcutJump *sj) {
 
     gboolean clear_previous_marker = FALSE;
 
-    if (sj->multicursor_enabled == MC_DISABLED) {
+    if (sj->multicursor_mode == MC_DISABLED) {
         clear_previous_marker = handle_text_after_action(sj, pos, word_length, line);
     }
 
-    if (sj->multicursor_enabled == MC_ACCEPTING) {
+    if (sj->multicursor_mode == MC_ACCEPTING) {
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 

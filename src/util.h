@@ -34,5 +34,6 @@ gint get_indent_width();
 gboolean mouse_movement_performed(ShortcutJump *sj, GdkEventButton *event);
 gboolean mod_key_pressed(GdkEventKey *event);
 void end_actions(ShortcutJump *sj);
+gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b);
 
 #endif

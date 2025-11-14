@@ -62,11 +62,11 @@ void shortcut_char_jumping_complete(ShortcutJump *sj, gint pos, gint word_length
         }
     }
 
-    if (sj->multicursor_enabled == MC_DISABLED) {
+    if (sj->multicursor_mode == MC_DISABLED) {
         handle_text_after_action(sj, pos, word_length, line);
     }
 
-    if (sj->multicursor_enabled == MC_ACCEPTING) {
+    if (sj->multicursor_mode == MC_ACCEPTING) {
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 

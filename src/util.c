@@ -135,3 +135,15 @@ void end_actions(ShortcutJump *sj) {
         line_insert_end(sj);
     }
 }
+
+gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
+    const Word *struct_a = (const Word *)a;
+    const Word *struct_b = (const Word *)b;
+    if (struct_a->starting_doc < struct_b->starting_doc) {
+        return -1;
+    } else if (struct_a->starting_doc > struct_b->starting_doc) {
+        return 1;
+    } else {
+        return 0;
+    }
+}

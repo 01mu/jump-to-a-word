@@ -68,7 +68,7 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     g_array_free(sj->words, TRUE);
     g_array_free(sj->markers, TRUE);
 
-    if (sj->multicursor_enabled == MC_ACCEPTING) {
+    if (sj->multicursor_mode == MC_ACCEPTING) {
         for (gint i = 0; i < sj->multicursor_words->len; i++) {
             Word word = g_array_index(sj->multicursor_words, Word, i);
             if (word.valid_search) {
@@ -304,7 +304,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
             word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
         }
 
-        if (sj->multicursor_enabled == MC_ACCEPTING && sj->current_mode != JM_LINE) {
+        if (sj->multicursor_mode == MC_ACCEPTING && sj->current_mode != JM_LINE) {
             multicursor_add_word(sj, word);
         }
 
@@ -348,7 +348,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
         if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
             Word word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
 
-            if (sj->multicursor_enabled == MC_ACCEPTING && sj->current_mode != JM_LINE) {
+            if (sj->multicursor_mode == MC_ACCEPTING && sj->current_mode != JM_LINE) {
                 multicursor_add_word(sj, word);
             }
 

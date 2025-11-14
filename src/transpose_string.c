@@ -28,7 +28,7 @@ void transpose_string(ShortcutJump *sj) {
         valid_count += word.valid_search ? 1 : 0;
     }
     if (valid_count != 2) {
-        multicursor_end(sj);
+        multicursor_transpose_cancel(sj);
         ui_set_statusbar(TRUE, _("Select 2 strings to transpose."));
         return;
     }
@@ -60,5 +60,5 @@ void transpose_string(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, word.starting_doc, (sptr_t)next_word.word->str);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, shift + next_word.word->len, (sptr_t)word.word->str);
 
-    multicursor_complete(sj);
+    multicursor_transpose_complete(sj);
 }

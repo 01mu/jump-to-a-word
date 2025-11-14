@@ -24,12 +24,13 @@
 
 void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data);
 gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
-void multicursor_complete(ShortcutJump *sj);
 void multicursor_end(ShortcutJump *sj);
-void multicursor_cancel(ShortcutJump *sj);
 void multicursor_add_word(ShortcutJump *sj, Word word);
-void multicursor_add_word_selection(ShortcutJump *sj, gint start, gint end);
-gboolean on_click_event_multicursor(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
-gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b);
+void multicursor_add_word_from_selection(ShortcutJump *sj, gint start, gint end);
+void multicursor_replace_cancel(ShortcutJump *sj);
+void multicursor_replace_complete(ShortcutJump *sj);
+void multicursor_transpose_cancel(ShortcutJump *sj);
+void multicursor_transpose_complete(ShortcutJump *sj);
+gboolean on_click_event_multicursor_replace(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 
 #endif

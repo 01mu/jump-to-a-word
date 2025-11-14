@@ -242,23 +242,17 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         !sj->search_change_made) {
         handle_single_backspace(sj);
 
-        if (sj->multicursor_enabled == MC_REPLACING) {
-            multicursor_complete(sj);
-        }
-
-        if (sj->current_mode == JM_REPLACE_SEARCH) {
+        if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+            multicursor_replace_complete(sj);
+        } else if (sj->current_mode == JM_REPLACE_SEARCH) {
             search_word_replace_complete(sj);
-        }
-
-        if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+        } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
             search_substring_replace_complete(sj);
-        }
-
-        if (sj->current_mode == JM_INSERTING_LINE) {
+        } else if (sj->current_mode == JM_INSERTING_LINE) {
             line_insert_complete(sj);
-        }
-
-        if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+            multicursor_line_insert_complete(sj);
+        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
             shortcut_char_replacing_complete(sj);
         }
 
@@ -277,23 +271,17 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&
         sj->replace_len >= 0) {
         if (sj->replace_len == 0) {
-            if (sj->multicursor_enabled == MC_REPLACING) {
-                multicursor_complete(sj);
-            }
-
-            if (sj->current_mode == JM_REPLACE_SEARCH) {
+            if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+                multicursor_replace_complete(sj);
+            } else if (sj->current_mode == JM_REPLACE_SEARCH) {
                 search_word_replace_complete(sj);
-            }
-
-            if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+            } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
                 search_substring_replace_complete(sj);
-            }
-
-            if (sj->current_mode == JM_INSERTING_LINE) {
+            } else if (sj->current_mode == JM_INSERTING_LINE) {
                 line_insert_complete(sj);
-            }
-
-            if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+            } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+                multicursor_line_insert_complete(sj);
+            } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
                 shortcut_char_replacing_complete(sj);
             }
 
@@ -310,23 +298,17 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     }
 
     if (event->keyval == GDK_KEY_Return) {
-        if (sj->multicursor_enabled == MC_REPLACING) {
-            multicursor_complete(sj);
-        }
-
-        if (sj->current_mode == JM_REPLACE_SEARCH) {
+        if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+            multicursor_replace_complete(sj);
+        } else if (sj->current_mode == JM_REPLACE_SEARCH) {
             search_word_replace_complete(sj);
-        }
-
-        if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+        } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
             search_substring_replace_complete(sj);
-        }
-
-        if (sj->current_mode == JM_INSERTING_LINE) {
+        } else if (sj->current_mode == JM_INSERTING_LINE) {
             line_insert_complete(sj);
-        }
-
-        if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+            multicursor_line_insert_complete(sj);
+        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
             shortcut_char_replacing_complete(sj);
         }
 
@@ -339,42 +321,32 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         sj->current_cursor_pos = pos_cache;
     }
 
-    if (sj->multicursor_enabled == MC_REPLACING) {
-        if (sj->search_change_made) {
-            multicursor_complete(sj);
-        } else {
-            multicursor_cancel(sj);
-        }
-    }
-
-    if (sj->current_mode == JM_REPLACE_SEARCH) {
-        if (sj->search_change_made) {
+    if (sj->search_change_made) {
+        if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+            multicursor_replace_complete(sj);
+        } else if (sj->current_mode == JM_REPLACE_SEARCH) {
             search_word_replace_complete(sj);
-        } else {
-            search_word_replace_cancel(sj);
-        }
-    }
-
-    if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-        if (sj->search_change_made) {
+        } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
             search_substring_replace_complete(sj);
-        } else {
-            search_substring_replace_cancel(sj);
-        }
-    }
-
-    if (sj->current_mode == JM_INSERTING_LINE) {
-        if (sj->search_change_made) {
+        } else if (sj->current_mode == JM_INSERTING_LINE) {
             line_insert_complete(sj);
-        } else {
-            line_insert_cancel(sj);
-        }
-    }
-
-    if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        if (sj->search_change_made) {
+        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+            multicursor_line_insert_complete(sj);
+        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
             shortcut_char_replacing_complete(sj);
-        } else {
+        }
+    } else {
+        if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+            multicursor_replace_cancel(sj);
+        } else if (sj->current_mode == JM_REPLACE_SEARCH) {
+            search_word_replace_cancel(sj);
+        } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+            search_substring_replace_cancel(sj);
+        } else if (sj->current_mode == JM_INSERTING_LINE) {
+            line_insert_cancel(sj);
+        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+            multicursor_line_insert_cancel(sj);
+        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
             shortcut_char_replacing_cancel(sj);
         }
     }

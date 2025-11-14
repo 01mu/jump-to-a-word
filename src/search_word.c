@@ -63,12 +63,6 @@ void search_word_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
-    if (sj->newline_was_added_for_next_line_insert) {
-        gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
-        sj->newline_was_added_for_next_line_insert = FALSE;
-    }
-
     g_string_free(sj->eol_message, TRUE);
     g_string_free(sj->search_query, TRUE);
 
@@ -123,7 +117,7 @@ void search_word_replace_cancel(ShortcutJump *sj) {
 void search_word_jump_complete(ShortcutJump *sj) {
     search_word_clear_jump_indicators(sj);
 
-    if (sj->multicursor_enabled == MC_ACCEPTING) {
+    if (sj->multicursor_mode == MC_ACCEPTING) {
         for (gint i = 0; i < sj->words->len; i++) {
             Word word = g_array_index(sj->words, Word, i);
             if (word.valid_search) {
@@ -154,11 +148,11 @@ void search_word_jump_complete(ShortcutJump *sj) {
 
     gboolean clear_previous_marker = FALSE;
 
-    if (sj->multicursor_enabled == MC_DISABLED) {
+    if (sj->multicursor_mode == MC_DISABLED) {
         clear_previous_marker = handle_text_after_action(sj, pos, word_length, line);
     }
 
-    if (sj->multicursor_enabled == MC_ACCEPTING) {
+    if (sj->multicursor_mode == MC_ACCEPTING) {
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 

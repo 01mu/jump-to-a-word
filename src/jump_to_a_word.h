@@ -68,13 +68,14 @@ typedef enum {
     JM_REPLACE_SUBSTRING,
     JM_LINE,
     JM_INSERTING_LINE,
+    JM_INSERTING_LINE_MULTICURSOR,
+    JM_REPLACE_MULTICURSOR,
     JM_NONE,
 } JumpMode;
 
 typedef enum {
     MC_DISABLED,
     MC_ACCEPTING,
-    MC_REPLACING,
 } MulticusrorMode;
 
 typedef enum {
@@ -223,7 +224,7 @@ typedef struct {
     GArray *markers;
     GArray *words;
     GArray *multicursor_words;
-    GArray *multicursor_lines;
+    GArray *searched_words_for_line_insert;
 
     GArray *lf_positions;
 
@@ -263,7 +264,7 @@ typedef struct {
     gboolean option_mod;
     JumpMode current_mode;
 
-    MulticusrorMode multicursor_enabled;
+    MulticusrorMode multicursor_mode;
     GString *multicursor_eol_message;
     gint multicusor_eol_message_line;
     gint multicursor_first_pos;
