@@ -211,19 +211,19 @@ static void on_entry_text_notify(GObject *object, GParamSpec *pspec, gpointer du
     gint value = (gint)g_ascii_strtoll(entry_text, &endptr, 10);
     if (sj->option_mod == OM_LINE && (value > 0 && value <= LA_COUNT)) {
         sj->config_settings->line_after = value - 1;
-        ui_set_statusbar(TRUE, _("%s"), line_conf[value - 1].label);
+        ui_set_statusbar(TRUE, _("Line action set to \"%s.\""), line_conf[value - 1].label);
         update_settings(SOURCE_OPTION_MENU, sj);
         gtk_widget_hide(sj->tl_window->panel);
     }
     if (sj->option_mod == OM_TEXT && (value > 0 && value <= TX_COUNT)) {
         sj->config_settings->text_after = value - 1;
-        ui_set_statusbar(TRUE, _("%s"), text_conf[value - 1].label);
+        ui_set_statusbar(TRUE, _("Text action set to \"%s.\""), text_conf[value - 1].label);
         update_settings(SOURCE_OPTION_MENU, sj);
         gtk_widget_hide(sj->tl_window->panel);
     }
     if (sj->option_mod == OM_REPLACE && (value > 0 && value <= RA_COUNT)) {
         sj->config_settings->replace_action = value - 1;
-        ui_set_statusbar(TRUE, _("%s"), replace_conf[value - 1].label);
+        ui_set_statusbar(TRUE, _("Replace action set to \"%s.\""), replace_conf[value - 1].label);
         update_settings(SOURCE_OPTION_MENU, sj);
         gtk_widget_hide(sj->tl_window->panel);
     }
@@ -244,13 +244,13 @@ static void on_view_row_activated(GtkTreeView *view, GtkTreePath *path, GtkTreeV
         gtk_tree_model_get(model, &iter, COL_TYPE, &type, -1);
         gtk_tree_model_get(model, &iter, COL_LABEL, &label, -1);
         if (sj->option_mod == OM_LINE) {
-            ui_set_statusbar(TRUE, _("%s"), line_conf[type].label);
+            ui_set_statusbar(TRUE, _("Line action set to \"%s.\""), line_conf[type].label);
             sj->config_settings->line_after = type;
         } else if (sj->option_mod == OM_TEXT) {
-            ui_set_statusbar(TRUE, _("%s"), text_conf[type].label);
+            ui_set_statusbar(TRUE, _("Text action set to \"%s.\""), text_conf[type].label);
             sj->config_settings->text_after = type;
         } else if (sj->option_mod == OM_REPLACE) {
-            ui_set_statusbar(TRUE, _("%s"), replace_conf[type].label);
+            ui_set_statusbar(TRUE, _("Replace action set to \"%s.\""), replace_conf[type].label);
             sj->config_settings->replace_action = type;
         }
         update_settings(SOURCE_OPTION_MENU, sj);
