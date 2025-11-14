@@ -20,15 +20,6 @@
 
 #include "jump_to_a_word.h"
 
-/**
- * @brief Checks to see if the selection is a word.
- *
- * @param ScintillaObject *sci: The Scintilla object
- * @param gint selection_start: The start of the selection
- * @param gint selection_end: The end of the selection
- *
- * @return gboolean: Whether the selection is a single word
- */
 static gboolean selection_is_a_word(ScintillaObject *sci, gint selection_start, gint selection_end) {
     char word_chars[256];
 
@@ -59,15 +50,6 @@ static gboolean selection_is_a_word(ScintillaObject *sci, gint selection_start, 
            !bound_is_word_char;
 }
 
-/**
- * @brief Checks to see if the selection is contained within a single line.
- *
- * @param const ScintillaObject *sci: The Scintilla object
- * @param gint selection_start: The start of the selection
- * @param gint selection_end: The end of the selection
- *
- * @return gboolean: Whether the selection is within a single line
- */
 static gboolean selection_is_a_line(const ShortcutJump *sj, ScintillaObject *sci, gint selection_start,
                                     gint selection_end) {
     selection_end -= 1;
@@ -82,12 +64,6 @@ static gboolean selection_is_a_line(const ShortcutJump *sj, ScintillaObject *sci
     return FALSE;
 }
 
-/**
- * @brief Gets the word selection bounds to be used in determining whether we use the selection or the page as a
- * search or replace area.
- *
- * @param ShortcutJump *sj: The plugin object
- */
 void set_selection_info(ShortcutJump *sj) {
     gint selection_start = scintilla_send_message(sj->sci, SCI_GETSELECTIONSTART, 0, 0);
     gint selection_end = scintilla_send_message(sj->sci, SCI_GETSELECTIONEND, 0, 0);

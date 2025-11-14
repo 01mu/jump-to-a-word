@@ -25,11 +25,6 @@
 #include "search_word.h"
 #include "shortcut_char.h"
 
-/**
- * @brief Controls for the user pressing a single backspace and deletes every occurance of the selected text.
- *
- * @param ShortcutJump *sj: The plugin object
- */
 static void handle_single_backspace(ShortcutJump *sj) {
     gint chars_removed = 0;
     gint rem_to_left = 0;
@@ -59,12 +54,6 @@ static void handle_single_backspace(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }
 
-/**
- * @brief Deletes every occurance of the text if no change has been made previously and determines if the cursor is
- * within a word to ensure that it maintains the correct position while the text is being updated.
- *
- * @param ShortcutJump *sj: The plugin object
- */
 static void clear_occurances(ShortcutJump *sj) {
     gint chars_removed = 0;
     gint removed_to_left = 0;
@@ -101,12 +90,6 @@ static void clear_occurances(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }
 
-/**
- * @brief Adds a new character to the replacement buffer for each occurance, maintains the correct cursor position, and
- * updates the indicators.
- *
- * @param ShortcutJump *sj: The plugin object
- */
 static void add_character(ShortcutJump *sj, gunichar keychar) {
     gint chars_added = 0;
     gint c = 0;
@@ -159,12 +142,6 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
     sj->search_change_made = TRUE;
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }
-/**
- * @brief Removes the last character from the replacement buffer for every occurance, maintains the correct cursor
- * position, and updates the indicators.
- *
- * @param ShortcutJump *sj: The plugin object
- */
 
 static void remove_character(ShortcutJump *sj) {
     gint chars_removed = 0;
@@ -218,16 +195,6 @@ static void remove_character(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }
 
-/**
- * @brief Handles inputs for reaplce search word mode, updates indicators, deletes the last input char when Backspace
- * is pressed and inputs a new char if it is valid. Also works to maintain the correct cursor position when updating.
- *
- * @param ShortcutJump *sj: The plugin object
- * @param GdkEventKey *event: A struct containing the key event
- * @param gunichar keychar: The key input value
- *
- * @return gboolean: TRUE if controlled for input occurs
- */
 gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar) {
     gint pos_cache = sj->current_cursor_pos;
 
