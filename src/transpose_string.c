@@ -22,6 +22,8 @@
 #include "multicursor.h"
 
 void transpose_string(ShortcutJump *sj) {
+    sj->current_mode = JM_TRANSPOSE_MULTICURSOR;
+
     gint valid_count = 0;
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
