@@ -128,7 +128,8 @@ static void replace_shortcut_char_init(ShortcutJump *sj) {
             continue;
         }
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting_doc, 1);
+        scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, 1);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
         scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, 1);
     }
 }
