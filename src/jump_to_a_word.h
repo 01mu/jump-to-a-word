@@ -270,8 +270,6 @@ typedef struct {
     gint multicusor_eol_message_line;
     gint multicursor_first_pos;
     gint multicursor_last_pos;
-
-    gboolean newline_was_added_for_next_line_insert;
 } ShortcutJump;
 
 #endif

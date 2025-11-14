@@ -55,11 +55,8 @@ static void line_insert_delete_blank_lines(ShortcutJump *sj) {
 }
 
 static void line_insert_remove_added_new_lines(ShortcutJump *sj) {
-    if (sj->newline_was_added_for_next_line_insert) {
-        gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
-        sj->newline_was_added_for_next_line_insert = FALSE;
-    }
+    gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
 }
 
 void line_insert_set_query(ShortcutJump *sj) {
@@ -88,8 +85,8 @@ void line_insert_end(ShortcutJump *sj) {
 
     g_array_free(sj->searched_words_for_line_insert, TRUE);
     g_array_free(sj->words, TRUE);
-    g_string_free(sj->search_query, TRUE);
-    g_string_free(sj->eol_message, TRUE);
+    g_string_free(sj->cache, TRUE);
+    g_string_free(sj->buffer, TRUE);
     g_string_free(sj->replace_cache, TRUE);
     sj->current_mode = JM_NONE;
 }
@@ -97,13 +94,13 @@ void line_insert_end(ShortcutJump *sj) {
 void line_insert_cancel(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Line insertion canceled."));
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    line_insert_clear_replace_indicators(sj);
+    line_insert_delete_blank_lines(sj);
+    line_insert_remove_added_new_lines(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
-    line_insert_clear_replace_indicators(sj);
-    line_insert_delete_blank_lines(sj);
-    line_insert_remove_added_new_lines(sj);
     line_insert_end(sj);
 }
 
@@ -111,13 +108,13 @@ void line_insert_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Line insertion completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    line_insert_clear_replace_indicators(sj);
+    line_insert_delete_blank_lines(sj);
+    line_insert_remove_added_new_lines(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
-    line_insert_clear_replace_indicators(sj);
-    line_insert_delete_blank_lines(sj);
-    line_insert_remove_added_new_lines(sj);
     line_insert_end(sj);
 }
 
@@ -128,8 +125,8 @@ void multicursor_line_insert_end(ShortcutJump *sj) {
     }
 
     g_array_free(sj->words, TRUE);
-    g_string_free(sj->search_query, TRUE);
-    g_string_free(sj->eol_message, TRUE);
+    g_string_free(sj->cache, TRUE);
+    g_string_free(sj->buffer, TRUE);
     g_string_free(sj->replace_cache, TRUE);
     sj->current_mode = JM_NONE;
     sj->multicursor_mode = MC_DISABLED;
@@ -138,13 +135,13 @@ void multicursor_line_insert_end(ShortcutJump *sj) {
 void multicursor_line_insert_cancel(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Multicursor line insertion canceled."));
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    line_insert_clear_replace_indicators(sj);
+    line_insert_delete_blank_lines(sj);
+    line_insert_remove_added_new_lines(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
-    line_insert_clear_replace_indicators(sj);
-    line_insert_delete_blank_lines(sj);
-    line_insert_remove_added_new_lines(sj);
     multicursor_line_insert_end(sj);
     multicursor_end(sj);
 }
@@ -153,13 +150,13 @@ void multicursor_line_insert_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Multicursor line insertion completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    line_insert_clear_replace_indicators(sj);
+    line_insert_delete_blank_lines(sj);
+    line_insert_remove_added_new_lines(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
-    line_insert_clear_replace_indicators(sj);
-    line_insert_delete_blank_lines(sj);
-    line_insert_remove_added_new_lines(sj);
     multicursor_line_insert_end(sj);
     multicursor_end(sj);
 }
@@ -191,12 +188,7 @@ static GArray *set_words_from_lines(ShortcutJump *sj, GArray *lines, GArray *lin
     gint lines_added = 0;
 
     gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-    gint last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, chars_in_doc - 1, 0);
-
-    if (sj->last_position <= chars_in_doc && last_char != '\n') {
-        scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
-        sj->newline_was_added_for_next_line_insert = TRUE;
-    }
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
 
     for (gint i = 0; i < lines->len; i++) {
         gint line = g_array_index(lines, gint, i);
@@ -252,8 +244,7 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
     }
 
     if (valid_count == 0) {
-        multicursor_line_insert_cancel(sj);
-        ui_set_statusbar(TRUE, _("No multicursor lines selected."));
+        ui_set_statusbar(TRUE, _("No multicursor strings selected."));
         return;
     }
 
@@ -354,7 +345,6 @@ void line_insert_from_search(ShortcutJump *sj) {
     }
 
     if (valid_count == 0) {
-        line_insert_cancel(sj);
         ui_set_statusbar(TRUE, _("No strings selected."));
         return;
     }
