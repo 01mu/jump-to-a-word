@@ -20,6 +20,7 @@
 
 #include "insert_line.h"
 #include "jump_to_a_word.h"
+#include "multicursor.h"
 #include "search_substring.h"
 #include "search_word.h"
 #include "shortcut_common.h"
@@ -133,6 +134,11 @@ void end_actions(ShortcutJump *sj) {
         search_substring_end(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
         line_insert_end(sj);
+    } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+        multicursor_line_insert_end(sj);
+        multicursor_end(sj);
+    } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+        multicursor_end(sj);
     }
 }
 

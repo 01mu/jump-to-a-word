@@ -157,6 +157,8 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
         search_substring_replace_cancel(sj);
     } else if (sj->current_mode == JM_INSERTING_LINE) {
         line_insert_cancel(sj);
+    } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+        multicursor_line_insert_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
         multicursor_replace_cancel(sj);
     }
