@@ -140,6 +140,10 @@ void end_actions(ShortcutJump *sj) {
     } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
         multicursor_end(sj);
     }
+
+    if (sj->multicursor_mode == MC_ACCEPTING) {
+        multicursor_end(sj);
+    }
 }
 
 gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {

@@ -69,6 +69,19 @@ static void multicursor_replace_clear_indicators(ShortcutJump *sj) {
     }
 }
 
+void multicursor_accepting_cancel(ShortcutJump *sj) {
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word word = g_array_index(sj->multicursor_words, Word, i);
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+    }
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    multicursor_replace_clear_indicators(sj);
+    annotation_clear(sj->sci, sj->eol_message_line);
+    multicursor_end(sj);
+    ui_set_statusbar(TRUE, _("Multicursor mode canceled."));
+}
+
 void multicursor_replace_cancel(ShortcutJump *sj) {
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);

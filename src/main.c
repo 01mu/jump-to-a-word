@@ -164,7 +164,7 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     }
 
     if (sj->multicursor_mode == MC_ACCEPTING) {
-        multicursor_end(sj);
+        multicursor_accepting_cancel(sj);
     }
 }
 
