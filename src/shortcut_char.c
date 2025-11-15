@@ -109,9 +109,12 @@ void shortcut_char_replacing_cancel(ShortcutJump *sj) {
     shortcut_set_to_first_visible_line(sj);
     shortcut_char_replacing_clear_indicators(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
+    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->buffer->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    annotation_clear(sj->sci, sj->eol_message_line);
     margin_markers_reset(sj);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -127,6 +130,7 @@ void shortcut_char_replacing_complete(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    annotation_clear(sj->sci, sj->eol_message_line);
     margin_markers_reset(sj);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
