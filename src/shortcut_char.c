@@ -51,6 +51,10 @@ void shortcut_char_jumping_complete(ShortcutJump *sj, gint pos, gint word_length
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
 
+    if (sj->multicursor_mode == MC_ACCEPTING) {
+        scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
+    }
+
     sj->previous_cursor_pos = sj->current_cursor_pos;
 
     if (sj->config_settings->move_marker_to_line) {

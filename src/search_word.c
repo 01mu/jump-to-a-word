@@ -157,7 +157,11 @@ void search_word_jump_complete(ShortcutJump *sj) {
     }
 
     margin_markers_reset(sj);
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+
+    if (sj->multicursor_mode != MC_ACCEPTING) {
+        scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    }
+
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
