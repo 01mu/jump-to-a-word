@@ -30,10 +30,8 @@ ScintillaObject *get_scintilla_object() {
 }
 
 void set_sj_scintilla_object(ShortcutJump *sj) {
-    if (!sj->sci) {
-        ScintillaObject *sci = get_scintilla_object();
-        sj->sci = sci;
-    }
+    ScintillaObject *sci = get_scintilla_object();
+    sj->sci = sci;
 }
 
 static gint get_first_line_on_screen(ShortcutJump *sj) {
