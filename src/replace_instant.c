@@ -51,6 +51,8 @@ void multicursor_replace(ShortcutJump *sj) {
         return;
     }
 
+    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
+
     gint first_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_first_pos, 0);
     gint last_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_last_pos, 0);
     gint lines_on_screen = last_line_on_screen - first_line_on_screen;
@@ -66,7 +68,6 @@ void multicursor_replace(ShortcutJump *sj) {
     g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
     sj->words = sj->multicursor_words;
 
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
     sj->search_results_count = 0;
 
     for (gint i = 0; i < sj->words->len; i++) {
@@ -74,6 +75,9 @@ void multicursor_replace(ShortcutJump *sj) {
 
         if (word->valid_search) {
             word->replace_pos = word->starting_doc - sj->first_position;
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
+            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
             scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
 
             if (sj->config_settings->replace_action == RA_INSERT_END) {
@@ -104,8 +108,6 @@ void multicursor_replace(ShortcutJump *sj) {
 
     sj->current_mode = JM_REPLACE_MULTICURSOR;
     annotation_display_replace_multicursor(sj);
-    scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
     connect_key_press_action(sj, on_key_press_search_replace);
     connect_click_action(sj, on_click_event_multicursor_replace);
 }
