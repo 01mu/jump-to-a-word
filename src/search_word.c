@@ -350,13 +350,13 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
 
             for (gint i = 0; i < sj->words->len; i++) {
                 Word word = g_array_index(sj->words, Word, i);
-                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
                 scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_HIGHLIGHT, 0);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
                 scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_TEXT, 0);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
                 scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-                scintilla_send_message(sj->sci, INDICATOR_TAG, INDICATOR_MULTICURSOR, 0);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
                 scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
             }
         }
