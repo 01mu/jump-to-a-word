@@ -274,6 +274,7 @@ void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
         }
     } else if (sj->multicursor_mode == MC_DISABLED) {
         ui_set_statusbar(TRUE, _("Multicursor mode enabled."));
+        end_actions(sj);
         multicursor_start(sj);
     }
 }
@@ -302,6 +303,7 @@ gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
         }
     } else if (sj->multicursor_mode == MC_DISABLED) {
         ui_set_statusbar(TRUE, _("Multicursor mode enabled."));
+        end_actions(sj);
         multicursor_start(sj);
     }
 
