@@ -33,10 +33,6 @@ void shortcut_word_complete(ShortcutJump *sj, gint pos, gint word_length, gint l
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
 
-    if (sj->multicursor_mode == MC_ACCEPTING) {
-        scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
-    }
-
     sj->previous_cursor_pos = sj->current_cursor_pos;
 
     if (sj->config_settings->move_marker_to_line) {
@@ -62,6 +58,11 @@ void shortcut_word_complete(ShortcutJump *sj, gint pos, gint word_length, gint l
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
     shortcut_end(sj, FALSE);
+
+    if (sj->multicursor_mode == MC_ACCEPTING) {
+        scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
+    }
+
     ui_set_statusbar(TRUE, _("Word jump completed."));
 }
 
