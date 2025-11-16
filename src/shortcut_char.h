@@ -23,6 +23,7 @@
 
 #include "jump_to_a_word.h"
 
+void shortcut_char_get_chars(ShortcutJump *sj, gchar query);
 void shortcut_char_jumping_cancel(ShortcutJump *sj);
 void shortcut_char_jumping_complete(ShortcutJump *sj, gint pos, gint word_length, gint line);
 void shortcut_char_waiting_cancel(ShortcutJump *sj);

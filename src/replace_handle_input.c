@@ -138,6 +138,7 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     }
 
+    g_string_insert_c(sj->replace_query, sj->replace_len, keychar);
     sj->replace_len += 1;
     sj->search_change_made = TRUE;
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
@@ -191,6 +192,7 @@ static void remove_character(ShortcutJump *sj) {
     }
 
     sj->replace_len -= 1;
+    g_string_erase(sj->replace_query, sj->replace_len, 1);
     sj->search_change_made = TRUE;
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }

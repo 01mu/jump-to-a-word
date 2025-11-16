@@ -45,6 +45,8 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
         in_line_jump_mode = FALSE;
     }
 
+    g_string_free(sj->replace_query, TRUE);
+
     sj->current_mode = JM_NONE;
 
     g_string_free(sj->eol_message, TRUE);

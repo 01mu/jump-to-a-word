@@ -133,12 +133,23 @@ void shortcut_char_replacing_complete(ShortcutJump *sj) {
     margin_markers_reset(sj);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
+
+    if (sj->has_previous_action) {
+        g_string_free(sj->previous_search_query, TRUE);
+        g_string_free(sj->previous_replace_query, TRUE);
+    }
+
+    sj->previous_search_query = g_string_new(sj->search_query->str);
+    sj->previous_replace_query = g_string_new(sj->replace_query->str);
+    sj->previous_mode = sj->current_mode;
+    sj->has_previous_action = TRUE;
+
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
                      sj->words->len == 1 ? "" : "s");
 }
 
-static void shortcut_char_get_chars(ShortcutJump *sj, gchar query) {
+void shortcut_char_get_chars(ShortcutJump *sj, gchar query) {
     gint lfs_added = 0;
     gint toggle = 1;
     gint added = 0;
@@ -315,6 +326,8 @@ void shortcut_char_init_with_query(ShortcutJump *sj, gchar query) {
     if (sj->in_selection) {
         if (sj->selection_is_a_char && sj->config_settings->use_selected_word_or_char) {
             shortcut_char_get_chars(sj, query);
+
+            g_string_append_c(sj->search_query, query);
 
             sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
             ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");

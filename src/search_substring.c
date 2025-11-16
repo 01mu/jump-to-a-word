@@ -59,6 +59,8 @@ void search_substring_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
+    g_string_free(sj->replace_query, TRUE);
+
     g_string_free(sj->eol_message, TRUE);
     g_string_free(sj->search_query, TRUE);
 
@@ -94,6 +96,17 @@ void search_substring_replace_complete(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
+
+    if (sj->has_previous_action) {
+        g_string_free(sj->previous_search_query, TRUE);
+        g_string_free(sj->previous_replace_query, TRUE);
+    }
+
+    sj->previous_search_query = g_string_new(sj->search_query->str);
+    sj->previous_replace_query = g_string_new(sj->replace_query->str);
+    sj->previous_mode = sj->current_mode;
+    sj->has_previous_action = TRUE;
+
     search_substring_end(sj);
 }
 

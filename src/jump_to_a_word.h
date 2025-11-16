@@ -54,6 +54,7 @@ typedef enum {
     KB_OPEN_REPLACE_OPTIONS,
     KB_JUMP_TO_A_SUBSTRING,
     KB_MULTICURSOR,
+    KB_REPEAT_ACTION,
     KB_COUNT,
 } KB;
 
@@ -270,6 +271,13 @@ typedef struct {
     gint multicusor_eol_message_line;
     gint multicursor_first_pos;
     gint multicursor_last_pos;
+
+    GString *replace_query;
+
+    GString *previous_search_query;
+    GString *previous_replace_query;
+    JumpMode previous_mode;
+    gboolean has_previous_action;
 } ShortcutJump;
 
 #endif

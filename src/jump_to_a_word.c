@@ -24,6 +24,7 @@
 #include "multicursor.h"
 #include "preferences.h"
 #include "previous_cursor.h"
+#include "repeat_action.h"
 #include "replace_instant.h"
 #include "search_substring.h"
 #include "search_word.h"
@@ -269,6 +270,9 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_MENU_ITEM("_Replace Selected Text", replace_search_cb, sj);
     SET_KEYBINDING("Replace selected text", "replace_search", replace_search_kb, KB_REPLACE_SEARCH, sj, item);
 
+    SET_MENU_ITEM("Repeat Pre_vious Action", repeat_action_cb, sj);
+    SET_KEYBINDING("Repeat previous action", "repeat_action", repeat_action_kb, KB_REPEAT_ACTION, sj, item);
+
     SET_MENU_ITEM("Toggle _Multicursor Mode", multicursor_cb, sj);
     SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
 
@@ -357,6 +361,11 @@ static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
 static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
     ShortcutJump *sj = (ShortcutJump *)pdata;
     end_actions(sj);
+
+    if (sj->has_previous_action) {
+        g_string_free(sj->previous_search_query, TRUE);
+        g_string_free(sj->previous_replace_query, TRUE);
+    }
 
     if (sj->tl_window->panel) {
         gtk_widget_destroy(sj->tl_window->panel);
@@ -647,6 +656,8 @@ ShortcutJump *init_data(const GeanyPlugin *plugin) {
     sj->config_widgets = g_new0(Widgets, 1);
     sj->gdk_colors = g_new0(Colors, 1);
     sj->tl_window = g_new0(TextLineWindow, 1);
+
+    sj->has_previous_action = FALSE;
 
     sj->multicursor_mode = MC_DISABLED;
     sj->multicursor_first_pos = 0;

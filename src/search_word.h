@@ -23,6 +23,7 @@
 
 #include "jump_to_a_word.h"
 
+void search_word_mark_words(ShortcutJump *sj, gboolean instant_replace);
 void search_word_end(ShortcutJump *sj);
 void search_word_init(ShortcutJump *sj, gboolean instant_replace);
 void search_word_cb(GtkMenuItem *menu_item, gpointer user_data);
