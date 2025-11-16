@@ -186,10 +186,6 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
-    if (nt->nmhdr.code == SCN_MODIFYATTEMPTRO) {
-        return TRUE;
-    }
-
     if (nt->modificationType & (SC_MOD_INSERTTEXT)) {
         if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) {
             if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
