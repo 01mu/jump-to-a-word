@@ -286,7 +286,7 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_KEYBINDING("Open line options window", "open_line_options", open_line_options_kb, KB_OPEN_LINE_OPTIONS, sj,
                    item);
 
-    SET_MENU_ITEM("Open _Replacement Options Window", open_replace_options_cb, sj);
+    SET_MENU_ITEM("Open R_eplacement Options Window", open_replace_options_cb, sj);
     SET_KEYBINDING("Open replacement options window", "open_replace_options", open_replace_options_kb,
                    KB_OPEN_REPLACE_OPTIONS, sj, item);
 
