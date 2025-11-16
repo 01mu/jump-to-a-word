@@ -210,6 +210,7 @@ void init_sj_values(ShortcutJump *sj) {
     sj->eol_message = g_string_new("");
     sj->search_query = g_string_new("");
 
+    sj->shortcut_single_pos = 0;
     sj->search_results_count = 0;
     sj->search_word_pos = -1;
     sj->search_word_pos_first = -1;
