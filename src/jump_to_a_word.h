@@ -277,6 +277,7 @@ typedef struct {
     GString *previous_search_query;
     GString *previous_replace_query;
     JumpMode previous_mode;
+    ReplaceAction previous_replace_action;
     gboolean has_previous_action;
 } ShortcutJump;
 

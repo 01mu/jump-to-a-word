@@ -125,6 +125,7 @@ void handle_action(gpointer user_data) {
         }
     }
 
+    // TODO add notice for current replace mode
     ui_set_statusbar(TRUE, _("No action available."));
 }
 

@@ -142,6 +142,7 @@ void shortcut_char_replacing_complete(ShortcutJump *sj) {
     sj->previous_search_query = g_string_new(sj->search_query->str);
     sj->previous_replace_query = g_string_new(sj->replace_query->str);
     sj->previous_mode = sj->current_mode;
+    sj->previous_replace_action = sj->config_settings->replace_action;
     sj->has_previous_action = TRUE;
 
     shortcut_end(sj, FALSE);

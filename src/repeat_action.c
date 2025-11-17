@@ -36,11 +36,19 @@ static void replace(ShortcutJump *sj) {
         if (word->valid_search) {
             gint new_pos = word->replace_pos - chars_removed + chars_added;
             gint t = word->replace_pos;
-            g_string_erase(sj->replace_cache, new_pos, word->word->len);
+
+            if (sj->previous_replace_action == RA_REPLACE) {
+                g_string_erase(sj->replace_cache, new_pos, word->word->len);
+                chars_removed += word->word->len;
+            } else if (sj->previous_replace_action == RA_INSERT_END) {
+                new_pos += word->word->len;
+            }
+
             g_string_insert_len(sj->replace_cache, new_pos, sj->previous_replace_query->str,
                                 sj->previous_replace_query->len);
-            chars_removed += word->word->len;
+
             chars_added += sj->previous_replace_query->len;
+
             if (t + sj->first_position < sj->current_cursor_pos) {
                 c = chars_added - chars_removed;
             }
