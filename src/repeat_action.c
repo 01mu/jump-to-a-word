@@ -35,7 +35,7 @@ static void replace(ShortcutJump *sj) {
         Word *word = &g_array_index(sj->words, Word, i);
         if (word->valid_search) {
             gint new_pos = word->replace_pos - chars_removed + chars_added;
-            int t = word->replace_pos;
+            gint t = word->replace_pos;
             g_string_erase(sj->replace_cache, new_pos, word->word->len);
             g_string_insert_len(sj->replace_cache, new_pos, sj->previous_replace_query->str,
                                 sj->previous_replace_query->len);
