@@ -40,6 +40,24 @@ static void multicursor_start(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }
 
+void multicursor_replace_end(ShortcutJump *sj) {
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word word = g_array_index(sj->multicursor_words, Word, i);
+        g_string_free(word.word, TRUE);
+    }
+
+    g_string_free(sj->replace_query, TRUE);
+
+    g_string_free(sj->buffer, TRUE);
+    g_string_free(sj->replace_cache, TRUE);
+    g_string_free(sj->cache, TRUE);
+
+    g_string_free(sj->multicursor_eol_message, TRUE);
+    g_array_free(sj->multicursor_words, TRUE);
+    sj->current_mode = JM_NONE;
+    sj->multicursor_mode = MC_DISABLED;
+}
+
 void multicursor_end(ShortcutJump *sj) {
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
@@ -94,7 +112,7 @@ void multicursor_replace_cancel(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
-    multicursor_end(sj);
+    multicursor_replace_end(sj);
     ui_set_statusbar(TRUE, _("Multicursor string replacement canceled."));
 }
 
@@ -107,7 +125,7 @@ void multicursor_replace_complete(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
-    multicursor_end(sj);
+    multicursor_replace_end(sj);
 }
 
 void multicursor_transpose_cancel(ShortcutJump *sj) {

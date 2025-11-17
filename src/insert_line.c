@@ -83,6 +83,8 @@ void line_insert_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
+    g_string_free(sj->replace_query, TRUE);
+
     g_array_free(sj->searched_words_for_line_insert, TRUE);
     g_array_free(sj->words, TRUE);
     g_string_free(sj->cache, TRUE);
@@ -281,6 +283,8 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
 
     gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
 
+    sj->replace_query = g_string_new("");
+
     sj->cache = g_string_new(screen_lines);
     sj->buffer = g_string_new(screen_lines);
     sj->replace_cache = g_string_new(screen_lines);
@@ -386,6 +390,8 @@ void line_insert_from_search(ShortcutJump *sj) {
     sj->last_position = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, last_line_on_screen, 0);
 
     gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+
+    sj->replace_query = g_string_new("");
 
     sj->cache = g_string_new(screen_lines);
     sj->buffer = g_string_new(screen_lines);
