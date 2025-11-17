@@ -264,11 +264,11 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 
     SET_MENU_SEPERATOR();
 
-    SET_MENU_ITEM("_Replace Selected Text", replace_search_cb, sj);
+    SET_MENU_ITEM("Replace Selected Te_xt", replace_search_cb, sj);
     SET_KEYBINDING("Replace selected text", "replace_search", replace_search_kb, KB_REPLACE_SEARCH, sj, item);
 
-    SET_MENU_ITEM("Repeat Pre_vious Action", repeat_action_cb, sj);
-    SET_KEYBINDING("Repeat previous action", "repeat_action", repeat_action_kb, KB_REPEAT_ACTION, sj, item);
+    SET_MENU_ITEM("_Repeat Last Action", repeat_action_cb, sj);
+    SET_KEYBINDING("Repeat last action", "repeat_action", repeat_action_kb, KB_REPEAT_ACTION, sj, item);
 
     SET_MENU_ITEM("Toggle _Multicursor Mode", multicursor_cb, sj);
     SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
