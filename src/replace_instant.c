@@ -46,7 +46,6 @@ void multicursor_replace(ShortcutJump *sj) {
     }
 
     if (valid_count == 0) {
-        multicursor_replace_cancel(sj);
         ui_set_statusbar(TRUE, _("No multicursor strings to replace."));
         return;
     }

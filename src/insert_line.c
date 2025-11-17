@@ -189,6 +189,7 @@ static GArray *line_insert_get_unique(ShortcutJump *sj, GArray *lines) {
 static GArray *set_words_from_lines(ShortcutJump *sj, GArray *lines, GArray *lines_to_insert) {
     gint lines_added = 0;
 
+    // TODO only insert new line when the last line in the document is in view
     gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
 
