@@ -72,6 +72,8 @@ void handle_action(gpointer user_data) {
     MulticusrorMode mm = sj->multicursor_mode;
     JumpMode jm = sj->current_mode;
 
+
+    // TODO add option to reset the replace mode after a completed action
     if (ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END) {
         if (mm == MC_DISABLED) {
             if (jm == JM_SEARCH) {
@@ -258,6 +260,7 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_KEYBINDING("Jump to substring (search)", "jump_to_a_substring", search_substring_kb, KB_JUMP_TO_A_SUBSTRING, sj,
                    item);
 
+    // TODO disable if no previous position
     SET_MENU_ITEM("Jump to _Previous Cursor Position", jump_to_previous_cursor_cb, sj);
     SET_KEYBINDING("Jump to previous cursor position", "jump_to_previous_cursor", jump_to_previous_cursor_kb,
                    KB_JUMP_TO_PREVIOUS_CARET, sj, item);
@@ -267,6 +270,7 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_MENU_ITEM("Replace Selected Te_xt", replace_search_cb, sj);
     SET_KEYBINDING("Replace selected text", "replace_search", replace_search_kb, KB_REPLACE_SEARCH, sj, item);
 
+    // TODO disable if no last action
     SET_MENU_ITEM("_Repeat Last Action", repeat_action_cb, sj);
     SET_KEYBINDING("Repeat last action", "repeat_action", repeat_action_kb, KB_REPEAT_ACTION, sj, item);
 

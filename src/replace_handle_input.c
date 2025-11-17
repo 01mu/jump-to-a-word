@@ -18,12 +18,7 @@
 
 #include <plugindata.h>
 
-#include "insert_line.h"
 #include "jump_to_a_word.h"
-#include "multicursor.h"
-#include "search_substring.h"
-#include "search_word.h"
-#include "shortcut_char.h"
 
 static void handle_single_backspace(ShortcutJump *sj) {
     gint chars_removed = 0;
@@ -197,7 +192,8 @@ static void remove_character(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }
 
-gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar) {
+gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar,
+                              void complete_func(ShortcutJump *), void cancel_func(ShortcutJump *)) {
     gint pos_cache = sj->current_cursor_pos;
 
     gboolean is_other_char =
@@ -210,21 +206,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&
         !sj->search_change_made) {
         handle_single_backspace(sj);
-
-        if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
-            multicursor_replace_complete(sj);
-        } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-            search_word_replace_complete(sj);
-        } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-            search_substring_replace_complete(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE) {
-            line_insert_complete(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
-            multicursor_line_insert_complete(sj);
-        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            shortcut_char_replacing_complete(sj);
-        }
-
+        complete_func(sj);
         return TRUE;
     }
 
@@ -240,20 +222,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&
         sj->replace_len >= 0) {
         if (sj->replace_len == 0) {
-            if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
-                multicursor_replace_complete(sj);
-            } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-                search_word_replace_complete(sj);
-            } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-                search_substring_replace_complete(sj);
-            } else if (sj->current_mode == JM_INSERTING_LINE) {
-                line_insert_complete(sj);
-            } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
-                multicursor_line_insert_complete(sj);
-            } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-                shortcut_char_replacing_complete(sj);
-            }
-
+            complete_func(sj);
             return TRUE;
         }
 
@@ -267,20 +236,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     }
 
     if (event->keyval == GDK_KEY_Return) {
-        if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
-            multicursor_replace_complete(sj);
-        } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-            search_word_replace_complete(sj);
-        } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-            search_substring_replace_complete(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE) {
-            line_insert_complete(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
-            multicursor_line_insert_complete(sj);
-        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            shortcut_char_replacing_complete(sj);
-        }
-
+        complete_func(sj);
         return TRUE;
     }
 
@@ -291,33 +247,9 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
     }
 
     if (sj->search_change_made) {
-        if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
-            multicursor_replace_complete(sj);
-        } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-            search_word_replace_complete(sj);
-        } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-            search_substring_replace_complete(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE) {
-            line_insert_complete(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
-            multicursor_line_insert_complete(sj);
-        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            shortcut_char_replacing_complete(sj);
-        }
+        complete_func(sj);
     } else {
-        if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
-            multicursor_replace_cancel(sj);
-        } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-            search_word_replace_cancel(sj);
-        } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-            search_substring_replace_cancel(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE) {
-            line_insert_cancel(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
-            multicursor_line_insert_cancel(sj);
-        } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-            shortcut_char_replacing_cancel(sj);
-        }
+        cancel_func(sj);
     }
 
     return FALSE;

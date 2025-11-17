@@ -19,6 +19,7 @@
 #include <plugindata.h>
 
 #include "annotation.h"
+#include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
 #include "replace_handle_input.h"
@@ -34,7 +35,39 @@ gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpoi
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
     annotation_clear(sj->sci, sj->eol_message_line);
     annotation_clear(sj->sci, sj->multicusor_eol_message_line);
-    return replace_handle_input(sj, event, keychar);
+
+    void (*complete_func)(ShortcutJump *) = NULL;
+    void (*cancel_func)(ShortcutJump *) = NULL;
+
+    if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+        complete_func = multicursor_replace_complete;
+    } else if (sj->current_mode == JM_REPLACE_SEARCH) {
+        complete_func = search_word_replace_complete;
+    } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+        complete_func = search_substring_replace_complete;
+    } else if (sj->current_mode == JM_INSERTING_LINE) {
+        complete_func = line_insert_complete;
+    } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+        complete_func = multicursor_line_insert_complete;
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        complete_func = shortcut_char_replacing_complete;
+    }
+
+    if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+        cancel_func = multicursor_replace_cancel;
+    } else if (sj->current_mode == JM_REPLACE_SEARCH) {
+        cancel_func = search_word_replace_cancel;
+    } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+        cancel_func = search_substring_replace_cancel;
+    } else if (sj->current_mode == JM_INSERTING_LINE) {
+        cancel_func = line_insert_cancel;
+    } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+        cancel_func = multicursor_line_insert_cancel;
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        cancel_func = shortcut_char_replacing_cancel;
+    }
+
+    return replace_handle_input(sj, event, keychar, complete_func, cancel_func);
 }
 
 void multicursor_replace(ShortcutJump *sj) {

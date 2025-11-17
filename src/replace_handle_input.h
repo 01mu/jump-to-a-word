@@ -21,6 +21,7 @@
 
 #include "jump_to_a_word.h"
 
-gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar);
+gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar,
+                              void complete_func(ShortcutJump *), void cancel_func(ShortcutJump *));
 
 #endif

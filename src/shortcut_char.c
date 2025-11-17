@@ -312,7 +312,7 @@ static gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event
         return shortcut_on_key_press_action(event, sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         annotation_clear(sj->sci, sj->eol_message_line);
-        return replace_handle_input(sj, event, query);
+        return replace_handle_input(sj, event, query, shortcut_char_replacing_complete, shortcut_char_replacing_cancel);
     }
 
     return FALSE;
