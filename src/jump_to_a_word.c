@@ -72,7 +72,6 @@ void handle_action(gpointer user_data) {
     MulticusrorMode mm = sj->multicursor_mode;
     JumpMode jm = sj->current_mode;
 
-
     // TODO add option to reset the replace mode after a completed action
     if (ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END) {
         if (mm == MC_DISABLED) {

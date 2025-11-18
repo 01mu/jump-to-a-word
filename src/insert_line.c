@@ -32,7 +32,7 @@ static void line_insert_clear_replace_indicators(ShortcutJump *sj) {
         gint lines_removed = 0;
         Word word = g_array_index(sj->words, Word, i);
         gint start_pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, word.line - lines_removed, 0);
-        gint clear_len = sj->replace_len;
+        gint clear_len = word.word->len + sj->replace_len;
         if (sj->replace_len == 0) {
             clear_len = word.word->len;
         }
@@ -48,7 +48,7 @@ static void line_insert_delete_blank_lines(ShortcutJump *sj) {
         for (gint i = 0; i < sj->words->len; i++) {
             Word word = g_array_index(sj->words, Word, i);
             gint pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, word.line - lines_removed, 0);
-            scintilla_send_message(sj->sci, SCI_DELETERANGE, pos, 1);
+            scintilla_send_message(sj->sci, SCI_DELETERANGE, pos, word.word->len);
             lines_removed++;
         }
     }
@@ -163,6 +163,11 @@ void multicursor_line_insert_complete(ShortcutJump *sj) {
     multicursor_end(sj);
 }
 
+typedef struct {
+    gint line;
+    GString *spaces_and_tabs;
+} LST;
+
 static GArray *line_insert_get_unique(ShortcutJump *sj, GArray *lines) {
     gint previous_line = -1;
 
@@ -170,6 +175,8 @@ static GArray *line_insert_get_unique(ShortcutJump *sj, GArray *lines) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
 
         if (word.valid_search && word.line > previous_line) {
+            LST lst;
+
             gint line;
 
             if (sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
@@ -178,8 +185,25 @@ static GArray *line_insert_get_unique(ShortcutJump *sj, GArray *lines) {
                 line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, word.starting_doc + word.word->len, 0);
             }
 
+            gint start = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, line, 0);
+            gint end = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line, 0);
+            GString *l = g_string_new(sci_get_contents_range(sj->sci, start, end));
+            GString *s = g_string_new("");
+            for (gint i = 0; i < l->len; i++) {
+                if (l->str[i] == ' ' || l->str[i] == '\t') {
+                    g_string_append_c(s, l->str[i]);
+                } else {
+                    break;
+                }
+            }
+            g_free(l);
+
             previous_line = line;
-            g_array_append_val(lines, previous_line);
+
+            lst.line = previous_line;
+            lst.spaces_and_tabs = s;
+
+            g_array_append_val(lines, lst);
         }
     }
 
@@ -194,30 +218,33 @@ static GArray *set_words_from_lines(ShortcutJump *sj, GArray *lines, GArray *lin
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
 
     for (gint i = 0; i < lines->len; i++) {
-        gint line = g_array_index(lines, gint, i);
+        LST line = g_array_index(lines, LST, i);
         gint pos;
 
         if (sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
-            pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, line + lines_added, 0);
+            pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, line.line + lines_added, 0);
         } else {
-            pos = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line + lines_added, 0) + 1;
+            pos = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line.line + lines_added, 0) + 1;
         }
 
-        scintilla_send_message(sj->sci, SCI_INSERTTEXT, pos, (sptr_t) "\n");
+        GString *insert = g_string_new("");
+        g_string_append_len(insert, line.spaces_and_tabs->str, line.spaces_and_tabs->len);
+        g_string_append_len(insert, "\n", 1);
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, pos, (sptr_t)insert->str);
 
         Word multicursor_word;
-        multicursor_word.word = g_string_new(sci_get_contents_range(sj->sci, pos, pos + 1));
+        multicursor_word.word = g_string_new(insert->str);
         multicursor_word.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
-        multicursor_word.starting = pos;
-        multicursor_word.starting_doc = pos;
+        multicursor_word.starting = pos + insert->len - 1;
+        multicursor_word.starting_doc = pos + insert->len - 1;
         multicursor_word.valid_search = TRUE;
 
         if (multicursor_word.starting_doc <= sj->multicursor_first_pos) {
             sj->multicursor_first_pos = multicursor_word.starting_doc;
         }
 
-        if (pos + 1 >= sj->multicursor_last_pos) {
-            sj->multicursor_last_pos = pos + 1;
+        if (pos + insert->len - 1 >= sj->multicursor_last_pos) {
+            sj->multicursor_last_pos = pos + insert->len - 1;
         }
 
         g_array_append_val(lines_to_insert, multicursor_word);
@@ -262,7 +289,7 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
 
     g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
 
-    GArray *lines = g_array_new(FALSE, FALSE, sizeof(gint));
+    GArray *lines = g_array_new(FALSE, FALSE, sizeof(LST));
     GArray *lines_to_insert = g_array_new(TRUE, FALSE, sizeof(Word));
 
     lines = line_insert_get_unique(sj, lines);
@@ -369,7 +396,7 @@ void line_insert_from_search(ShortcutJump *sj) {
 
     g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
 
-    GArray *lines = g_array_new(FALSE, FALSE, sizeof(gint));
+    GArray *lines = g_array_new(FALSE, FALSE, sizeof(LST));
     GArray *lines_to_insert = g_array_new(TRUE, FALSE, sizeof(Word));
 
     lines = line_insert_get_unique(sj, lines);
