@@ -295,6 +295,10 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
     lines = line_insert_get_unique(sj, lines);
     lines_to_insert = set_words_from_lines(sj, lines, lines_to_insert);
 
+    for (gint i = 0; i < lines->len; i++) {
+        LST l = g_array_index(lines, LST, i);
+        g_free(l.spaces_and_tabs);
+    }
     g_array_free(lines, TRUE);
 
     sj->words = lines_to_insert;
@@ -402,6 +406,10 @@ void line_insert_from_search(ShortcutJump *sj) {
     lines = line_insert_get_unique(sj, lines);
     lines_to_insert = set_words_from_lines(sj, lines, lines_to_insert);
 
+    for (gint i = 0; i < lines->len; i++) {
+        LST l = g_array_index(lines, LST, i);
+        g_free(l.spaces_and_tabs);
+    }
     g_array_free(lines, TRUE);
 
     sj->searched_words_for_line_insert = sj->words;
