@@ -292,6 +292,8 @@ typedef struct {
     JumpMode previous_mode;
     ReplaceAction previous_replace_action;
     gboolean has_previous_action;
+
+    gboolean added_new_line_insert;
 } ShortcutJump;
 
 #endif
