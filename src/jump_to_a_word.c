@@ -126,8 +126,9 @@ void handle_action(gpointer user_data) {
         }
     }
 
-    // TODO add notice for current replace mode
-    ui_set_statusbar(TRUE, _("No action available."));
+    ui_set_statusbar(TRUE, _("Nothing to do. | Text option: %s | Line option: %s | Action: %s | Multicursor mode %s"),
+                     text_conf[sj->config_settings->text_after].label, line_conf[sj->config_settings->line_after].label,
+                     replace_conf[ra].label, mm == MC_ACCEPTING ? "enabled" : "disabled");
 }
 
 void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) { handle_action(user_data); }
