@@ -208,6 +208,16 @@ static void configure_color_from_int(GdkColor *color, guint32 val) {
     color->red = ((val & 0x0000ff) >> 0) * 0x101;
 }
 
+static void on_previous_cursor_show(GtkMenuItem *menuitem, gpointer gdata) {
+    PCMenuSensitivity *pc_menu_sensitivity = (PCMenuSensitivity *)gdata;
+    gtk_widget_set_sensitive(pc_menu_sensitivity->submenu, *(pc_menu_sensitivity->previous_cursor_pos) != -1);
+}
+
+static void on_previous_action_show(GtkMenuItem *menuitem, gpointer gdata) {
+    PAMenuSensitivity *pa_menu_sensitivity = (PAMenuSensitivity *)gdata;
+    gtk_widget_set_sensitive(pa_menu_sensitivity->submenu, *(pa_menu_sensitivity->has_previous_action));
+}
+
 static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 #define SET_MENU_ITEM(description, callback, data)                                                                     \
     G_STMT_START {                                                                                                     \
@@ -259,19 +269,31 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_KEYBINDING("Jump to substring (search)", "jump_to_a_substring", search_substring_kb, KB_JUMP_TO_A_SUBSTRING, sj,
                    item);
 
-    // TODO disable if no previous position
     SET_MENU_ITEM("Jump to _Previous Cursor Position", jump_to_previous_cursor_cb, sj);
     SET_KEYBINDING("Jump to previous cursor position", "jump_to_previous_cursor", jump_to_previous_cursor_kb,
                    KB_JUMP_TO_PREVIOUS_CARET, sj, item);
+
+    PCMenuSensitivity *pc_menu_sensitivity = g_new0(PCMenuSensitivity, 1);
+    pc_menu_sensitivity->previous_cursor_pos = &(sj->previous_cursor_pos);
+    pc_menu_sensitivity->submenu = item;
+    plugin_signal_connect(plugin, G_OBJECT(sj->geany->main_widgets->tools_menu), "show", FALSE,
+                          (GCallback)on_previous_cursor_show, pc_menu_sensitivity);
+    sj->pc_menu_sensitivity = pc_menu_sensitivity;
 
     SET_MENU_SEPERATOR();
 
     SET_MENU_ITEM("Replace Selected Te_xt", replace_search_cb, sj);
     SET_KEYBINDING("Replace selected text", "replace_search", replace_search_kb, KB_REPLACE_SEARCH, sj, item);
 
-    // TODO disable if no last action
     SET_MENU_ITEM("_Repeat Last Action", repeat_action_cb, sj);
     SET_KEYBINDING("Repeat last action", "repeat_action", repeat_action_kb, KB_REPEAT_ACTION, sj, item);
+
+    PAMenuSensitivity *pa_menu_sensitivity = g_new0(PAMenuSensitivity, 1);
+    pa_menu_sensitivity->has_previous_action = &(sj->has_previous_action);
+    pa_menu_sensitivity->submenu = item;
+    plugin_signal_connect(plugin, G_OBJECT(sj->geany->main_widgets->tools_menu), "show", FALSE,
+                          (GCallback)on_previous_action_show, pa_menu_sensitivity);
+    sj->pa_menu_sensitivity = pa_menu_sensitivity;
 
     SET_MENU_ITEM("Toggle _Multicursor Mode", multicursor_cb, sj);
     SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
@@ -380,6 +402,9 @@ static void cleanup(GeanyPlugin *plugin, gpointer pdata) {
     g_free(sj->gdk_colors);
     g_free(sj->tl_window);
     g_free(sj->config_file);
+
+    g_free(sj->pc_menu_sensitivity);
+    g_free(sj->pa_menu_sensitivity);
 
     gtk_widget_destroy(sj->main_menu_item);
 
@@ -622,6 +647,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_FRAME_COLOR("Annotation background color");
     WIDGET_COLOR(search_annotation_bg_color, search_annotation_bg_color_gdk);
 
+    // TODO add transparency option for colors
     HORIZONTAL_FRAME();
     WIDGET_FRAME_COLOR("Tag color");
     WIDGET_COLOR(tag_color, tag_color_gdk);

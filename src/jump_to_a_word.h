@@ -200,6 +200,16 @@ typedef struct {
 } TextLineWindow;
 
 typedef struct {
+    gint *previous_cursor_pos;
+    GtkWidget *submenu;
+} PCMenuSensitivity;
+
+typedef struct {
+    gboolean *has_previous_action;
+    GtkWidget *submenu;
+} PAMenuSensitivity;
+
+typedef struct {
     Settings *config_settings;
     Widgets *config_widgets;
     Colors *gdk_colors;
@@ -209,6 +219,9 @@ typedef struct {
     GtkWidget *main_menu_item;
     gchar *config_file;
     GeanyData *geany_data;
+
+    PCMenuSensitivity *pc_menu_sensitivity;
+    PAMenuSensitivity *pa_menu_sensitivity;
 
     gint first_line_on_screen;
     gint lines_on_screen;
