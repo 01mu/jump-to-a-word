@@ -89,7 +89,8 @@ static void repeat_action(gpointer user_data) {
         scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
         replace(sj);
         scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-        ui_set_statusbar(TRUE, _("Substring replacement action repeated."));
+        ui_set_statusbar(TRUE, _("Substring replacement action repeated. Substrings \"%s\" replaced with \"%s\"."),
+                         sj->search_query->str, sj->previous_replace_query->str);
     } else if (sj->previous_mode == JM_SHORTCUT_CHAR_REPLACING) {
         sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(Word));
         shortcut_char_get_chars(sj, sj->search_query->str[0]);
@@ -97,14 +98,16 @@ static void repeat_action(gpointer user_data) {
         replace(sj);
         scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
         g_array_free(sj->lf_positions, TRUE);
-        ui_set_statusbar(TRUE, _("Character replacement action repeated."));
+        ui_set_statusbar(TRUE, _("Character replacement action repeated. Occurances of \"%s\" replaced with \"%s\"."),
+                         sj->search_query->str, sj->previous_replace_query->str);
     } else if (sj->previous_mode == JM_REPLACE_SEARCH) {
         search_word_get_words(sj);
         search_word_mark_words(sj, FALSE);
         scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
         replace(sj);
         scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-        ui_set_statusbar(TRUE, _("Word replacement action repeated."));
+        ui_set_statusbar(TRUE, _("Word replacement action repeated. Words marked with \"%s\" replaced with \"%s\"."),
+                         sj->search_query->str, sj->previous_replace_query->str);
     }
 
     for (gint i = 0; i < sj->words->len; i++) {
