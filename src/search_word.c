@@ -215,8 +215,6 @@ void search_word_mark_words(ShortcutJump *sj, gboolean instant_replace) {
     sj->search_results_count = 0;
     sj->search_word_pos = -1;
 
-    // FIXME last char in word not being considered when "match from start of word" is disabled
-
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
 
@@ -263,16 +261,13 @@ void search_word_mark_words(ShortcutJump *sj, gboolean instant_replace) {
 
                     do {
                         z = sj->search_query->str + k;
-
                         const gchar *d = p + k;
-
                         haystack_char = d[0];
                         needle_char = z[0];
-
                         k++;
                     } while (valid_smart_case(haystack_char, needle_char));
 
-                    if (k - 1 == sj->search_query->len) {
+                    if (k - 1 >= 1) {
                         word->valid_search = TRUE;
                     }
                 }
