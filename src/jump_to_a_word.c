@@ -188,7 +188,8 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
-    if ((sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_INSERTING_LINE ||
+    if ((sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_MULTICURSOR ||
+         sj->current_mode == JM_INSERTING_LINE || sj->current_mode == JM_INSERTING_LINE_MULTICURSOR ||
          sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_REPLACE_SUBSTRING) &&
         nt->modificationType & (SC_MOD_INSERTCHECK) && strcmp(nt->text, sj->clipboard_text) == 0) {
         scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");

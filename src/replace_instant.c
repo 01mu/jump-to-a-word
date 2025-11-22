@@ -140,6 +140,11 @@ void multicursor_replace(ShortcutJump *sj) {
     sj->multicusor_eol_message_line = line;
     sj->current_cursor_pos = pos;
 
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
+    sj->inserting_clipboard = FALSE;
+
     sj->current_mode = JM_REPLACE_MULTICURSOR;
     annotation_display_replace_multicursor(sj);
     connect_key_press_action(sj, on_key_press_search_replace);
