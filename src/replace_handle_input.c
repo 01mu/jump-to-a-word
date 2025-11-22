@@ -49,7 +49,7 @@ static void handle_single_backspace(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }
 
-static void clear_occurances(ShortcutJump *sj) {
+void clear_occurances(ShortcutJump *sj) {
     gint chars_removed = 0;
     gint removed_to_left = 0;
     gint into = 0;
@@ -96,11 +96,12 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
         Word *word = &g_array_index(sj->words, Word, i);
 
         if (word->valid_search) {
-            int t = word->replace_pos;
+            gint t = word->replace_pos;
 
             word->replace_pos += chars_added;
 
-            g_string_insert_c(sj->replace_cache, word->replace_pos + sj->replace_len, keychar);
+            gint insert_pos = word->replace_pos + sj->replace_len;
+            g_string_insert_c(sj->replace_cache, insert_pos, keychar);
             chars_added += 1;
 
             if (t + sj->first_position < sj->current_cursor_pos) {
@@ -113,11 +114,9 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
-
         if (word.valid_search) {
             gint start = sj->first_position + word.replace_pos;
             gint len = sj->replace_len + 1;
-
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
@@ -136,7 +135,7 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
     g_string_insert_c(sj->replace_query, sj->replace_len, keychar);
     sj->replace_len += 1;
     sj->search_change_made = TRUE;
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
+    // scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }
 
 static void remove_character(ShortcutJump *sj) {
@@ -189,7 +188,7 @@ static void remove_character(ShortcutJump *sj) {
     sj->replace_len -= 1;
     g_string_erase(sj->replace_query, sj->replace_len, 1);
     sj->search_change_made = TRUE;
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
+    // scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }
 
 gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar,
@@ -200,7 +199,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         strchr("[]\\;'.,/-=_+{`_+|}:<>?\"~)(*&^%$#@!) ", (gchar)gdk_keyval_to_unicode(event->keyval)) ||
         (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9);
 
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
+    // scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
     scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
 
     if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&

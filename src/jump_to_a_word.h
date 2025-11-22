@@ -30,6 +30,7 @@ typedef struct {
     gint padding;
     gint bytes;
     gint replace_pos;
+    gint replace_pos_start;
     gboolean valid_search;
     gboolean shortcut_marked;
     gboolean is_hidden_neighbor;
@@ -266,6 +267,7 @@ typedef struct {
 
     gboolean delete_added_bracket;
 
+    gulong paste_key_release_id;
     gulong kp_handler_id;
     gulong click_handler_id;
 
@@ -294,6 +296,9 @@ typedef struct {
     gboolean has_previous_action;
 
     gboolean added_new_line_insert;
+
+    gchar *clipboard_text;
+    gboolean inserting_clipboard;
 } ShortcutJump;
 
 #endif

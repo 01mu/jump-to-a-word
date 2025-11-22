@@ -354,6 +354,12 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
 
     sj->current_mode = JM_INSERTING_LINE_MULTICURSOR;
     annotation_display_inserting_line_multicursor(sj);
+
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
+    sj->inserting_clipboard = FALSE;
+
     connect_key_press_action(sj, on_key_press_search_replace);
     connect_click_action(sj, on_click_event_multicursor_line_insert);
 }
@@ -452,6 +458,12 @@ void line_insert_from_search(ShortcutJump *sj) {
 
     sj->current_mode = JM_INSERTING_LINE;
     annotation_display_inserting_line_from_search(sj);
+
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
+    sj->inserting_clipboard = FALSE;
+
     connect_key_press_action(sj, on_key_press_search_replace);
     connect_click_action(sj, on_click_event_line_insert);
 }

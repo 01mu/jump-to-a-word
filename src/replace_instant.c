@@ -192,6 +192,11 @@ void replace_substring_init(ShortcutJump *sj) {
         }
     }
 
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
+    sj->inserting_clipboard = FALSE;
+
     disconnect_key_press_action(sj);
     connect_key_press_action(sj, on_key_press_search_replace);
 }
@@ -216,6 +221,11 @@ void replace_word_init(ShortcutJump *sj) {
             }
         }
     }
+
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
+    sj->inserting_clipboard = FALSE;
 
     disconnect_key_press_action(sj);
     connect_key_press_action(sj, on_key_press_search_replace);

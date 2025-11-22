@@ -22,6 +22,7 @@
 #include "jump_to_a_word.h"
 #include "line_options.h"
 #include "multicursor.h"
+#include "paste.h"
 #include "preferences.h"
 #include "previous_cursor.h"
 #include "repeat_action.h"
@@ -56,6 +57,7 @@ const struct {
                  {"Select to text", TX_SELECT_TO_TEXT},
                  {"Select text range", TX_SELECT_TEXT_RANGE}};
 
+// TODO add option to duplicate selection
 const struct {
     gchar *label;
     ReplaceAction type;
@@ -174,28 +176,34 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    if (nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION && sj->multicursor_mode == MC_ACCEPTING) {
+    // TODO add multicursor selection using alt key
+    if (sj->multicursor_mode == MC_ACCEPTING && nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION) {
         set_sj_scintilla_object(sj);
-
         gint selection_start = scintilla_send_message(sj->sci, SCI_GETSELECTIONSTART, 0, 0);
         gint selection_end = scintilla_send_message(sj->sci, SCI_GETSELECTIONEND, 0, 0);
-
         if (selection_start == selection_end) {
             return TRUE;
         }
-
         multicursor_add_word_from_selection(sj, selection_start, selection_end);
         return TRUE;
     }
 
-    if (nt->modificationType & (SC_MOD_INSERTTEXT)) {
-        if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) {
-            if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
-                strcmp(nt->text, "\'") == 0 || strcmp(nt->text, "\"") == 0 || strcmp(nt->text, "`") == 0 ||
-                strcmp(nt->text, ")") == 0) {
-                sj->delete_added_bracket = TRUE;
-                return TRUE;
-            }
+    if ((sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_INSERTING_LINE ||
+         sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_REPLACE_SUBSTRING) &&
+        nt->modificationType & (SC_MOD_INSERTCHECK) && strcmp(nt->text, sj->clipboard_text) == 0) {
+        scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
+        sj->inserting_clipboard = TRUE;
+        sj->paste_key_release_id = g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(on_paste_key_release), sj);
+        return TRUE;
+    }
+
+    if ((sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) &&
+        nt->modificationType & (SC_MOD_INSERTTEXT)) {
+        if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
+            strcmp(nt->text, "\'") == 0 || strcmp(nt->text, "\"") == 0 || strcmp(nt->text, "`") == 0 ||
+            strcmp(nt->text, ")") == 0) {
+            sj->delete_added_bracket = TRUE;
+            return TRUE;
         }
     }
 
@@ -298,6 +306,7 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_MENU_ITEM("Toggle _Multicursor Mode", multicursor_cb, sj);
     SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
 
+    // TODO add checkbox menu groups for option selection
     SET_MENU_SEPERATOR();
 
     SET_MENU_ITEM("Open _Text Options Window", open_text_options_cb, sj);
@@ -647,7 +656,6 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_FRAME_COLOR("Annotation background color");
     WIDGET_COLOR(search_annotation_bg_color, search_annotation_bg_color_gdk);
 
-    // TODO add transparency option for colors
     HORIZONTAL_FRAME();
     WIDGET_FRAME_COLOR("Tag color");
     WIDGET_COLOR(tag_color, tag_color_gdk);

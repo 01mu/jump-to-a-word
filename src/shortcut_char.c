@@ -312,6 +312,12 @@ static gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event
         return shortcut_on_key_press_action(event, sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
         annotation_clear(sj->sci, sj->eol_message_line);
+
+        scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+        GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+        sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
+        sj->inserting_clipboard = FALSE;
+
         return replace_handle_input(sj, event, query, shortcut_char_replacing_complete, shortcut_char_replacing_cancel);
     }
 

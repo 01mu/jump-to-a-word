@@ -430,6 +430,7 @@ void serach_substring_init(ShortcutJump *sj) {
         init_sj_values(sj);
     }
 
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
     connect_key_press_action(sj, on_key_press_search_substring);
     connect_click_action(sj, on_click_event_search);
     annotation_display_substring(sj);
