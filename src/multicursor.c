@@ -268,9 +268,7 @@ gboolean on_click_event_multicursor_replace(GtkWidget *widget, GdkEventButton *e
     return FALSE;
 }
 
-void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
-    ShortcutJump *sj = (ShortcutJump *)user_data;
-
+static void multicursor_toggle(ShortcutJump *sj) {
     if (sj->multicursor_mode == MC_ACCEPTING) {
         for (gint i = 0; i < sj->multicursor_words->len; i++) {
             Word word = g_array_index(sj->multicursor_words, Word, i);
@@ -297,33 +295,13 @@ void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
     }
 }
 
+void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    multicursor_toggle(sj);
+}
+
 gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
-    if (sj->multicursor_mode == MC_ACCEPTING) {
-        for (gint i = 0; i < sj->multicursor_words->len; i++) {
-            Word word = g_array_index(sj->multicursor_words, Word, i);
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-        }
-
-        if (sj->current_mode == JM_TRANSPOSE_MULTICURSOR) {
-            multicursor_transpose_cancel(sj);
-        } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
-            multicursor_line_insert_cancel(sj);
-        } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
-            multicursor_replace_cancel(sj);
-        } else if (sj->current_mode == JM_NONE) {
-            scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-            ui_set_statusbar(TRUE, _("Multicursor mode disabled."));
-            annotation_clear(sj->sci, sj->multicusor_eol_message_line);
-            multicursor_end(sj);
-        }
-    } else if (sj->multicursor_mode == MC_DISABLED) {
-        ui_set_statusbar(TRUE, _("Multicursor mode enabled."));
-        end_actions(sj);
-        multicursor_start(sj);
-    }
-
+    multicursor_toggle(sj);
     return TRUE;
 }
