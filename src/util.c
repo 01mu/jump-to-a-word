@@ -23,7 +23,9 @@
 #include "multicursor.h"
 #include "search_substring.h"
 #include "search_word.h"
+#include "shortcut_char.h"
 #include "shortcut_common.h"
+#include "shortcut_line.h"
 #include "shortcut_word.h"
 
 gint get_lfs(ShortcutJump *sj, gint current_line) {
@@ -99,6 +101,38 @@ void disconnect_key_press_action(ShortcutJump *sj) { g_signal_handler_disconnect
 
 void disconnect_click_action(ShortcutJump *sj) {
     g_signal_handler_disconnect(sj->geany_data->main_widgets->window, sj->click_handler_id);
+}
+
+void cancel_actions(ShortcutJump *sj) {
+    if (sj->current_mode == JM_SEARCH) {
+        search_word_jump_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_WORD) {
+        shortcut_word_cancel(sj);
+    } else if (sj->current_mode == JM_REPLACE_SEARCH) {
+        search_word_replace_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
+        shortcut_char_jumping_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
+        shortcut_char_waiting_cancel(sj);
+    } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
+        shortcut_char_replacing_cancel(sj);
+    } else if (sj->current_mode == JM_LINE) {
+        shortcut_line_cancel(sj);
+    } else if (sj->current_mode == JM_SUBSTRING) {
+        search_substring_jump_cancel(sj);
+    } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
+        search_substring_replace_cancel(sj);
+    } else if (sj->current_mode == JM_INSERTING_LINE) {
+        line_insert_cancel(sj);
+    } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
+        multicursor_line_insert_cancel(sj);
+    } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+        multicursor_replace_cancel(sj);
+    }
+
+    if (sj->multicursor_mode == MC_ACCEPTING) {
+        multicursor_accepting_cancel(sj);
+    }
 }
 
 void end_actions(ShortcutJump *sj) {

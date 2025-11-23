@@ -141,36 +141,7 @@ gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data
 
 static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
-    if (sj->current_mode == JM_SEARCH) {
-        search_word_jump_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT_WORD) {
-        shortcut_word_cancel(sj);
-    } else if (sj->current_mode == JM_REPLACE_SEARCH) {
-        search_word_replace_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
-        shortcut_char_jumping_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING) {
-        shortcut_char_waiting_cancel(sj);
-    } else if (sj->current_mode == JM_SHORTCUT_CHAR_REPLACING) {
-        shortcut_char_replacing_cancel(sj);
-    } else if (sj->current_mode == JM_LINE) {
-        shortcut_line_cancel(sj);
-    } else if (sj->current_mode == JM_SUBSTRING) {
-        search_substring_jump_cancel(sj);
-    } else if (sj->current_mode == JM_REPLACE_SUBSTRING) {
-        search_substring_replace_cancel(sj);
-    } else if (sj->current_mode == JM_INSERTING_LINE) {
-        line_insert_cancel(sj);
-    } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
-        multicursor_line_insert_cancel(sj);
-    } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
-        multicursor_replace_cancel(sj);
-    }
-
-    if (sj->multicursor_mode == MC_ACCEPTING) {
-        multicursor_accepting_cancel(sj);
-    }
+    cancel_actions(sj);
 }
 
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {

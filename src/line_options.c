@@ -23,6 +23,7 @@
 #include "jump_to_a_word.h"
 #include "line_options.h"
 #include "preferences.h"
+#include "util.h"
 
 extern const struct {
     gchar *label;
@@ -325,6 +326,8 @@ static void on_panel_show(GtkWidget *widget, gpointer dummy) {
 }
 
 static void create_panel(ShortcutJump *sj) {
+    cancel_actions(sj);
+
     sj->tl_window->panel =
         g_object_new(GTK_TYPE_WINDOW, "decorated", FALSE, "default-width", 275, "default-height", 275, "transient-for",
                      sj->geany_data->main_widgets->window, "window-position", GTK_WIN_POS_CENTER_ON_PARENT, "type-hint",
