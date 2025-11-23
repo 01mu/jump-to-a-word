@@ -72,6 +72,11 @@ static void repeat_action(gpointer user_data) {
         return;
     }
 
+    if (sj->multicursor_mode != MC_DISABLED) {
+        ui_set_statusbar(TRUE, _("Cannot repeat the previous action while in multicursor mode."));
+        return;
+    }
+
     if (!sj->has_previous_action) {
         ui_set_statusbar(TRUE, _("No previous action to repeat."));
         return;
