@@ -65,6 +65,13 @@ static void replace(ShortcutJump *sj) {
 
 static void repeat_action(gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    if (!(sj->config_settings->replace_action == RA_REPLACE || sj->config_settings->replace_action == RA_INSERT_START ||
+          sj->config_settings->replace_action == RA_INSERT_END)) {
+        ui_set_statusbar(TRUE, _("Invalid replace mode."));
+        return;
+    }
+
     if (!sj->has_previous_action) {
         ui_set_statusbar(TRUE, _("No previous action to repeat."));
         return;
