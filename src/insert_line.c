@@ -21,6 +21,7 @@
 #include "annotation.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
+#include "paste.h"
 #include "replace_instant.h"
 #include "search_substring.h"
 #include "search_word.h"
@@ -338,6 +339,9 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
         }
     }
 
+    // sj->clipboard_text = g_strdup("");
+    // sj->inserting_clipboard = FALSE;
+
     sj->search_word_pos = -1;
     sj->search_word_pos_first = -1;
     sj->search_word_pos_last = -1;
@@ -356,10 +360,7 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
     annotation_display_inserting_line_multicursor(sj);
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
-    sj->inserting_clipboard = FALSE;
-
+    paste_get_clipboard_text(sj);
     connect_key_press_action(sj, on_key_press_search_replace);
     connect_click_action(sj, on_click_event_multicursor_line_insert);
 }
@@ -460,10 +461,7 @@ void line_insert_from_search(ShortcutJump *sj) {
     annotation_display_inserting_line_from_search(sj);
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
-    sj->inserting_clipboard = FALSE;
-
+    paste_get_clipboard_text(sj);
     connect_key_press_action(sj, on_key_press_search_replace);
     connect_click_action(sj, on_click_event_line_insert);
 }

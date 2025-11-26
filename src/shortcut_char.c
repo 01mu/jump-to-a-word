@@ -21,6 +21,7 @@
 #include "action_text_after.h"
 #include "annotation.h"
 #include "jump_to_a_word.h"
+#include "paste.h"
 #include "replace_handle_input.h"
 #include "selection.h"
 #include "shortcut_common.h"
@@ -306,10 +307,7 @@ static gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event
         annotation_clear(sj->sci, sj->eol_message_line);
 
         scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-        GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
-        sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
-        sj->inserting_clipboard = FALSE;
-
+        paste_get_clipboard_text(sj);
         return replace_handle_input(sj, event, query, shortcut_char_replacing_complete, shortcut_char_replacing_cancel);
     }
 

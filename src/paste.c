@@ -21,7 +21,18 @@
 #include "jump_to_a_word.h"
 #include "replace_handle_input.h"
 
-static void paste_clipboard_text(ShortcutJump *sj) {
+void paste_get_clipboard_text(ShortcutJump *sj) {
+    GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
+    if (sj->clipboard_text == NULL) {
+        sj->clipboard_text = g_strdup("");
+        sj->inserting_clipboard = FALSE;
+    } else {
+        sj->inserting_clipboard = TRUE;
+    }
+}
+
+static void paste_insert_clipboard_text(ShortcutJump *sj) {
     gint chars_added = 0;
     gint c = 0;
     gint clipboard_text_len = strlen(sj->clipboard_text);
@@ -80,7 +91,7 @@ gboolean on_paste_key_release(GtkWidget *widget, GdkEventKey *event, gpointer us
         if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
             clear_occurances(sj);
         }
-        paste_clipboard_text(sj);
+        paste_insert_clipboard_text(sj);
         sj->inserting_clipboard = FALSE;
         g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
     }
