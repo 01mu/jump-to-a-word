@@ -95,9 +95,11 @@ static void shortcut_char_replacing_clear_indicators(ShortcutJump *sj) {
         Word word = g_array_index(sj->words, Word, i);
         if (word.valid_search) {
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position, 1);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position,
+                                   sj->replace_len);
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position, 1);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position,
+                                   sj->replace_len);
         }
     }
 }
