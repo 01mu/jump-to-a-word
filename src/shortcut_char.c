@@ -118,6 +118,8 @@ void shortcut_char_replacing_cancel(ShortcutJump *sj) {
 }
 
 void shortcut_char_replacing_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
+                     sj->words->len == 1 ? "" : "s");
     shortcut_char_replacing_clear_indicators(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
@@ -139,8 +141,6 @@ void shortcut_char_replacing_complete(ShortcutJump *sj) {
     sj->has_previous_action = TRUE;
 
     shortcut_end(sj, FALSE);
-    ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
-                     sj->words->len == 1 ? "" : "s");
 }
 
 void shortcut_char_get_chars(ShortcutJump *sj, gchar query) {

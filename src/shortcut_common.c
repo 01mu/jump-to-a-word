@@ -62,6 +62,8 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
 
+    g_free(sj->clipboard_text);
+
     g_string_free(sj->cache, TRUE);
     g_string_free(sj->buffer, TRUE);
     g_string_free(sj->replace_cache, TRUE);

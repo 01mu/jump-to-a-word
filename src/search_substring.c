@@ -88,11 +88,11 @@ void search_substring_end(ShortcutJump *sj) {
 }
 
 void search_substring_replace_complete(ShortcutJump *sj) {
+    ui_set_statusbar(TRUE, _("Substring replacement completed (%i change%s made)."), sj->search_results_count,
+                     sj->search_results_count == 1 ? "" : "s");
     search_substring_clear_replace_indicators(sj);
     search_substring_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    ui_set_statusbar(TRUE, _("Substring replacement completed (%i change%s made)."), sj->search_results_count,
-                     sj->search_results_count == 1 ? "" : "s");
     margin_markers_reset(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
