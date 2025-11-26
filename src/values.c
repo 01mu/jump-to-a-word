@@ -221,6 +221,9 @@ void init_sj_values(ShortcutJump *sj) {
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
 
+    sj->clipboard_text = g_strdup("");
+    sj->inserting_clipboard = FALSE;
+
     sj->replace_query = g_string_new("");
 
     sj->cache = g_string_new(screen_lines);
