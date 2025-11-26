@@ -140,8 +140,6 @@ void end_actions(ShortcutJump *sj) {
         search_word_end(sj);
     } else if (sj->current_mode == JM_SHORTCUT_WORD) {
         scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
-        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
         scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
         scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
@@ -150,8 +148,6 @@ void end_actions(ShortcutJump *sj) {
         search_word_end(sj);
     } else if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
         scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->buffer->len);
-        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->cache->str);
         scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
         scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
         scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
