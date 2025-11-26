@@ -74,6 +74,8 @@ void search_substring_end(ShortcutJump *sj) {
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
 
+    sj->waiting_after_single_instance = FALSE;
+
     g_free(sj->clipboard_text);
 
     g_string_free(sj->cache, TRUE);
@@ -187,6 +189,10 @@ static void search_substring_jump_complete(ShortcutJump *sj) {
 }
 
 void search_substring_jump_cancel(ShortcutJump *sj) {
+    if (sj->waiting_after_single_instance) {
+        return;
+    }
+
     search_substring_clear_jump_indicators(sj);
     margin_markers_reset(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
@@ -327,6 +333,12 @@ void search_substring_get_substrings(ShortcutJump *sj) {
                      sj->search_results_count == 1 ? "" : "s");
 }
 
+static gboolean timer_callback(gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+    search_substring_jump_complete(sj);
+    return G_SOURCE_REMOVE;
+}
+
 static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
@@ -334,6 +346,10 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
     gboolean is_other_char =
         strchr("[]\\;'.,/-=_+{`_+|}:<>?\"~)(*&^% $#@!)", (gchar)gdk_keyval_to_unicode(event->keyval)) ||
         (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9);
+
+    if (sj->waiting_after_single_instance) {
+        return FALSE;
+    }
 
     if (event->keyval == GDK_KEY_Return) {
         if (sj->search_word_pos != -1) {
@@ -379,7 +395,14 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
         annotation_display_substring(sj);
 
         if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
-            search_substring_jump_complete(sj);
+            if (sj->multicursor_mode == MC_ACCEPTING) {
+                search_substring_jump_complete(sj);
+            } else {
+                Word word = g_array_index(sj->words, Word, sj->search_word_pos);
+                scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);
+                sj->waiting_after_single_instance = TRUE;
+                return g_timeout_add(500, timer_callback, sj);
+            }
         }
 
         return TRUE;

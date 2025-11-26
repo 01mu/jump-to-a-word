@@ -299,6 +299,8 @@ typedef struct {
 
     gchar *clipboard_text;
     gboolean inserting_clipboard;
+
+    gboolean waiting_after_single_instance;
 } ShortcutJump;
 
 #endif

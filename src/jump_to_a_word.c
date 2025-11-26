@@ -74,6 +74,10 @@ void handle_action(gpointer user_data) {
     MulticusrorMode mm = sj->multicursor_mode;
     JumpMode jm = sj->current_mode;
 
+    if (sj->waiting_after_single_instance) {
+        return;
+    }
+
     if (ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END) {
         if (mm == MC_DISABLED) {
             if (jm == JM_SEARCH) {
