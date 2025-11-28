@@ -347,7 +347,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_INTEGER(replace_action, "replace_action", "replace_action", RA_REPLACE);
 
     SET_SETTING_COLOR(text_color, "text_color", 0xFFFFFF);
-    SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0xFFFFFF);
+    SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0x46383D);
     SET_SETTING_COLOR(tag_color, "tag_color", 0xFFFFFF);
     SET_SETTING_COLOR(highlight_color, "highlight_color", 0x00FF00);
 
