@@ -56,10 +56,10 @@ static void line_insert_delete_blank_lines(ShortcutJump *sj) {
 }
 
 static void line_insert_remove_added_new_lines(ShortcutJump *sj) {
-    if (sj->added_new_line_insert) {
+    if (sj->added_new_line_insert > 0) {
         gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, 1);
-        sj->added_new_line_insert = FALSE;
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, chars_in_doc - 1, sj->added_new_line_insert);
+        sj->added_new_line_insert = 0;
     }
 }
 
@@ -191,7 +191,14 @@ static GArray *line_insert_get_unique(ShortcutJump *sj, GArray *lines) {
 
             gint start = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, line, 0);
             gint end = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line, 0);
-            GString *l = g_string_new(sci_get_contents_range(sj->sci, start, end));
+            GString *l;
+
+            if (start != end) {
+                l = g_string_new(sci_get_contents_range(sj->sci, start, end));
+            } else {
+                l = g_string_new("");
+            }
+
             GString *s = g_string_new("");
             for (gint i = 0; i < l->len; i++) {
                 if (l->str[i] == ' ' || l->str[i] == '\t') {
@@ -216,13 +223,6 @@ static GArray *line_insert_get_unique(ShortcutJump *sj, GArray *lines) {
 
 static GArray *set_words_from_lines(ShortcutJump *sj, GArray *lines, GArray *lines_to_insert) {
     gint lines_added = 0;
-
-    gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-    gint last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, chars_in_doc - 1, 0);
-    if (sj->last_position == chars_in_doc && last_char != '\n') {
-        scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
-        sj->added_new_line_insert = TRUE;
-    }
 
     for (gint i = 0; i < lines->len; i++) {
         LST line = g_array_index(lines, LST, i);
@@ -300,6 +300,23 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
     GArray *lines_to_insert = g_array_new(TRUE, FALSE, sizeof(Word));
 
     lines = line_insert_get_unique(sj, lines);
+
+    sj->added_new_line_insert = 0;
+
+    gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+    gint last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, chars_in_doc - 1, 0);
+    if (sj->last_position == chars_in_doc && last_char != '\n') {
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
+        sj->added_new_line_insert += 1;
+    }
+
+    chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+    Word last_word = g_array_index(sj->multicursor_words, Word, sj->multicursor_words->len - 1);
+    if (last_word.word->str[last_word.word->len - 1] == '\n') {
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
+        sj->added_new_line_insert += 1;
+    }
+
     lines_to_insert = set_words_from_lines(sj, lines, lines_to_insert);
 
     for (gint i = 0; i < lines->len; i++) {
@@ -338,9 +355,6 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
             sj->search_results_count++;
         }
     }
-
-    // sj->clipboard_text = g_strdup("");
-    // sj->inserting_clipboard = FALSE;
 
     sj->search_word_pos = -1;
     sj->search_word_pos_first = -1;
@@ -417,6 +431,16 @@ void line_insert_from_search(ShortcutJump *sj) {
     GArray *lines_to_insert = g_array_new(TRUE, FALSE, sizeof(Word));
 
     lines = line_insert_get_unique(sj, lines);
+
+    sj->added_new_line_insert = 0;
+
+    gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+    gint last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, chars_in_doc - 1, 0);
+    if (sj->last_position == chars_in_doc && last_char != '\n') {
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
+        sj->added_new_line_insert += 1;
+    }
+
     lines_to_insert = set_words_from_lines(sj, lines, lines_to_insert);
 
     for (gint i = 0; i < lines->len; i++) {

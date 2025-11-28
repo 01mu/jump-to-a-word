@@ -295,7 +295,7 @@ typedef struct {
     ReplaceAction previous_replace_action;
     gboolean has_previous_action;
 
-    gboolean added_new_line_insert;
+    gint added_new_line_insert;
 
     gchar *clipboard_text;
     gboolean inserting_clipboard;
