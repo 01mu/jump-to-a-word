@@ -326,7 +326,9 @@ static void on_panel_show(GtkWidget *widget, gpointer dummy) {
 }
 
 static void create_panel(ShortcutJump *sj) {
-    cancel_actions(sj);
+    if (sj->multicursor_mode == MC_DISABLED) {
+        cancel_actions(sj);
+    }
 
     sj->tl_window->panel =
         g_object_new(GTK_TYPE_WINDOW, "decorated", FALSE, "default-width", 275, "default-height", 275, "transient-for",
