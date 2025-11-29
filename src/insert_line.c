@@ -193,7 +193,7 @@ static GArray *line_insert_get_unique(ShortcutJump *sj, GArray *lines) {
             gint end = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line, 0);
             GString *l;
 
-            if (start != end) {
+            if (start < end) {
                 l = g_string_new(sci_get_contents_range(sj->sci, start, end));
             } else {
                 l = g_string_new("");
@@ -312,7 +312,8 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
 
     chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
     Word last_word = g_array_index(sj->multicursor_words, Word, sj->multicursor_words->len - 1);
-    if (last_word.word->str[last_word.word->len - 1] == '\n') {
+    gint last_word_last_char_pos = last_word.starting_doc + last_word.word->len;
+    if (last_word.word->str[last_word.word->len - 1] == '\n' && chars_in_doc == last_word_last_char_pos) {
         scintilla_send_message(sj->sci, SCI_INSERTTEXT, chars_in_doc, (sptr_t) "\n");
         sj->added_new_line_insert += 1;
     }
@@ -462,13 +463,18 @@ void line_insert_from_search(ShortcutJump *sj) {
     sj->first_position = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line_on_screen, 0);
     sj->last_position = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, last_line_on_screen, 0);
 
-    gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
-
     sj->replace_query = g_string_new("");
 
-    sj->cache = g_string_new(screen_lines);
-    sj->buffer = g_string_new(screen_lines);
-    sj->replace_cache = g_string_new(screen_lines);
+    if (sj->first_position < sj->last_position) {
+        gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+        sj->cache = g_string_new(screen_lines);
+        sj->buffer = g_string_new(screen_lines);
+        sj->replace_cache = g_string_new(screen_lines);
+    } else {
+        sj->cache = g_string_new("");
+        sj->buffer = g_string_new("");
+        sj->replace_cache = g_string_new("");
+    }
 
     sj->search_results_count = 0;
 
