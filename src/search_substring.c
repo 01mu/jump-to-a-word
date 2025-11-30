@@ -400,6 +400,7 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
             } else {
                 Word word = g_array_index(sj->words, Word, sj->search_word_pos);
                 scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);
+                annotation_clear(sj->sci, sj->eol_message_line);
                 sj->waiting_after_single_instance = TRUE;
                 return g_timeout_add(500, timer_callback, sj);
             }

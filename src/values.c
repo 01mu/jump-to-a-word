@@ -192,6 +192,7 @@ void get_view_positions(ShortcutJump *sj) {
     gint last_position = get_last_position(sj, last_line_on_screen);
     gint current_cursor_pos = get_cursor_position(sj->sci, first_position, last_position);
 
+    // FIXME screen position after shortcut insertion when line wrapping occurs on page
     sj->first_line_on_screen = first_line_on_screen;
     sj->lines_on_screen = lines_on_screen;
     sj->last_line_on_screen = last_line_on_screen;
