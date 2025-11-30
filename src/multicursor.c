@@ -74,15 +74,12 @@ static void multicursor_replace_clear_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
         if (word.valid_search) {
-            gint start_pos = sj->first_position + word.replace_pos;
-            gint clear_len = sj->replace_len;
-            if (sj->replace_len == 0) {
-                clear_len = word.word->len;
-            }
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, clear_len);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, sj->first_position + word.replace_pos,
+                                   sj->replace_len);
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start_pos, clear_len);
+            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, sj->first_position + word.replace_pos,
+                                   sj->replace_len);
         }
     }
 }

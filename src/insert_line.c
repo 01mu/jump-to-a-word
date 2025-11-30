@@ -31,12 +31,9 @@
 static void line_insert_clear_replace_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
-        gint clear_len = word.word->len + sj->replace_len;
-        if (sj->replace_len == 0) {
-            clear_len = word.word->len;
-        }
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos, clear_len);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, sj->first_position + word.replace_pos,
+                               sj->replace_len);
     }
 }
 
