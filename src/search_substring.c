@@ -444,7 +444,7 @@ void serach_substring_init(ShortcutJump *sj) {
     define_indicators(sj->sci, sj);
 
     if (sj->in_selection) {
-        if (!sj->selection_is_a_char && !sj->selection_is_a_word && sj->selection_is_a_line) {
+        if (!sj->selection_is_a_char && !sj->selection_is_a_word && sj->selection_is_within_a_line) {
             sj->in_selection = FALSE;
             init_sj_values(sj);
             search_substring_set_query(sj);

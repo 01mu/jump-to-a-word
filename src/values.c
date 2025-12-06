@@ -38,12 +38,12 @@ static gint get_first_line_on_screen(ShortcutJump *sj) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
     if (!z && sj->in_selection && sj->config_settings->search_from_selection && !sj->selection_is_a_char) {
-        if (sj->selection_is_a_line && sj->config_settings->search_selection_if_line) {
+        if (sj->selection_is_within_a_line && sj->config_settings->search_selection_if_line) {
             gint first_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->selection_start, 0);
             return scintilla_send_message(sj->sci, SCI_DOCLINEFROMVISIBLE, first_line, 0);
         }
 
-        if (!sj->selection_is_a_word && !sj->selection_is_a_line) {
+        if (!sj->selection_is_a_word && !sj->selection_is_within_a_line) {
             gint first_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->selection_start, 0);
             return scintilla_send_message(sj->sci, SCI_DOCLINEFROMVISIBLE, first_line, 0);
         }
@@ -57,13 +57,13 @@ static gint get_number_of_lines_on_screen(ShortcutJump *sj) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
     if (!z && sj->in_selection && sj->config_settings->search_from_selection && !sj->selection_is_a_char) {
-        if (sj->selection_is_a_line && sj->config_settings->search_selection_if_line) {
+        if (sj->selection_is_within_a_line && sj->config_settings->search_selection_if_line) {
             gint first_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->selection_start, 0);
             gint last_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->selection_end, 0);
             return last_line - first_line;
         }
 
-        if (!sj->selection_is_a_word && !sj->selection_is_a_line) {
+        if (!sj->selection_is_a_word && !sj->selection_is_within_a_line) {
             gint first_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->selection_start, 0);
             gint last_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->selection_end, 0);
             return last_line - first_line;
@@ -77,11 +77,11 @@ static gint get_first_position(ShortcutJump *sj, gint first_line_on_screen) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
     if (!z && sj->in_selection && sj->config_settings->search_from_selection && !sj->selection_is_a_char) {
-        if (sj->selection_is_a_line && sj->config_settings->search_selection_if_line) {
+        if (sj->selection_is_within_a_line && sj->config_settings->search_selection_if_line) {
             return sj->selection_start;
         }
 
-        if (!sj->selection_is_a_word && !sj->selection_is_a_line) {
+        if (!sj->selection_is_a_word && !sj->selection_is_within_a_line) {
             return sj->selection_start;
         }
     }
@@ -100,11 +100,11 @@ static gint get_last_position(ShortcutJump *sj, gint last_line_on_screen) {
     gboolean z = sj->in_selection && sj->replace_instant && sj->current_mode == JM_SUBSTRING;
 
     if (!z && sj->in_selection && sj->config_settings->search_from_selection && !sj->selection_is_a_char) {
-        if (sj->selection_is_a_line && sj->config_settings->search_selection_if_line) {
+        if (sj->selection_is_within_a_line && sj->config_settings->search_selection_if_line) {
             return sj->selection_end;
         }
 
-        if (!sj->selection_is_a_word && !sj->selection_is_a_line) {
+        if (!sj->selection_is_a_word && !sj->selection_is_within_a_line) {
             return sj->selection_end;
         }
     }

@@ -73,5 +73,5 @@ void set_selection_info(ShortcutJump *sj) {
     sj->selection_end = selection_end;
     sj->selection_is_a_char = selection_end == selection_start + 1;
     sj->selection_is_a_word = selection_is_a_word(sj->sci, selection_start, selection_end);
-    sj->selection_is_a_line = selection_is_a_line(sj, sj->sci, selection_start, selection_end);
+    sj->selection_is_within_a_line = selection_is_a_line(sj, sj->sci, selection_start, selection_end);
 }

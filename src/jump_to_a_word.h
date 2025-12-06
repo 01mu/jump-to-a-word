@@ -274,7 +274,7 @@ typedef struct {
     gboolean in_selection;
     gboolean selection_is_a_word;
     gboolean selection_is_a_char;
-    gboolean selection_is_a_line;
+    gboolean selection_is_within_a_line;
     gint selection_start;
     gint selection_end;
 

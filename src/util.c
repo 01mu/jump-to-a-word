@@ -29,7 +29,7 @@
 #include "shortcut_word.h"
 
 gint get_lfs(ShortcutJump *sj, gint current_line) {
-    if (sj->in_selection && sj->selection_is_a_line) {
+    if (sj->in_selection && sj->selection_is_within_a_line) {
         return 0;
     }
 

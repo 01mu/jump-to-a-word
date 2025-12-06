@@ -57,19 +57,6 @@ static void line_insert_remove_added_new_lines(ShortcutJump *sj) {
     }
 }
 
-void line_insert_set_query(ShortcutJump *sj) {
-    if (sj->in_selection) {
-        sj->in_selection = FALSE;
-        init_sj_values(sj);
-        search_substring_set_query(sj);
-        search_substring_get_substrings(sj);
-    } else {
-        init_sj_values(sj);
-        search_word_get_words(sj);
-        search_word_set_query(sj, TRUE);
-    }
-}
-
 void line_insert_end(ShortcutJump *sj) {
     for (gint i = 0; i < sj->searched_words_for_line_insert->len; i++) {
         Word word = g_array_index(sj->searched_words_for_line_insert, Word, i);

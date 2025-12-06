@@ -101,7 +101,18 @@ void handle_action(gpointer user_data) {
             if (jm == JM_NONE) {
                 set_sj_scintilla_object(sj);
                 set_selection_info(sj);
-                line_insert_set_query(sj);
+
+                if (sj->in_selection) {
+                    sj->in_selection = FALSE;
+                    init_sj_values(sj);
+                    search_substring_set_query(sj);
+                    search_substring_get_substrings(sj);
+                } else {
+                    init_sj_values(sj);
+                    search_word_get_words(sj);
+                    search_word_set_query(sj, TRUE);
+                }
+
                 define_indicators(sj->sci, sj);
                 line_insert_from_search(sj);
                 return;
