@@ -76,10 +76,10 @@ static void multicursor_replace_clear_indicators(ShortcutJump *sj) {
         if (word.valid_search) {
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, sj->first_position + word.replace_pos,
-                                   sj->replace_len);
+                                   sj->replace_len == 0 ? word.word->len : sj->replace_len);
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, sj->first_position + word.replace_pos,
-                                   sj->replace_len);
+                                   sj->replace_len == 0 ? word.word->len : sj->replace_len);
         }
     }
 }
@@ -126,8 +126,6 @@ void multicursor_replace_complete(ShortcutJump *sj) {
 }
 
 void multicursor_transpose_cancel(ShortcutJump *sj) {
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     multicursor_replace_clear_indicators(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
