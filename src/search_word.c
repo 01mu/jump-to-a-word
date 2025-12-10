@@ -101,6 +101,7 @@ void search_word_replace_complete(ShortcutJump *sj) {
     search_word_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     margin_markers_reset(sj);
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -124,6 +125,7 @@ void search_word_replace_cancel(ShortcutJump *sj) {
     search_word_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     margin_markers_reset(sj);
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -175,6 +177,10 @@ void search_word_jump_complete(ShortcutJump *sj) {
 
     margin_markers_reset(sj);
 
+    if (sj->multicursor_mode != MC_ACCEPTING) {
+        scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    }
+
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -195,6 +201,7 @@ void search_word_jump_cancel(ShortcutJump *sj) {
 
     search_word_clear_jump_indicators(sj);
     margin_markers_reset(sj);
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -402,6 +409,7 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
                 scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);
                 annotation_clear(sj->sci, sj->eol_message_line);
                 sj->waiting_after_single_instance = TRUE;
+                scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
                 // TODO add settings option for interval
                 return g_timeout_add(500, timer_callback, sj);
             }
