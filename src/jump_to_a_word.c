@@ -190,6 +190,8 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
             sj->paste_key_release_id =
                 g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(on_paste_key_release_replace), sj);
         }
+
+        return TRUE;
     }
 
     if ((sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) &&
