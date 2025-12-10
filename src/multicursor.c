@@ -32,6 +32,16 @@ static void multicursor_start(ShortcutJump *sj) {
     sj->multicursor_last_pos = 0;
     sj->multicursor_eol_message = g_string_new("");
     sj->multicursor_words = g_array_new(TRUE, FALSE, sizeof(Word));
+
+    sj->search_word_pos = -1;
+    sj->search_word_pos_first = -1;
+    sj->search_word_pos_last = -1;
+    sj->search_change_made = FALSE;
+    sj->cursor_in_word = FALSE;
+    sj->delete_added_bracket = FALSE;
+    sj->replace_len = 0;
+    sj->replace_instant = FALSE;
+
     gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
     sj->multicusor_eol_message_line = line;
