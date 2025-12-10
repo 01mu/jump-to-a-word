@@ -18,12 +18,18 @@
 
 #include <plugindata.h>
 
+#include "annotation.h"
 #include "jump_to_a_word.h"
 #include "replace_handle_input.h"
+#include "search_substring.h"
+#include "search_word.h"
+#include "shortcut_char.h"
 
 void paste_get_clipboard_text(ShortcutJump *sj) {
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+
     sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
+
     if (sj->clipboard_text == NULL) {
         sj->clipboard_text = g_strdup("");
         sj->inserting_clipboard = FALSE;
@@ -85,8 +91,9 @@ static void paste_insert_clipboard_text(ShortcutJump *sj) {
     sj->search_change_made = TRUE;
 }
 
-gboolean on_paste_key_release(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+gboolean on_paste_key_release_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
+
     if (sj->inserting_clipboard) {
         if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
             clear_occurances(sj);
@@ -95,5 +102,38 @@ gboolean on_paste_key_release(GtkWidget *widget, GdkEventKey *event, gpointer us
         sj->inserting_clipboard = FALSE;
         g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
     }
+
+    return TRUE;
+}
+
+gboolean on_paste_key_release_word_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    if (sj->inserting_clipboard) {
+        g_string_append(sj->search_query, sj->clipboard_text);
+
+        search_word_mark_words(sj, FALSE);
+        annotation_display_search(sj);
+
+        sj->inserting_clipboard = FALSE;
+        g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
+    }
+
+    return TRUE;
+}
+
+gboolean on_paste_key_release_substring_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    if (sj->inserting_clipboard) {
+        g_string_append(sj->search_query, sj->clipboard_text);
+
+        search_substring_get_substrings(sj);
+        annotation_display_substring(sj);
+
+        sj->inserting_clipboard = FALSE;
+        g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
+    }
+
     return TRUE;
 }

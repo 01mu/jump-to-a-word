@@ -22,6 +22,7 @@
 #include "annotation.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
+#include "paste.h"
 #include "search_common.h"
 #include "selection.h"
 #include "util.h"
@@ -100,7 +101,6 @@ void search_word_replace_complete(ShortcutJump *sj) {
     search_word_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     margin_markers_reset(sj);
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -124,7 +124,6 @@ void search_word_replace_cancel(ShortcutJump *sj) {
     search_word_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     margin_markers_reset(sj);
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -176,10 +175,6 @@ void search_word_jump_complete(ShortcutJump *sj) {
 
     margin_markers_reset(sj);
 
-    if (sj->multicursor_mode != MC_ACCEPTING) {
-        scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    }
-
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -200,7 +195,6 @@ void search_word_jump_cancel(ShortcutJump *sj) {
 
     search_word_clear_jump_indicators(sj);
     margin_markers_reset(sj);
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
@@ -416,10 +410,10 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
         return TRUE;
     }
 
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
-
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
+
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
         scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
     }
 
@@ -487,7 +481,7 @@ void search_word_init(ShortcutJump *sj, gboolean instant_replace) {
     init_sj_values(sj);
     search_word_get_words(sj);
     search_word_set_query(sj, instant_replace);
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
+    paste_get_clipboard_text(sj);
     connect_key_press_action(sj, on_key_press_search_word);
     connect_click_action(sj, on_click_event_search);
     annotation_display_search(sj);

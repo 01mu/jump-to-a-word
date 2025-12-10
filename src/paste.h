@@ -23,6 +23,8 @@
 #include <geanyplugin.h>
 
 void paste_get_clipboard_text(ShortcutJump *sj);
-gboolean on_paste_key_release(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
+gboolean on_paste_key_release_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
+gboolean on_paste_key_release_word_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
+gboolean on_paste_key_release_substring_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data);
 
 #endif
