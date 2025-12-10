@@ -347,6 +347,8 @@ void shortcut_char_init(ShortcutJump *sj) {
     define_indicators(sj->sci, sj);
     annotation_display_shortcut_char(sj);
 
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
+
     if (sj->in_selection) {
         if (sj->selection_is_a_char && sj->config_settings->use_selected_word_or_char) {
             gchar query = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->selection_start, sj->selection_end);
