@@ -174,22 +174,20 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
-    if (nt->modificationType & (SC_MOD_INSERTCHECK) && strcmp(nt->text, sj->clipboard_text) == 0) {
+    if (sj->current_mode != JM_NONE && nt->modificationType & (SC_MOD_INSERTCHECK) &&
+        strcmp(nt->text, sj->clipboard_text) == 0) {
+        scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
+        sj->inserting_clipboard = TRUE;
+
         if (sj->current_mode == JM_SUBSTRING) {
-            scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
-            sj->inserting_clipboard = TRUE;
             sj->paste_key_release_id =
                 g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(on_paste_key_release_substring_search), sj);
         } else if (sj->current_mode == JM_SEARCH) {
-            scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
-            sj->inserting_clipboard = TRUE;
             sj->paste_key_release_id =
                 g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(on_paste_key_release_word_search), sj);
         } else if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_MULTICURSOR ||
                    sj->current_mode == JM_INSERTING_LINE || sj->current_mode == JM_INSERTING_LINE_MULTICURSOR ||
                    sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_REPLACE_SUBSTRING) {
-            scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
-            sj->inserting_clipboard = TRUE;
             sj->paste_key_release_id =
                 g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(on_paste_key_release_replace), sj);
         }
