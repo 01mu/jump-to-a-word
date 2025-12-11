@@ -302,11 +302,18 @@ static void multicursor_toggle(ShortcutJump *sj) {
 
 void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-    multicursor_toggle(sj);
+
+    if (!sj->waiting_after_single_instance) {
+        multicursor_toggle(sj);
+    }
 }
 
 gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-    multicursor_toggle(sj);
+
+    if (!sj->waiting_after_single_instance) {
+        multicursor_toggle(sj);
+    }
+
     return TRUE;
 }

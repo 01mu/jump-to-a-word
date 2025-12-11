@@ -74,10 +74,6 @@ void handle_action(gpointer user_data) {
     MulticusrorMode mm = sj->multicursor_mode;
     JumpMode jm = sj->current_mode;
 
-    if (sj->waiting_after_single_instance) {
-        return;
-    }
-
     if (ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END) {
         if (mm == MC_DISABLED) {
             if (jm == JM_SEARCH) {
@@ -147,10 +143,21 @@ void handle_action(gpointer user_data) {
                      replace_conf[ra].label, mm == MC_ACCEPTING ? "enabled" : "disabled");
 }
 
-void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) { handle_action(user_data); }
+void replace_search_cb(GtkMenuItem *menu_item, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    if (!sj->waiting_after_single_instance) {
+        handle_action(user_data);
+    }
+}
 
 gboolean replace_search_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
-    handle_action(user_data);
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    if (!sj->waiting_after_single_instance) {
+        handle_action(user_data);
+    }
+
     return TRUE;
 }
 
