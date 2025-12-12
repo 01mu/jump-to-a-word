@@ -181,8 +181,8 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
-    if (sj->current_mode != JM_NONE && nt->modificationType & (SC_MOD_INSERTCHECK) &&
-        strcmp(nt->text, sj->clipboard_text) == 0) {
+    if (sj->multicursor_mode == MC_DISABLED && sj->current_mode != JM_NONE &&
+        nt->modificationType & (SC_MOD_INSERTCHECK) && strcmp(nt->text, sj->clipboard_text) == 0) {
         scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
         sj->inserting_clipboard = TRUE;
 
@@ -202,8 +202,9 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
-    if ((sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) &&
-        nt->modificationType & (SC_MOD_INSERTTEXT) && !sj->inserting_clipboard) {
+    if (!sj->inserting_clipboard &&
+        (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) &&
+        nt->modificationType & (SC_MOD_INSERTTEXT)) {
         if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
             strcmp(nt->text, "\'") == 0 || strcmp(nt->text, "\"") == 0 || strcmp(nt->text, "`") == 0 ||
             strcmp(nt->text, ")") == 0) {

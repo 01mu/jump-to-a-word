@@ -42,6 +42,8 @@ static void multicursor_start(ShortcutJump *sj) {
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
 
+    sj->waiting_after_single_instance = FALSE;
+
     gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
     sj->multicusor_eol_message_line = line;
