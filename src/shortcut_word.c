@@ -28,6 +28,9 @@
 
 void shortcut_word_complete(ShortcutJump *sj, gint pos, gint word_length, gint line) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->first_position, 0);
+    scintilla_send_message(sj->sci, SCI_SETTARGETEND, sj->first_position + sj->buffer->len, 0);
+    scintilla_send_message(sj->sci, SCI_REPLACETARGET, -1, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
 
@@ -66,6 +69,9 @@ void shortcut_word_complete(ShortcutJump *sj, gint pos, gint word_length, gint l
 
 void shortcut_word_cancel(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->first_position, 0);
+    scintilla_send_message(sj->sci, SCI_SETTARGETEND, sj->first_position + sj->buffer->len, 0);
+    scintilla_send_message(sj->sci, SCI_REPLACETARGET, -1, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
