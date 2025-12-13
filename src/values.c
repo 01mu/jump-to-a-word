@@ -205,7 +205,13 @@ void init_sj_values(ShortcutJump *sj) {
     set_sj_scintilla_object(sj);
     get_view_positions(sj);
 
-    gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+    gchar *screen_lines;
+
+    if (sj->first_position < sj->last_position) {
+        screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+    } else {
+        screen_lines = g_strdup("");
+    }
 
     sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     sj->eol_message = g_string_new("");
@@ -230,6 +236,8 @@ void init_sj_values(ShortcutJump *sj) {
     sj->cache = g_string_new(screen_lines);
     sj->buffer = g_string_new(screen_lines);
     sj->replace_cache = g_string_new(screen_lines);
+
+    g_free(screen_lines);
 
     gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
     gchar last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->last_position - 1, 0);
