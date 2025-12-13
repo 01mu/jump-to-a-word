@@ -485,7 +485,10 @@ void search_word_init(ShortcutJump *sj, gboolean instant_replace) {
     sj->current_mode = JM_SEARCH;
     sj->sci = get_scintilla_object();
     set_selection_info(sj);
-    define_indicators(sj->sci, sj);
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
+
     init_sj_values(sj);
     search_word_get_words(sj);
     search_word_set_query(sj, instant_replace);

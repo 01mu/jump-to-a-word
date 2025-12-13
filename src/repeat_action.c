@@ -85,7 +85,9 @@ static void repeat_action(gpointer user_data) {
     sj->sci = get_scintilla_object();
     set_selection_info(sj);
     get_view_positions(sj);
-    define_indicators(sj->sci, sj);
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
 
     gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
 

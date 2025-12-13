@@ -233,7 +233,9 @@ void replace_instant_init(ShortcutJump *sj) {
     set_selection_info(sj);
     sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     sj->replace_instant = TRUE;
-    define_indicators(sj->sci, sj);
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
 
     if (sj->in_selection) {
         if (sj->selection_is_a_char) {

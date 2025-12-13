@@ -109,7 +109,9 @@ void handle_action(gpointer user_data) {
                     search_word_set_query(sj, TRUE);
                 }
 
-                define_indicators(sj->sci, sj);
+                define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                                  sj->config_settings->text_color);
+
                 line_insert_from_search(sj);
                 return;
             } else if (jm == JM_SUBSTRING) {

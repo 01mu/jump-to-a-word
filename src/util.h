@@ -25,7 +25,7 @@
 
 void connect_key_press_action(ShortcutJump *sj, KeyPressCallback function);
 void connect_click_action(ShortcutJump *sj, ClickCallback function);
-void define_indicators(ScintillaObject *sci, ShortcutJump *sj);
+void define_indicators(ScintillaObject *sci, gint tag_color, gint highlight_color, gint text_color);
 void disconnect_key_press_action(ShortcutJump *sj);
 void disconnect_click_action(ShortcutJump *sj);
 gint set_cursor_position_with_lfs(ShortcutJump *sj);

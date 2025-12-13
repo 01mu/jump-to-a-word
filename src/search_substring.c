@@ -442,7 +442,9 @@ void serach_substring_init(ShortcutJump *sj) {
     sj->current_mode = JM_SUBSTRING;
     sj->sci = get_scintilla_object();
     set_selection_info(sj);
-    define_indicators(sj->sci, sj);
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
 
     if (sj->in_selection) {
         if (!sj->selection_is_a_char && !sj->selection_is_a_word && sj->selection_is_within_a_line) {

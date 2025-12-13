@@ -26,7 +26,10 @@
 
 static void multicursor_start(ShortcutJump *sj) {
     sj->sci = get_scintilla_object();
-    define_indicators(sj->sci, sj);
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
+
     get_view_positions(sj);
     sj->multicursor_first_pos = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
     sj->multicursor_last_pos = 0;

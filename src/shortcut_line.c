@@ -91,7 +91,9 @@ void shortcut_line_init(ShortcutJump *sj) {
     sj->sci = get_scintilla_object();
     set_selection_info(sj);
     init_sj_values(sj);
-    define_indicators(sj->sci, sj);
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
 
     gint lfs_added = 0;
     gint prev_line = sj->first_line_on_screen;

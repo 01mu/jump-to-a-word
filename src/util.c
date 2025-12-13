@@ -71,22 +71,22 @@ gboolean mouse_movement_performed(ShortcutJump *sj, const GdkEventButton *event)
            event->type == GDK_2BUTTON_PRESS || event->type == GDK_3BUTTON_PRESS;
 }
 
-void define_indicators(ScintillaObject *sci, ShortcutJump *sj) {
+void define_indicators(ScintillaObject *sci, gint tag_color, gint highlight_color, gint text_color) {
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TAG, INDIC_FULLBOX);
     scintilla_send_message(sci, SCI_INDICSETOUTLINEALPHA, INDICATOR_TAG, 120);
-    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TAG, sj->config_settings->tag_color);
+    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TAG, tag_color);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_HIGHLIGHT, INDIC_FULLBOX);
     scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_HIGHLIGHT, 120);
-    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT, sj->config_settings->highlight_color);
+    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_HIGHLIGHT, highlight_color);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_TEXT, INDIC_TEXTFORE);
     scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_TEXT, 120);
-    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TEXT, sj->config_settings->text_color);
+    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_TEXT, text_color);
 
     scintilla_send_message(sci, SCI_INDICSETSTYLE, INDICATOR_MULTICURSOR, INDIC_PLAIN);
     scintilla_send_message(sci, SCI_INDICSETALPHA, INDICATOR_MULTICURSOR, 0);
-    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_MULTICURSOR, sj->config_settings->highlight_color);
+    scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_MULTICURSOR, highlight_color);
 }
 
 void connect_key_press_action(ShortcutJump *sj, KeyPressCallback function) {

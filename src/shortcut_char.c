@@ -332,7 +332,9 @@ void shortcut_char_init_with_query(ShortcutJump *sj, gchar query) {
     sj->current_mode = JM_SHORTCUT_CHAR_ACCEPTING;
     sj->sci = get_scintilla_object();
     init_sj_values(sj);
-    define_indicators(sj->sci, sj);
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
 
     if (sj->in_selection) {
         if (sj->selection_is_a_char && sj->config_settings->use_selected_word_or_char) {
@@ -356,7 +358,10 @@ void shortcut_char_init(ShortcutJump *sj) {
     sj->sci = get_scintilla_object();
     set_selection_info(sj);
     init_sj_values(sj);
-    define_indicators(sj->sci, sj);
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
+
     annotation_display_shortcut_char(sj);
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
