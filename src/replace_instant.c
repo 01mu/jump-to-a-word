@@ -229,7 +229,7 @@ void replace_word_init(ShortcutJump *sj) {
 }
 
 void replace_instant_init(ShortcutJump *sj) {
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     set_selection_info(sj);
     sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     sj->replace_instant = TRUE;

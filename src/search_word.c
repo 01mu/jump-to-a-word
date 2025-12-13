@@ -483,7 +483,7 @@ void search_word_set_query(ShortcutJump *sj, gboolean instant_replace) {
 
 void search_word_init(ShortcutJump *sj, gboolean instant_replace) {
     sj->current_mode = JM_SEARCH;
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     set_selection_info(sj);
     define_indicators(sj->sci, sj);
     init_sj_values(sj);

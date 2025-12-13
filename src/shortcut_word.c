@@ -110,7 +110,7 @@ static GString *shortcut_word_hide_word(const ShortcutJump *sj, GArray *words, G
 
 void shortcut_word_init(ShortcutJump *sj) {
     sj->current_mode = JM_SHORTCUT_WORD;
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     set_selection_info(sj);
     init_sj_values(sj);
     define_indicators(sj->sci, sj);

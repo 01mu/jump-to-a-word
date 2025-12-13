@@ -23,15 +23,12 @@
 
 ScintillaObject *get_scintilla_object() {
     GeanyDocument *doc = document_get_current();
+
     if (!doc->is_valid) {
         exit(1);
     }
-    return doc->editor->sci;
-}
 
-void set_sj_scintilla_object(ShortcutJump *sj) {
-    ScintillaObject *sci = get_scintilla_object();
-    sj->sci = sci;
+    return doc->editor->sci;
 }
 
 static gint get_first_line_on_screen(ShortcutJump *sj) {
@@ -202,7 +199,6 @@ void get_view_positions(ShortcutJump *sj) {
 }
 
 void init_sj_values(ShortcutJump *sj) {
-    set_sj_scintilla_object(sj);
     get_view_positions(sj);
 
     gchar *screen_lines;
@@ -212,6 +208,12 @@ void init_sj_values(ShortcutJump *sj) {
     } else {
         screen_lines = g_strdup("");
     }
+
+    sj->cache = g_string_new(screen_lines);
+    sj->buffer = g_string_new(screen_lines);
+    sj->replace_cache = g_string_new(screen_lines);
+
+    g_free(screen_lines);
 
     sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     sj->eol_message = g_string_new("");
@@ -232,12 +234,6 @@ void init_sj_values(ShortcutJump *sj) {
     sj->inserting_clipboard = FALSE;
 
     sj->replace_query = g_string_new("");
-
-    sj->cache = g_string_new(screen_lines);
-    sj->buffer = g_string_new(screen_lines);
-    sj->replace_cache = g_string_new(screen_lines);
-
-    g_free(screen_lines);
 
     gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
     gchar last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->last_position - 1, 0);

@@ -21,7 +21,6 @@
 
 #include "jump_to_a_word.h"
 
-void set_sj_scintilla_object(ShortcutJump *sj);
 void init_sj_values(ShortcutJump *sj);
 ScintillaObject *get_scintilla_object();
 void margin_markers_reset(ShortcutJump *sj);

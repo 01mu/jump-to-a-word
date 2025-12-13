@@ -25,7 +25,7 @@
 #include "values.h"
 
 static void multicursor_start(ShortcutJump *sj) {
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     define_indicators(sj->sci, sj);
     get_view_positions(sj);
     sj->multicursor_first_pos = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);

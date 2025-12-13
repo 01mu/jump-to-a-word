@@ -82,7 +82,7 @@ static void repeat_action(gpointer user_data) {
         return;
     }
 
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     set_selection_info(sj);
     get_view_positions(sj);
     define_indicators(sj->sci, sj);

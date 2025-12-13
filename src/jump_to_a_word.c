@@ -95,7 +95,7 @@ void handle_action(gpointer user_data) {
     } else if (ra == RA_INSERT_NEXT_LINE || ra == RA_INSERT_PREVIOUS_LINE) {
         if (mm == MC_DISABLED) {
             if (jm == JM_NONE) {
-                set_sj_scintilla_object(sj);
+                sj->sci = get_scintilla_object();
                 set_selection_info(sj);
 
                 if (sj->in_selection) {
@@ -171,7 +171,7 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
 
     // TODO add multicursor selection using alt key
     if (sj->multicursor_mode == MC_ACCEPTING && nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION) {
-        set_sj_scintilla_object(sj);
+        sj->sci = get_scintilla_object();
         gint selection_start = scintilla_send_message(sj->sci, SCI_GETSELECTIONSTART, 0, 0);
         gint selection_end = scintilla_send_message(sj->sci, SCI_GETSELECTIONEND, 0, 0);
         if (selection_start == selection_end) {

@@ -318,7 +318,7 @@ static gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event
 
 void shortcut_char_init_with_query(ShortcutJump *sj, gchar query) {
     sj->current_mode = JM_SHORTCUT_CHAR_ACCEPTING;
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     init_sj_values(sj);
     define_indicators(sj->sci, sj);
 
@@ -341,7 +341,7 @@ void shortcut_char_init_with_query(ShortcutJump *sj, gchar query) {
 
 void shortcut_char_init(ShortcutJump *sj) {
     sj->current_mode = JM_SHORTCUT_CHAR_ACCEPTING;
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     set_selection_info(sj);
     init_sj_values(sj);
     define_indicators(sj->sci, sj);

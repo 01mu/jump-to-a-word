@@ -82,7 +82,7 @@ static gboolean shortcut_line_on_click_event(GtkWidget *widget, GdkEventButton *
 
 void shortcut_line_init(ShortcutJump *sj) {
     sj->current_mode = JM_LINE;
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     set_selection_info(sj);
     init_sj_values(sj);
     define_indicators(sj->sci, sj);

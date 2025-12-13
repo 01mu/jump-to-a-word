@@ -440,7 +440,7 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
 
 void serach_substring_init(ShortcutJump *sj) {
     sj->current_mode = JM_SUBSTRING;
-    set_sj_scintilla_object(sj);
+    sj->sci = get_scintilla_object();
     set_selection_info(sj);
     define_indicators(sj->sci, sj);
 
