@@ -102,10 +102,10 @@ static void shortcut_char_replacing_clear_indicators(ShortcutJump *sj) {
         if (word.valid_search) {
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position,
-                                   sj->replace_len);
+                                   sj->replace_len == 0 ? word.word->len : sj->replace_len);
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.replace_pos + sj->first_position,
-                                   sj->replace_len);
+                                   sj->replace_len == 0 ? word.word->len : sj->replace_len);
         }
     }
 }
@@ -113,9 +113,6 @@ static void shortcut_char_replacing_clear_indicators(ShortcutJump *sj) {
 void shortcut_char_replacing_cancel(ShortcutJump *sj) {
     shortcut_char_replacing_clear_indicators(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->first_position, 0);
-    scintilla_send_message(sj->sci, SCI_SETTARGETEND, sj->first_position + sj->buffer->len, 0);
-    scintilla_send_message(sj->sci, SCI_REPLACETARGET, -1, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_UNDO, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
@@ -133,9 +130,6 @@ void shortcut_char_replacing_complete(ShortcutJump *sj) {
                      sj->words->len == 1 ? "" : "s");
     shortcut_char_replacing_clear_indicators(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->first_position, 0);
-    scintilla_send_message(sj->sci, SCI_SETTARGETEND, sj->first_position + sj->buffer->len, 0);
-    scintilla_send_message(sj->sci, SCI_REPLACETARGET, -1, (sptr_t)sj->cache->str);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
