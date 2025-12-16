@@ -224,6 +224,7 @@ typedef struct {
     PCMenuSensitivity *pc_menu_sensitivity;
     PAMenuSensitivity *pa_menu_sensitivity;
 
+    gint wrapped_lines;
     gint first_line_on_screen;
     gint lines_on_screen;
     gint last_line_on_screen;

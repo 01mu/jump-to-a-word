@@ -97,7 +97,7 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
 
 void shortcut_set_to_first_visible_line(ShortcutJump *sj) {
     if (!sj->in_selection || sj->selection_is_a_word || sj->selection_is_a_char) {
-        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen, 0);
+        scintilla_send_message(sj->sci, SCI_SETFIRSTVISIBLELINE, sj->first_line_on_screen + sj->wrapped_lines, 0);
     }
 }
 

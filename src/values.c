@@ -47,7 +47,16 @@ static gint get_first_line_on_screen(ShortcutJump *sj) {
     }
 
     gint first_visible_line = scintilla_send_message(sj->sci, SCI_GETFIRSTVISIBLELINE, 0, 0);
-    return scintilla_send_message(sj->sci, SCI_DOCLINEFROMVISIBLE, first_visible_line, 0);
+    gint doc_line = scintilla_send_message(sj->sci, SCI_DOCLINEFROMVISIBLE, first_visible_line, 0);
+    gint wrapped_lines = 0;
+
+    for (gint i = 0; i < doc_line; i++) {
+        wrapped_lines += scintilla_send_message(sj->sci, SCI_WRAPCOUNT, i, 0) - 1;
+    }
+
+    sj->wrapped_lines = wrapped_lines;
+
+    return doc_line;
 }
 
 static gint get_number_of_lines_on_screen(ShortcutJump *sj) {
@@ -189,7 +198,6 @@ void get_view_positions(ShortcutJump *sj) {
     gint last_position = get_last_position(sj, last_line_on_screen);
     gint current_cursor_pos = get_cursor_position(sj->sci, first_position, last_position);
 
-    // FIXME screen position after shortcut insertion when line wrapping occurs on page
     sj->first_line_on_screen = first_line_on_screen;
     sj->lines_on_screen = lines_on_screen;
     sj->last_line_on_screen = last_line_on_screen;
