@@ -115,13 +115,9 @@ void handle_action(gpointer user_data) {
                 line_insert_from_search(sj);
                 return;
             } else if (jm == JM_SUBSTRING) {
-                disconnect_key_press_action(sj);
-                disconnect_click_action(sj);
                 line_insert_from_search(sj);
                 return;
             } else if (jm == JM_SEARCH) {
-                disconnect_key_press_action(sj);
-                disconnect_click_action(sj);
                 line_insert_from_search(sj);
                 return;
             }

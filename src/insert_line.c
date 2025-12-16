@@ -285,11 +285,12 @@ void line_insert_set_positions(ShortcutJump *sj, GArray *lines_to_insert) {
 
     if (sj->first_position < sj->last_position) {
         gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+
+        g_string_free(sj->cache, TRUE);
+        g_string_free(sj->replace_cache, TRUE);
+
         sj->cache = g_string_new(screen_lines);
         sj->replace_cache = g_string_new(screen_lines);
-    } else {
-        sj->cache = g_string_new("");
-        sj->replace_cache = g_string_new("");
     }
 }
 
@@ -367,23 +368,31 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
         valid_count += word.valid_search ? 1 : 0;
     }
 
-    if (valid_count == 0) {
-        ui_set_statusbar(TRUE, _("No multicursor strings selected."));
-        return;
-    }
+    GArray *dummy_lines = g_array_new(TRUE, FALSE, sizeof(Word));
+
+    sj->words = dummy_lines;
+
+    sj->cache = g_string_new("");
+    sj->replace_cache = g_string_new("");
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
 
+    connect_key_press_action(sj, on_key_press_search_replace);
+    connect_click_action(sj, on_click_event_multicursor_line_insert);
+
+    if (valid_count == 0) {
+        multicursor_line_insert_cancel(sj);
+        return;
+    }
+
     GArray *unique_lines = g_array_new(FALSE, FALSE, sizeof(LST));
-    GArray *dummy_lines = g_array_new(TRUE, FALSE, sizeof(Word));
 
     line_insert_common(sj, unique_lines, dummy_lines, anchors);
 
-    sj->words = dummy_lines;
-
     gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
+
     sj->multicusor_eol_message_line = line;
     sj->current_cursor_pos = pos;
 
@@ -391,18 +400,10 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
     annotation_display_inserting_line_multicursor(sj);
 
     paste_get_clipboard_text(sj);
-    connect_key_press_action(sj, on_key_press_search_replace);
-    connect_click_action(sj, on_click_event_multicursor_line_insert);
 }
 
 void line_insert_from_search(ShortcutJump *sj) {
     GArray *anchors = sj->words;
-
-    sj->multicursor_first_pos = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
-    sj->multicursor_last_pos = 0;
-
-    g_string_free(sj->cache, TRUE);
-    g_string_free(sj->replace_cache, TRUE);
 
     gint valid_count = 0;
 
@@ -411,21 +412,31 @@ void line_insert_from_search(ShortcutJump *sj) {
         valid_count += word.valid_search ? 1 : 0;
     }
 
+    GArray *dummy_lines = g_array_new(TRUE, FALSE, sizeof(Word));
+
+    sj->searched_words_for_line_insert = sj->words;
+    sj->words = dummy_lines;
+
     if (valid_count == 0) {
-        ui_set_statusbar(TRUE, _("No strings selected."));
+        line_insert_cancel(sj);
         return;
     }
+
+    sj->multicursor_first_pos = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
+    sj->multicursor_last_pos = 0;
+
+    g_string_free(sj->cache, TRUE);
+    g_string_free(sj->replace_cache, TRUE);
+
+    sj->cache = g_string_new("");
+    sj->replace_cache = g_string_new("");
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
 
     GArray *unique_lines = g_array_new(FALSE, FALSE, sizeof(LST));
-    GArray *dummy_lines = g_array_new(TRUE, FALSE, sizeof(Word));
 
     line_insert_common(sj, unique_lines, dummy_lines, anchors);
-
-    sj->searched_words_for_line_insert = anchors;
-    sj->words = dummy_lines;
 
     sj->current_mode = JM_INSERTING_LINE;
     annotation_display_inserting_line_from_search(sj);
