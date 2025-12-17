@@ -18,8 +18,38 @@
 
 #include <plugindata.h>
 
+#include "annotation.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
+#include "util.h"
+
+void multicursor_transpose_cancel(ShortcutJump *sj) {
+    multicursor_replace_clear_indicators(sj);
+    annotation_clear(sj->sci, sj->eol_message_line);
+
+    disconnect_key_press_action(sj);
+    disconnect_click_action(sj);
+
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word word = g_array_index(sj->multicursor_words, Word, i);
+
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+    }
+
+    multicursor_end(sj);
+    ui_set_statusbar(TRUE, _("Multicursor string transposition canceled."));
+}
+
+void multicursor_transpose_complete(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
+
+    annotation_clear(sj->sci, sj->eol_message_line);
+
+    multicursor_end(sj);
+    ui_set_statusbar(TRUE, _("Multicursor string transposition completed."));
+}
 
 void transpose_string(ShortcutJump *sj) {
     sj->current_mode = JM_TRANSPOSE_MULTICURSOR;

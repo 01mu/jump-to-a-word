@@ -21,6 +21,7 @@
 #include "annotation.h"
 #include "insert_line.h"
 #include "jump_to_a_word.h"
+#include "transpose_string.h"
 #include "util.h"
 #include "values.h"
 
@@ -31,6 +32,7 @@ static void multicursor_start(ShortcutJump *sj) {
                       sj->config_settings->text_color);
 
     get_view_positions(sj);
+
     sj->multicursor_first_pos = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
     sj->multicursor_last_pos = 0;
     sj->multicursor_eol_message = g_string_new("");
@@ -49,7 +51,9 @@ static void multicursor_start(ShortcutJump *sj) {
 
     gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
+
     sj->multicusor_eol_message_line = line;
+
     annotation_display_accepting_multicursor(sj);
     sj->multicursor_mode = MC_ACCEPTING;
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
@@ -85,7 +89,7 @@ void multicursor_end(ShortcutJump *sj) {
     sj->multicursor_mode = MC_DISABLED;
 }
 
-static void multicursor_replace_clear_indicators(ShortcutJump *sj) {
+void multicursor_replace_clear_indicators(ShortcutJump *sj) {
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
         if (word.valid_search) {
@@ -138,28 +142,6 @@ void multicursor_replace_complete(ShortcutJump *sj) {
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
     multicursor_replace_end(sj);
-}
-
-void multicursor_transpose_cancel(ShortcutJump *sj) {
-    multicursor_replace_clear_indicators(sj);
-    annotation_clear(sj->sci, sj->eol_message_line);
-    disconnect_key_press_action(sj);
-    disconnect_click_action(sj);
-    for (gint i = 0; i < sj->multicursor_words->len; i++) {
-        Word word = g_array_index(sj->multicursor_words, Word, i);
-        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
-        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
-    }
-    multicursor_end(sj);
-    ui_set_statusbar(TRUE, _("Multicursor string transposition canceled."));
-}
-
-void multicursor_transpose_complete(ShortcutJump *sj) {
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    annotation_clear(sj->sci, sj->eol_message_line);
-    multicursor_end(sj);
-    ui_set_statusbar(TRUE, _("Multicursor string transposition completed."));
 }
 
 void multicursor_add_word_from_selection(ShortcutJump *sj, gint start, gint end) {
@@ -220,6 +202,7 @@ void multicursor_add_word_from_selection(ShortcutJump *sj, gint start, gint end)
 
 void multicursor_add_word(ShortcutJump *sj, Word word) {
     Word multicursor_word;
+
     multicursor_word.word = g_string_new(word.word->str);
     multicursor_word.line = word.line;
     multicursor_word.starting = word.starting;
@@ -231,6 +214,7 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word *word = &g_array_index(sj->multicursor_words, Word, i);
+
         gint old_word_start = word->starting_doc;
         gint old_word_end = word->starting_doc + word->word->len;
 

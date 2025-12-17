@@ -30,8 +30,7 @@ void multicursor_add_word(ShortcutJump *sj, Word word);
 void multicursor_add_word_from_selection(ShortcutJump *sj, gint start, gint end);
 void multicursor_replace_cancel(ShortcutJump *sj);
 void multicursor_replace_complete(ShortcutJump *sj);
-void multicursor_transpose_cancel(ShortcutJump *sj);
-void multicursor_transpose_complete(ShortcutJump *sj);
 gboolean on_click_event_multicursor_replace(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
+void multicursor_replace_clear_indicators(ShortcutJump *sj);
 
 #endif
