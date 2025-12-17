@@ -141,7 +141,7 @@ static gint get_cursor_position(ScintillaObject *sci, gint first_position, gint 
     return current_cursor_pos;
 }
 
-GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen) {
+static GArray *markers_margin_get(ShortcutJump *sj, gint first_line_on_screen, gint lines_on_screen) {
     GArray *markers = g_array_new(FALSE, FALSE, sizeof(gint));
 
     if (sj->current_mode == JM_SHORTCUT_WORD || sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
@@ -206,6 +206,39 @@ void get_view_positions(ShortcutJump *sj) {
     sj->current_cursor_pos = current_cursor_pos;
 }
 
+static void set_common_vals(ShortcutJump *sj) {
+    sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+    sj->shortcut_single_pos = 0;
+    sj->search_results_count = 0;
+    sj->search_word_pos = -1;
+    sj->search_word_pos_first = -1;
+    sj->search_word_pos_last = -1;
+    sj->search_change_made = FALSE;
+    sj->cursor_in_word = FALSE;
+    sj->delete_added_bracket = FALSE;
+    sj->replace_len = 0;
+    sj->replace_instant = FALSE;
+    sj->inserting_clipboard = FALSE;
+}
+
+void free_sj_values(ShortcutJump *sj) {
+    g_string_free(sj->cache, TRUE);
+    g_string_free(sj->buffer, TRUE);
+    g_string_free(sj->replace_cache, TRUE);
+
+    g_string_free(sj->eol_message, TRUE);
+    g_string_free(sj->search_query, TRUE);
+
+    g_free(sj->clipboard_text);
+    g_string_free(sj->replace_query, TRUE);
+
+    g_array_free(sj->lf_positions, TRUE);
+    g_array_free(sj->words, TRUE);
+    g_array_free(sj->markers, TRUE);
+
+    set_common_vals(sj);
+}
+
 void init_sj_values(ShortcutJump *sj) {
     get_view_positions(sj);
 
@@ -223,25 +256,17 @@ void init_sj_values(ShortcutJump *sj) {
 
     g_free(screen_lines);
 
-    sj->eol_message_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     sj->eol_message = g_string_new("");
     sj->search_query = g_string_new("");
 
-    sj->shortcut_single_pos = 0;
-    sj->search_results_count = 0;
-    sj->search_word_pos = -1;
-    sj->search_word_pos_first = -1;
-    sj->search_word_pos_last = -1;
-    sj->search_change_made = FALSE;
-    sj->cursor_in_word = FALSE;
-    sj->delete_added_bracket = FALSE;
-    sj->replace_len = 0;
-    sj->replace_instant = FALSE;
-
     sj->clipboard_text = g_strdup("");
-    sj->inserting_clipboard = FALSE;
-
     sj->replace_query = g_string_new("");
+
+    sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
+    sj->words = g_array_new(FALSE, FALSE, sizeof(Word));
+    sj->markers = markers_margin_get(sj, sj->first_line_on_screen, sj->lines_on_screen);
+
+    set_common_vals(sj);
 
     gint chars_in_doc = scintilla_send_message(sj->sci, SCI_GETLENGTH, 0, 0);
     gchar last_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->last_position - 1, 0);
@@ -250,9 +275,5 @@ void init_sj_values(ShortcutJump *sj) {
         g_string_append_c(sj->buffer, '\n');
     }
 
-    sj->lf_positions = g_array_new(FALSE, FALSE, sizeof(gint));
-    sj->words = g_array_new(FALSE, FALSE, sizeof(Word));
-    sj->markers = markers_margin_get(sj, sj->first_line_on_screen, sj->lines_on_screen);
-
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+    // scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }
