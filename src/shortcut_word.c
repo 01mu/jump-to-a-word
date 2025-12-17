@@ -87,17 +87,20 @@ void shortcut_word_cancel(ShortcutJump *sj) {
 
 static gboolean shortcut_word_on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
+
     return shortcut_on_key_press_action(event, sj);
 }
 
 static gboolean shortcut_word_on_click_event(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
+
     if (mouse_movement_performed(sj, event)) {
         sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
         sj->current_cursor_pos = set_cursor_position_with_lfs(sj);
         shortcut_word_cancel(sj);
         return TRUE;
     }
+
     return FALSE;
 }
 
@@ -134,7 +137,7 @@ void shortcut_word_init(ShortcutJump *sj) {
     gint lfs_added = 0;
 
     for (gint i = sj->first_position; i < sj->last_position; i++) {
-        if (sj->words->len == shortcut_get_max_words(sj)) {
+        if (sj->words->len == shortcut_get_max_words(sj->config_settings->shortcuts_include_single_char)) {
             break;
         }
 
@@ -152,7 +155,8 @@ void shortcut_word_init(ShortcutJump *sj) {
         word.starting_doc = start;
         word.is_hidden_neighbor = FALSE;
         word.bytes = shortcut_get_utf8_char_length(word.word->str[0]);
-        word.shortcut = shortcut_make_tag(sj, sj->words->len);
+        word.shortcut = shortcut_make_tag(sj->config_settings->shortcuts_include_single_char,
+                                          sj->config_settings->shortcut_all_caps, sj->words->len);
         word.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, start, 0);
         word.padding = shortcut_set_padding(sj, word.word->len);
 
@@ -191,7 +195,7 @@ void shortcut_word_init(ShortcutJump *sj) {
     sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
 
     shortcut_set_after_placement(sj);
-    shortcut_set_indicators(sj);
+    shortcut_set_indicators(sj->sci, sj->words);
     connect_key_press_action(sj, shortcut_word_on_key_press);
     connect_click_action(sj, shortcut_word_on_click_event);
     ui_set_statusbar(TRUE, _("%i word%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");

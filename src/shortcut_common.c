@@ -27,11 +27,14 @@
 #include "shortcut_line.h"
 #include "shortcut_word.h"
 #include "util.h"
+#include "values.h"
 
 void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
+
         g_string_free(word.word, TRUE);
+
         if (!word.is_hidden_neighbor) {
             g_string_free(word.shortcut, TRUE);
         }
@@ -45,36 +48,14 @@ void shortcut_end(ShortcutJump *sj, gboolean was_canceled) {
         in_line_jump_mode = FALSE;
     }
 
-    g_string_free(sj->replace_query, TRUE);
+    free_sj_values(sj);
 
     sj->current_mode = JM_NONE;
-
-    g_string_free(sj->eol_message, TRUE);
-    g_string_free(sj->search_query, TRUE);
-
-    sj->search_results_count = 0;
-    sj->search_word_pos = -1;
-    sj->search_word_pos_first = -1;
-    sj->search_word_pos_last = -1;
-    sj->search_change_made = FALSE;
-    sj->cursor_in_word = FALSE;
-    sj->delete_added_bracket = FALSE;
-    sj->replace_len = 0;
-    sj->replace_instant = FALSE;
-
-    g_free(sj->clipboard_text);
-
-    g_string_free(sj->cache, TRUE);
-    g_string_free(sj->buffer, TRUE);
-    g_string_free(sj->replace_cache, TRUE);
-
-    g_array_free(sj->lf_positions, TRUE);
-    g_array_free(sj->words, TRUE);
-    g_array_free(sj->markers, TRUE);
 
     if (sj->multicursor_mode == MC_ACCEPTING) {
         for (gint i = 0; i < sj->multicursor_words->len; i++) {
             Word word = g_array_index(sj->multicursor_words, Word, i);
+
             if (word.valid_search) {
                 scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
                 scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
@@ -101,8 +82,8 @@ void shortcut_set_to_first_visible_line(ShortcutJump *sj) {
     }
 }
 
-gint shortcut_get_max_words(ShortcutJump *sj) {
-    if (sj->config_settings->shortcuts_include_single_char) {
+gint shortcut_get_max_words(gint shortcuts_include_single_char) {
+    if (shortcuts_include_single_char) {
         return 720;
     } else {
         return 676;
@@ -113,10 +94,12 @@ GString *shortcut_mask_bytes(GArray *words, GString *buffer, gint first_position
     for (gint i = 0; i < words->len; i++) {
         Word word = g_array_index(words, Word, i);
         gint starting = word.starting - first_position;
+
         for (gint j = 0; j < word.bytes; j++) {
             buffer->str[starting + j + word.padding] = ' ';
         }
     }
+
     return buffer;
 }
 
@@ -124,80 +107,102 @@ GString *shortcut_set_tags_in_buffer(GArray *words, GString *buffer, gint first_
     for (gint i = 0; i < words->len; i++) {
         Word word = g_array_index(words, Word, i);
         gint starting = word.starting - first_position;
+
         if (!word.is_hidden_neighbor) {
             for (gint j = 0; j < word.shortcut->len; j++) {
                 buffer->str[starting + j + word.padding] = word.shortcut->str[j];
             }
         }
     }
+
     return buffer;
 }
 
-GString *shortcut_make_tag(ShortcutJump *sj, gint position) {
-    if (!sj->config_settings->shortcuts_include_single_char) {
+GString *shortcut_make_tag(gint shortcuts_include_single_char, gint shortcut_all_caps, gint position) {
+    if (!shortcuts_include_single_char) {
         position += 26;
     }
+
     if (position < 0) {
         return NULL;
     }
+
     gint word_length = 1;
     gint temp = position;
+
     while (temp >= 26) {
         temp = (temp / 26) - 1;
         word_length++;
     }
+
     GString *result = g_string_new("");
+
     if (!result) {
         return NULL;
     }
+
     for (gint i = word_length - 1; i >= 0; i--) {
-        gchar ch = (sj->config_settings->shortcut_all_caps ? 'A' : 'a') + (position % 26);
+        gchar ch = (shortcut_all_caps ? 'A' : 'a') + (position % 26);
+
         g_string_prepend_c(result, ch);
         position = (position / 26) - 1;
     }
+
     return result;
 }
 
 static gint shortcut_get_search_results_count(ScintillaObject *sci, GArray *words) {
     gint search_results_count = 0;
+
     for (gint i = 0; i < words->len; i++) {
         Word *word = &g_array_index(words, Word, i);
+
         if (word->shortcut_marked) {
             search_results_count += 1;
         }
     }
+
     return search_results_count;
 }
 
 static gint shortcut_get_highlighted_pos(ScintillaObject *sci, GArray *words) {
     for (gint i = 0; i < words->len; i++) {
         Word word = g_array_index(words, Word, i);
+
         if (word.valid_search) {
             return i;
         }
     }
+
     return -1;
 }
 
 static GArray *shortcut_mark_indicators(ScintillaObject *sci, GArray *words, GString *search_query) {
     for (gint i = 0; i < words->len; i++) {
         Word *word = &g_array_index(words, Word, i);
+
         word->shortcut_marked = FALSE;
         word->valid_search = FALSE;
+
         scintilla_send_message(sci, SCI_INDICATORCLEARRANGE, word->starting, 2);
     }
+
     for (gint i = 0; i < words->len; i++) {
         Word *word = &g_array_index(words, Word, i);
+
         if (word->is_hidden_neighbor) {
             continue;
         }
+
         if (g_str_has_prefix(word->shortcut->str, search_query->str) && search_query->len > 0) {
             word->shortcut_marked = TRUE;
         }
+
         if (g_strcmp0(word->shortcut->str, search_query->str) == 0) {
             word->valid_search = TRUE;
         }
     }
+
     return words;
 }
 
@@ -211,6 +216,7 @@ gint shortcut_get_utf8_char_length(gchar c) {
     } else if ((c & 0xF8) == 0xF0) {
         return 4;
     }
+
     return -1;
 }
 
@@ -218,13 +224,16 @@ gint shortcut_set_padding(ShortcutJump *sj, gint word_length) {
     if (sj->config_settings->center_shortcut) {
         return word_length >= 3 ? floor((float)word_length / 2) : 0;
     }
+
     return 0;
 }
 
 void shortcut_set_after_placement(ShortcutJump *sj) {
     gint current_line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
     gint lfs_added = get_lfs(sj, current_line);
+
     shortcut_set_to_first_visible_line(sj);
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->first_position, 0);
@@ -320,6 +329,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
         } else if (sj->current_mode == JM_SHORTCUT_WORD) {
             shortcut_word_complete(sj, word.starting_doc, word.word->len, word.line);
         }
+
         return TRUE;
     }
 
@@ -338,6 +348,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
             } else if (sj->current_mode == JM_SHORTCUT_WORD) {
                 shortcut_word_cancel(sj);
             }
+
             return TRUE;
         }
 
@@ -380,14 +391,15 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
     return FALSE;
 }
 
-void shortcut_set_indicators(ShortcutJump *sj) {
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
+void shortcut_set_indicators(ScintillaObject *sci, GArray *words) {
+    for (gint i = 0; i < words->len; i++) {
+        Word word = g_array_index(words, Word, i);
+
         if (!word.is_hidden_neighbor) {
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting + word.padding, word.shortcut->len);
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting + word.padding, word.shortcut->len);
+            scintilla_send_message(sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+            scintilla_send_message(sci, SCI_INDICATORFILLRANGE, word.starting + word.padding, word.shortcut->len);
+            scintilla_send_message(sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
+            scintilla_send_message(sci, SCI_INDICATORFILLRANGE, word.starting + word.padding, word.shortcut->len);
         }
     }
 }

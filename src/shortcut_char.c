@@ -172,7 +172,7 @@ void shortcut_char_get_chars(ShortcutJump *sj, gchar query) {
     }
 
     for (gint i = sj->first_position; i < sj->last_position; i++) {
-        if (added == shortcut_get_max_words(sj)) {
+        if (added == shortcut_get_max_words(sj->config_settings->shortcuts_include_single_char)) {
             break;
         }
 
@@ -223,7 +223,8 @@ void shortcut_char_get_chars(ShortcutJump *sj, gchar query) {
         word.line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, i, 0);
         word.padding = shortcut_set_padding(sj, word.word->len);
         word.replace_pos = i - sj->first_position;
-        word.shortcut = shortcut_make_tag(sj, added++);
+        word.shortcut = shortcut_make_tag(sj->config_settings->shortcuts_include_single_char,
+                                          sj->config_settings->shortcut_all_caps, added++);
         toggle ^= 1;
 
         gchar line_ending_char = scintilla_send_message(sj->sci, SCI_GETCHARAT, i + 1, TRUE);
@@ -296,7 +297,7 @@ static gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event
         sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
         sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
         shortcut_set_after_placement(sj);
-        shortcut_set_indicators(sj);
+        shortcut_set_indicators(sj->sci, sj->words);
         sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
         ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
 
@@ -369,7 +370,7 @@ void shortcut_char_init(ShortcutJump *sj) {
             sj->buffer = shortcut_set_tags_in_buffer(sj->words, sj->buffer, sj->first_position);
             sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
             shortcut_set_after_placement(sj);
-            shortcut_set_indicators(sj);
+            shortcut_set_indicators(sj->sci, sj->words);
 
             sj->current_mode = JM_SHORTCUT_CHAR_JUMPING;
             ui_set_statusbar(TRUE, _("%i character%s in view."), sj->words->len, sj->words->len == 1 ? "" : "s");
