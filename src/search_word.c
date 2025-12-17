@@ -64,33 +64,9 @@ void search_word_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
-    g_string_free(sj->replace_query, TRUE);
-
-    g_string_free(sj->eol_message, TRUE);
-    g_string_free(sj->search_query, TRUE);
-
-    sj->search_results_count = 0;
-    sj->search_word_pos = -1;
-    sj->search_word_pos_first = -1;
-    sj->search_word_pos_last = -1;
-    sj->search_change_made = FALSE;
-    sj->cursor_in_word = FALSE;
-    sj->delete_added_bracket = FALSE;
-    sj->replace_len = 0;
-    sj->replace_instant = FALSE;
+    free_sj_values(sj);
 
     sj->waiting_after_single_instance = FALSE;
-
-    g_free(sj->clipboard_text);
-
-    g_string_free(sj->cache, TRUE);
-    g_string_free(sj->buffer, TRUE);
-    g_string_free(sj->replace_cache, TRUE);
-
-    g_array_free(sj->lf_positions, TRUE);
-    g_array_free(sj->words, TRUE);
-    g_array_free(sj->markers, TRUE);
-
     sj->current_mode = JM_NONE;
 }
 
