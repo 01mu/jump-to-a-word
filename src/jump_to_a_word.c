@@ -633,7 +633,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_FRAME("Replace action", GTK_ORIENTATION_VERTICAL);
 
     tt = "A tranpose action will always occur when two strings are selected";
-    WIDGET_CONF_BOOL(instant_transpose, "Transpose when two strings are selected", tt);
+    WIDGET_CONF_BOOL(instant_transpose, "Transpose _when two strings are selected", tt);
 
     /*
      * After jumping to a word, character, or substring
