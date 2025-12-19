@@ -74,6 +74,22 @@ void handle_action(gpointer user_data) {
     MulticusrorMode mm = sj->multicursor_mode;
     JumpMode jm = sj->current_mode;
 
+    if (sj->config_settings->instant_transpose && mm == MC_ACCEPTING) {
+        if (jm == JM_NONE) {
+            gint valid_count = 0;
+
+            for (gint i = 0; i < sj->multicursor_words->len; i++) {
+                Word word = g_array_index(sj->multicursor_words, Word, i);
+                valid_count += word.valid_search ? 1 : 0;
+            }
+
+            if (valid_count == 2) {
+                transpose_string(sj);
+                return;
+            }
+        }
+    }
+
     if (ra == RA_REPLACE || ra == RA_INSERT_START || ra == RA_INSERT_END) {
         if (mm == MC_DISABLED) {
             if (jm == JM_SEARCH) {
@@ -370,6 +386,8 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(search_case_sensitive, "search_case_sensitive", "search", TRUE);
     SET_SETTING_BOOL(search_smart_case, "search_smart_case", "search", TRUE);
 
+    SET_SETTING_BOOL(instant_transpose, "instant_transpose", "action", FALSE);
+
     SET_SETTING_INTEGER(text_after, "text_after", "text_after", TX_SELECT_TEXT);
     SET_SETTING_INTEGER(line_after, "line_after", "line_after", LA_SELECT_TO_LINE);
     SET_SETTING_INTEGER(replace_action, "replace_action", "replace_action", RA_REPLACE);
@@ -607,6 +625,17 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     gtk_frame_set_label_widget(GTK_FRAME(frame), sj->config_widgets->search_case_sensitive);
     gtk_container_add(GTK_CONTAINER(frame), sj->config_widgets->search_smart_case);
     gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 0);
+
+    /*
+     * Replace action
+     */
+
+    WIDGET_FRAME("Replace action", GTK_ORIENTATION_VERTICAL);
+
+    tt = "A tranpose action will occur when only two strings are selected regardless of the current "
+         "replace action.";
+
+    WIDGET_CONF_BOOL(instant_transpose, "Transpose when two strings are selected", tt);
 
     /*
      * After jumping to a word, character, or substring
