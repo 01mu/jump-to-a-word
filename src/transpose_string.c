@@ -51,20 +51,22 @@ void multicursor_transpose_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Multicursor string transposition completed."));
 }
 
-void transpose_string(ShortcutJump *sj) {
+void transpose_string(ShortcutJump *sj, gboolean is_instant_transpose) {
     sj->current_mode = JM_TRANSPOSE_MULTICURSOR;
 
-    gint valid_count = 0;
+    if (!is_instant_transpose) {
+        gint valid_count = 0;
 
-    for (gint i = 0; i < sj->multicursor_words->len; i++) {
-        Word word = g_array_index(sj->multicursor_words, Word, i);
-        valid_count += word.valid_search ? 1 : 0;
-    }
+        for (gint i = 0; i < sj->multicursor_words->len; i++) {
+            Word word = g_array_index(sj->multicursor_words, Word, i);
+            valid_count += word.valid_search ? 1 : 0;
+        }
 
-    if (valid_count != 2) {
-        multicursor_transpose_cancel(sj);
-        ui_set_statusbar(TRUE, _("Select 2 strings to transpose."));
-        return;
+        if (valid_count != 2) {
+            multicursor_transpose_cancel(sj);
+            ui_set_statusbar(TRUE, _("Select 2 strings to transpose."));
+            return;
+        }
     }
 
     gint first_valid = -1;

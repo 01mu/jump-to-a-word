@@ -84,7 +84,7 @@ void handle_action(gpointer user_data) {
             }
 
             if (valid_count == 2) {
-                transpose_string(sj);
+                transpose_string(sj, TRUE);
                 return;
             }
         }
@@ -146,7 +146,7 @@ void handle_action(gpointer user_data) {
     } else if (ra == RA_TRANSPOSE_STRING) {
         if (mm == MC_ACCEPTING) {
             if (jm == JM_NONE) {
-                transpose_string(sj);
+                transpose_string(sj, FALSE);
                 return;
             }
         }
