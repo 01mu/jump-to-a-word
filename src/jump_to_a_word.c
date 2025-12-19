@@ -632,9 +632,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
     WIDGET_FRAME("Replace action", GTK_ORIENTATION_VERTICAL);
 
-    tt = "A tranpose action will occur when only two strings are selected regardless of the current "
-         "replace action.";
-
+    tt = "A tranpose action will always occur when two strings are selected";
     WIDGET_CONF_BOOL(instant_transpose, "Transpose when two strings are selected", tt);
 
     /*
