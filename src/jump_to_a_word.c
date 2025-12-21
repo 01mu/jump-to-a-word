@@ -338,7 +338,13 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
                           (GCallback)on_previous_action_show, pa_menu_sensitivity);
     sj->pa_menu_sensitivity = pa_menu_sensitivity;
 
-    SET_MENU_ITEM("Toggle _Multicursor Mode", multicursor_cb, sj);
+    item = gtk_check_menu_item_new_with_mnemonic(_("_Enable Multicursor Mode"));
+    sj->multicursor_menu_checkbox = GTK_CHECK_MENU_ITEM(item);
+    sj->multicursor_menu_checkbox_signal_id =
+        g_signal_connect(sj->multicursor_menu_checkbox, "toggled", G_CALLBACK(multicursor_menu_toggled), sj);
+    gtk_widget_show(item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
+
     SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
 
     // TODO add checkbox menu groups for option selection

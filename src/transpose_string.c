@@ -21,6 +21,7 @@
 #include "annotation.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
+#include "util.h"
 
 void multicursor_transpose_cancel(ShortcutJump *sj) {
     multicursor_replace_clear_indicators(sj);
@@ -33,6 +34,8 @@ void multicursor_transpose_cancel(ShortcutJump *sj) {
         scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
     }
 
+    toggle_multicursor_menu(sj, FALSE);
+
     multicursor_end(sj);
     ui_set_statusbar(TRUE, _("Multicursor string transposition canceled."));
 }
@@ -42,6 +45,8 @@ void multicursor_transpose_complete(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
 
     annotation_clear(sj->sci, sj->eol_message_line);
+
+    toggle_multicursor_menu(sj, FALSE);
 
     multicursor_end(sj);
     ui_set_statusbar(TRUE, _("Multicursor string transposition completed."));

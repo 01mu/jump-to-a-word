@@ -112,6 +112,9 @@ void multicursor_accepting_cancel(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     multicursor_replace_clear_indicators(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
+
+    toggle_multicursor_menu(sj, FALSE);
+
     multicursor_end(sj);
     ui_set_statusbar(TRUE, _("Multicursor mode canceled."));
 }
@@ -128,6 +131,9 @@ void multicursor_replace_cancel(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
+
+    toggle_multicursor_menu(sj, FALSE);
+
     multicursor_replace_end(sj);
     ui_set_statusbar(TRUE, _("Multicursor string replacement canceled."));
 }
@@ -141,6 +147,9 @@ void multicursor_replace_complete(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
+
+    toggle_multicursor_menu(sj, FALSE);
+
     multicursor_replace_end(sj);
 }
 
@@ -282,13 +291,13 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
 gboolean on_click_event_multicursor_replace(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     if (mouse_movement_performed(sj, event)) {
-        multicursor_replace_cancel(sj);
+        gtk_check_menu_item_set_active(sj->multicursor_menu_checkbox, FALSE);
         return TRUE;
     }
     return FALSE;
 }
 
-static void multicursor_toggle(ShortcutJump *sj) {
+void multicursor_toggle(ShortcutJump *sj) {
     if (sj->multicursor_mode == MC_ACCEPTING) {
         for (gint i = 0; i < sj->multicursor_words->len; i++) {
             Word word = g_array_index(sj->multicursor_words, Word, i);
@@ -303,10 +312,7 @@ static void multicursor_toggle(ShortcutJump *sj) {
         } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
             multicursor_replace_cancel(sj);
         } else if (sj->current_mode == JM_NONE) {
-            scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-            ui_set_statusbar(TRUE, _("Multicursor mode disabled."));
-            annotation_clear(sj->sci, sj->multicusor_eol_message_line);
-            multicursor_end(sj);
+            multicursor_accepting_cancel(sj);
         }
     } else if (sj->multicursor_mode == MC_DISABLED) {
         ui_set_statusbar(TRUE, _("Multicursor mode enabled."));
@@ -318,16 +324,20 @@ static void multicursor_toggle(ShortcutJump *sj) {
 void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    if (!sj->waiting_after_single_instance) {
-        multicursor_toggle(sj);
+    if (sj->multicursor_mode == MC_ACCEPTING) {
+        gtk_check_menu_item_set_active(sj->multicursor_menu_checkbox, FALSE);
+    } else if (sj->multicursor_mode == MC_DISABLED) {
+        gtk_check_menu_item_set_active(sj->multicursor_menu_checkbox, TRUE);
     }
 }
 
 gboolean multicursor_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    if (!sj->waiting_after_single_instance) {
-        multicursor_toggle(sj);
+    if (sj->multicursor_mode == MC_ACCEPTING) {
+        gtk_check_menu_item_set_active(sj->multicursor_menu_checkbox, FALSE);
+    } else if (sj->multicursor_mode == MC_DISABLED) {
+        gtk_check_menu_item_set_active(sj->multicursor_menu_checkbox, TRUE);
     }
 
     return TRUE;

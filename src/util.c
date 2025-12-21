@@ -89,6 +89,21 @@ void define_indicators(ScintillaObject *sci, gint tag_color, gint highlight_colo
     scintilla_send_message(sci, SCI_INDICSETFORE, INDICATOR_MULTICURSOR, highlight_color);
 }
 
+void multicursor_menu_toggled(GtkMenuItem *menuitem, gpointer data) {
+    ShortcutJump *sj = (ShortcutJump *)data;
+
+    if (!sj->waiting_after_single_instance) {
+        multicursor_toggle(sj);
+    }
+}
+
+void toggle_multicursor_menu(ShortcutJump *sj, gboolean type) {
+    g_signal_handler_disconnect(sj->multicursor_menu_checkbox, sj->multicursor_menu_checkbox_signal_id);
+    gtk_check_menu_item_set_active(sj->multicursor_menu_checkbox, type);
+    sj->multicursor_menu_checkbox_signal_id =
+        g_signal_connect(sj->multicursor_menu_checkbox, "toggled", G_CALLBACK(multicursor_menu_toggled), sj);
+}
+
 void connect_key_press_action(ShortcutJump *sj, KeyPressCallback function) {
     sj->kp_handler_id = g_signal_connect(sj->sci, "key-press-event", G_CALLBACK(function), sj);
 }

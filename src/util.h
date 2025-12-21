@@ -36,5 +36,7 @@ gboolean mod_key_pressed(GdkEventKey *event);
 void cancel_actions(ShortcutJump *sj);
 void end_actions(ShortcutJump *sj);
 gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b);
+void multicursor_menu_toggled(GtkMenuItem *menuitem, gpointer data);
+void toggle_multicursor_menu(ShortcutJump *sj, gboolean type);
 
 #endif

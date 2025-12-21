@@ -127,6 +127,9 @@ void multicursor_line_insert_cancel(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Multicursor line insertion canceled."));
 
     line_insert_done_common(sj);
+
+    toggle_multicursor_menu(sj, FALSE);
+
     multicursor_line_insert_end(sj);
     multicursor_end(sj);
 }
@@ -136,6 +139,9 @@ void multicursor_line_insert_complete(ShortcutJump *sj) {
                      sj->search_results_count == 1 ? "" : "s");
 
     line_insert_done_common(sj);
+
+    toggle_multicursor_menu(sj, FALSE);
+
     multicursor_line_insert_end(sj);
     multicursor_end(sj);
 }

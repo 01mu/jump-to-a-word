@@ -223,6 +223,9 @@ typedef struct {
     gchar *config_file;
     GeanyData *geany_data;
 
+    GtkCheckMenuItem *multicursor_menu_checkbox;
+    gulong multicursor_menu_checkbox_signal_id;
+
     PCMenuSensitivity *pc_menu_sensitivity;
     PAMenuSensitivity *pa_menu_sensitivity;
 

@@ -32,5 +32,6 @@ void multicursor_replace_cancel(ShortcutJump *sj);
 void multicursor_replace_complete(ShortcutJump *sj);
 gboolean on_click_event_multicursor_replace(GtkWidget *widget, GdkEventButton *event, gpointer user_data);
 void multicursor_replace_clear_indicators(ShortcutJump *sj);
+void multicursor_toggle(ShortcutJump *sj);
 
 #endif
