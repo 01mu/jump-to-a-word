@@ -23,6 +23,7 @@
 #include "jump_to_a_word.h"
 #include "selection.h"
 #include "shortcut_common.h"
+#include "transpose_string.h"
 #include "util.h"
 #include "values.h"
 
@@ -65,6 +66,7 @@ void shortcut_word_complete(ShortcutJump *sj, gint pos, gint word_length, gint l
     }
 
     ui_set_statusbar(TRUE, _("Word jump completed."));
+    transpose_string_attempt(sj);
 }
 
 void shortcut_word_cancel(ShortcutJump *sj) {

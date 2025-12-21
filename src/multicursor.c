@@ -207,19 +207,6 @@ void multicursor_add_word_from_selection(ShortcutJump *sj, gint start, gint end)
     }
 
     g_array_append_val(sj->multicursor_words, multicursor_word);
-
-    if (sj->config_settings->replace_action == RA_TRANSPOSE_STRING) {
-        gint valid_count = 0;
-
-        for (gint i = 0; i < sj->multicursor_words->len; i++) {
-            Word word = g_array_index(sj->multicursor_words, Word, i);
-            valid_count += word.valid_search ? 1 : 0;
-        }
-
-        if (valid_count == 2) {
-            transpose_string(sj, FALSE);
-        }
-    }
 }
 
 void multicursor_add_word(ShortcutJump *sj, Word word) {
@@ -273,19 +260,6 @@ void multicursor_add_word(ShortcutJump *sj, Word word) {
     }
 
     g_array_append_val(sj->multicursor_words, multicursor_word);
-
-    if (sj->config_settings->replace_action == RA_TRANSPOSE_STRING) {
-        gint valid_count = 0;
-
-        for (gint i = 0; i < sj->multicursor_words->len; i++) {
-            Word word = g_array_index(sj->multicursor_words, Word, i);
-            valid_count += word.valid_search ? 1 : 0;
-        }
-
-        if (valid_count == 2) {
-            transpose_string(sj, FALSE);
-        }
-    }
 }
 
 gboolean on_click_event_multicursor_replace(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {

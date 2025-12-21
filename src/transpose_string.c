@@ -105,3 +105,18 @@ void transpose_string(ShortcutJump *sj, gboolean is_instant_transpose) {
 
     multicursor_transpose_complete(sj);
 }
+
+void transpose_string_attempt(ShortcutJump *sj) {
+    if (sj->multicursor_mode == MC_ACCEPTING && sj->config_settings->replace_action == RA_TRANSPOSE_STRING) {
+        gint valid_count = 0;
+
+        for (gint i = 0; i < sj->multicursor_words->len; i++) {
+            Word word = g_array_index(sj->multicursor_words, Word, i);
+            valid_count += word.valid_search ? 1 : 0;
+        }
+
+        if (valid_count == 2) {
+            transpose_string(sj, FALSE);
+        }
+    }
+}

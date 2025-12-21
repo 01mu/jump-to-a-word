@@ -25,6 +25,7 @@
 #include "paste.h"
 #include "search_common.h"
 #include "selection.h"
+#include "transpose_string.h"
 #include "util.h"
 #include "values.h"
 
@@ -168,6 +169,7 @@ void search_word_jump_complete(ShortcutJump *sj) {
     }
 
     ui_set_statusbar(TRUE, _("Word search completed."));
+    transpose_string_attempt(sj);
 }
 
 void search_word_jump_cancel(ShortcutJump *sj) {

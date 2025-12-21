@@ -25,6 +25,7 @@
 #include "replace_handle_input.h"
 #include "selection.h"
 #include "shortcut_common.h"
+#include "transpose_string.h"
 #include "util.h"
 #include "values.h"
 
@@ -85,6 +86,7 @@ void shortcut_char_jumping_complete(ShortcutJump *sj, gint pos, gint word_length
     }
 
     ui_set_statusbar(TRUE, _("Character jump completed."));
+    transpose_string_attempt(sj);
 }
 
 void shortcut_char_waiting_cancel(ShortcutJump *sj) {

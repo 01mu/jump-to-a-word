@@ -25,6 +25,7 @@
 #include "paste.h"
 #include "search_common.h"
 #include "selection.h"
+#include "transpose_string.h"
 #include "util.h"
 #include "values.h"
 
@@ -163,6 +164,7 @@ static void search_substring_jump_complete(ShortcutJump *sj) {
     }
 
     ui_set_statusbar(TRUE, _("Substring search completed."));
+    transpose_string_attempt(sj);
 }
 
 void search_substring_jump_cancel(ShortcutJump *sj) {
