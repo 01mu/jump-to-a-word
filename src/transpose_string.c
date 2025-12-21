@@ -65,7 +65,6 @@ void transpose_string(ShortcutJump *sj, gboolean is_instant_transpose) {
 
         if (valid_count != 2) {
             multicursor_transpose_cancel(sj);
-            ui_set_statusbar(TRUE, _("Select 2 strings to transpose."));
             return;
         }
     }
