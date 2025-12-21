@@ -21,14 +21,10 @@
 #include "annotation.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
-#include "util.h"
 
 void multicursor_transpose_cancel(ShortcutJump *sj) {
     multicursor_replace_clear_indicators(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
-
-    disconnect_key_press_action(sj);
-    disconnect_click_action(sj);
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
         Word word = g_array_index(sj->multicursor_words, Word, i);
