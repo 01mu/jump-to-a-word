@@ -66,7 +66,7 @@ const struct {
                     {"Insert at end of string", RA_INSERT_END},
                     {"Insert at previous line", RA_INSERT_PREVIOUS_LINE},
                     {"Insert at next line", RA_INSERT_NEXT_LINE},
-                    {"Transpose string", RA_TRANSPOSE_STRING}};
+                    {"Transpose 2 strings", RA_TRANSPOSE_STRING}};
 
 void handle_action(gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
