@@ -216,6 +216,21 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
+    if (sj->multicursor_mode == MC_DISABLED && sj->current_mode != JM_NONE &&
+        (nt->modificationType & (SC_PERFORMED_UNDO) || nt->modificationType & (SC_PERFORMED_REDO))) {
+        if (sj->current_mode == JM_SUBSTRING) {
+            cancel_actions(sj);
+        } else if (sj->current_mode == JM_SEARCH) {
+            cancel_actions(sj);
+        } else if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_MULTICURSOR ||
+                   sj->current_mode == JM_INSERTING_LINE || sj->current_mode == JM_INSERTING_LINE_MULTICURSOR ||
+                   sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_REPLACE_SUBSTRING) {
+            cancel_actions(sj);
+        }
+
+        return TRUE;
+    }
+
     if (!sj->inserting_clipboard &&
         (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) &&
         nt->modificationType & (SC_MOD_INSERTTEXT)) {
