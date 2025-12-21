@@ -72,19 +72,13 @@ gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpoi
 }
 
 void multicursor_replace(ShortcutJump *sj) {
-    gint valid_count = 0;
-
-    for (gint i = 0; i < sj->multicursor_words->len; i++) {
-        Word word = g_array_index(sj->multicursor_words, Word, i);
-        valid_count += word.valid_search ? 1 : 0;
-    }
-
-    if (valid_count == 0) {
-        multicursor_replace_cancel(sj);
-        return;
-    }
+    sj->current_mode = JM_REPLACE_MULTICURSOR;
 
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+
+    connect_key_press_action(sj, on_key_press_search_replace);
+    connect_click_action(sj, on_click_event_multicursor_replace);
 
     gint first_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_first_pos, 0);
     gint last_line_on_screen = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->multicursor_last_pos, 0);
@@ -96,7 +90,30 @@ void multicursor_replace(ShortcutJump *sj) {
     sj->first_position = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, first_line_on_screen, 0);
     sj->last_position = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, last_line_on_screen, 0);
 
-    gchar *screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+    gchar *screen_lines;
+
+    if (sj->first_position < sj->last_position) {
+        screen_lines = sci_get_contents_range(sj->sci, sj->first_position, sj->last_position);
+    } else {
+        screen_lines = g_strdup("");
+    }
+
+    sj->replace_query = g_string_new("");
+
+    sj->cache = g_string_new(screen_lines);
+    sj->replace_cache = g_string_new(screen_lines);
+
+    gint valid_count = 0;
+
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word word = g_array_index(sj->multicursor_words, Word, i);
+        valid_count += word.valid_search ? 1 : 0;
+    }
+
+    if (valid_count == 0) {
+        multicursor_replace_cancel(sj);
+        return;
+    }
 
     g_array_sort(sj->multicursor_words, sort_words_by_starting_doc);
     sj->words = sj->multicursor_words;
@@ -130,23 +147,13 @@ void multicursor_replace(ShortcutJump *sj) {
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
 
-    sj->replace_query = g_string_new("");
-
-    sj->cache = g_string_new(screen_lines);
-    sj->buffer = g_string_new(screen_lines);
-    sj->replace_cache = g_string_new(screen_lines);
-
     gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
     sj->multicusor_eol_message_line = line;
     sj->current_cursor_pos = pos;
 
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     paste_get_clipboard_text(sj);
-    sj->current_mode = JM_REPLACE_MULTICURSOR;
     annotation_display_replace_multicursor(sj);
-    connect_key_press_action(sj, on_key_press_search_replace);
-    connect_click_action(sj, on_click_event_multicursor_replace);
 }
 
 static void replace_shortcut_char_init(ShortcutJump *sj) {

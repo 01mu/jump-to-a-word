@@ -67,7 +67,6 @@ void multicursor_replace_end(ShortcutJump *sj) {
 
     g_string_free(sj->replace_query, TRUE);
 
-    g_string_free(sj->buffer, TRUE);
     g_string_free(sj->replace_cache, TRUE);
     g_string_free(sj->cache, TRUE);
 
