@@ -166,13 +166,6 @@ void shortcut_char_get_chars(ShortcutJump *sj, gchar query) {
         prev_line = sj->first_line_on_screen - 1;
     }
 
-    if (sj->delete_added_bracket) {
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->current_cursor_pos, 1);
-        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
-        scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
-        sj->delete_added_bracket = FALSE;
-    }
-
     for (gint i = sj->first_position; i < sj->last_position; i++) {
         if (added == shortcut_get_max_words(sj->config_settings->shortcuts_include_single_char)) {
             break;

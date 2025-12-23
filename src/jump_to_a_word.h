@@ -271,8 +271,6 @@ typedef struct {
     gboolean search_change_made;
     gint replace_len;
 
-    gboolean delete_added_bracket;
-
     gulong paste_key_release_id;
     gulong kp_handler_id;
     gulong click_handler_id;

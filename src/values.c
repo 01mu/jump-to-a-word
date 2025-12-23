@@ -220,7 +220,6 @@ static void set_common_vals(ShortcutJump *sj) {
     sj->search_word_pos_last = -1;
     sj->search_change_made = FALSE;
     sj->cursor_in_word = FALSE;
-    sj->delete_added_bracket = FALSE;
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
     sj->inserting_clipboard = FALSE;

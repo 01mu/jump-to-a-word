@@ -43,7 +43,6 @@ static void multicursor_start(ShortcutJump *sj) {
     sj->search_word_pos_last = -1;
     sj->search_change_made = FALSE;
     sj->cursor_in_word = FALSE;
-    sj->delete_added_bracket = FALSE;
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
 
@@ -68,6 +67,7 @@ void multicursor_replace_end(ShortcutJump *sj) {
     g_string_free(sj->replace_query, TRUE);
 
     g_string_free(sj->replace_cache, TRUE);
+    g_string_free(sj->buffer, TRUE);
     g_string_free(sj->cache, TRUE);
 
     g_string_free(sj->multicursor_eol_message, TRUE);

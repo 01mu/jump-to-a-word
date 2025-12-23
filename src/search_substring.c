@@ -205,13 +205,6 @@ static Word search_substring_make_word(ShortcutJump *sj, gint i) {
 }
 
 void search_substring_get_substrings(ShortcutJump *sj) {
-    if (sj->delete_added_bracket) {
-        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->current_cursor_pos, 1);
-        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
-        scintilla_send_message(sj->sci, SCI_SETCURRENTPOS, sj->current_cursor_pos, 0);
-        sj->delete_added_bracket = FALSE;
-    }
-
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);

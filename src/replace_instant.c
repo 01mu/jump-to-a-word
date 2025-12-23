@@ -101,6 +101,7 @@ void multicursor_replace(ShortcutJump *sj) {
     sj->replace_query = g_string_new("");
 
     sj->cache = g_string_new(screen_lines);
+    sj->buffer = g_string_new(screen_lines);
     sj->replace_cache = g_string_new(screen_lines);
 
     gint valid_count = 0;
@@ -143,7 +144,6 @@ void multicursor_replace(ShortcutJump *sj) {
     sj->search_word_pos_last = -1;
     sj->search_change_made = FALSE;
     sj->cursor_in_word = FALSE;
-    sj->delete_added_bracket = FALSE;
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
 

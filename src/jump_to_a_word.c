@@ -195,8 +195,8 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
-    if (sj->multicursor_mode == MC_DISABLED && sj->current_mode != JM_NONE &&
-        nt->modificationType & (SC_MOD_INSERTCHECK) && strcmp(nt->text, sj->clipboard_text) == 0) {
+    if (sj->current_mode != JM_NONE && nt->modificationType & (SC_MOD_INSERTCHECK) &&
+        strcmp(nt->text, sj->clipboard_text) == 0) {
         scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
         sj->inserting_clipboard = TRUE;
 
@@ -231,13 +231,17 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
-    if (!sj->inserting_clipboard &&
-        (sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING) &&
-        nt->modificationType & (SC_MOD_INSERTTEXT)) {
+    if ((sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING ||
+         sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH ||
+         sj->current_mode == JM_REPLACE_MULTICURSOR || sj->current_mode == JM_INSERTING_LINE ||
+         sj->current_mode == JM_INSERTING_LINE_MULTICURSOR || sj->current_mode == JM_SHORTCUT_CHAR_REPLACING ||
+         sj->current_mode == JM_REPLACE_SUBSTRING) &&
+        nt->modificationType & (SC_MOD_INSERTCHECK)) {
+
         if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
             strcmp(nt->text, "\'") == 0 || strcmp(nt->text, "\"") == 0 || strcmp(nt->text, "`") == 0 ||
             strcmp(nt->text, ")") == 0) {
-            sj->delete_added_bracket = TRUE;
+            scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
             return TRUE;
         }
     }
@@ -761,7 +765,6 @@ ShortcutJump *init_data(const GeanyPlugin *plugin) {
     sj->selection_is_a_word = FALSE;
     sj->range_is_set = FALSE;
     sj->previous_cursor_pos = -1;
-    sj->delete_added_bracket = FALSE;
     sj->current_mode = JM_NONE;
 
     return sj;
