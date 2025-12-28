@@ -351,15 +351,6 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
                           (GCallback)on_previous_action_show, pa_menu_sensitivity);
     sj->pa_menu_sensitivity = pa_menu_sensitivity;
 
-    item = gtk_check_menu_item_new_with_mnemonic(_("_Enable Multicursor Mode"));
-    sj->multicursor_menu_checkbox = GTK_CHECK_MENU_ITEM(item);
-    sj->multicursor_menu_checkbox_signal_id =
-        g_signal_connect(sj->multicursor_menu_checkbox, "toggled", G_CALLBACK(multicursor_menu_toggled), sj);
-    gtk_widget_show(item);
-    gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
-
-    SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
-
     // TODO add checkbox menu groups for option selection
     SET_MENU_SEPERATOR();
 
@@ -374,6 +365,17 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
     SET_MENU_ITEM("Open R_eplacement Options Window", open_replace_options_cb, sj);
     SET_KEYBINDING("Open replacement options window", "open_replace_options", open_replace_options_kb,
                    KB_OPEN_REPLACE_OPTIONS, sj, item);
+
+    SET_MENU_SEPERATOR();
+
+    item = gtk_check_menu_item_new_with_mnemonic(_("_Enable Multicursor Mode"));
+    sj->multicursor_menu_checkbox = GTK_CHECK_MENU_ITEM(item);
+    sj->multicursor_menu_checkbox_signal_id =
+        g_signal_connect(sj->multicursor_menu_checkbox, "toggled", G_CALLBACK(multicursor_menu_toggled), sj);
+    gtk_widget_show(item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
+
+    SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
 
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(sj->main_menu_item), submenu);
     gtk_container_add(GTK_CONTAINER(sj->geany_data->main_widgets->tools_menu), sj->main_menu_item);
