@@ -74,6 +74,13 @@ void search_word_end(ShortcutJump *sj) {
 void search_word_replace_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Word replacement completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
+
+    if (sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->first_position, 0);
+        scintilla_send_message(sj->sci, SCI_SETTARGETEND, sj->last_position, 0);
+        scintilla_send_message(sj->sci, SCI_REPLACETARGET, -1, (sptr_t)sj->replace_cache->str);
+    }
+
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     search_word_clear_replace_indicators(sj);
     search_word_clear_jump_indicators(sj);

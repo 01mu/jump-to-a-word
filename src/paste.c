@@ -43,7 +43,9 @@ static void paste_insert_clipboard_text(ShortcutJump *sj) {
     gint prev;
     gint clipboard_text_len = strlen(sj->clipboard_text);
 
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    if (!sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    }
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
@@ -67,29 +69,35 @@ static void paste_insert_clipboard_text(ShortcutJump *sj) {
         c = chars_added;
     }
 
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
+    if (!sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
 
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
+        for (gint i = 0; i < sj->words->len; i++) {
+            Word word = g_array_index(sj->words, Word, i);
 
-        if (word.valid_search) {
-            gint start = sj->first_position + word.replace_pos;
-            gint len = sj->replace_len + clipboard_text_len;
+            if (word.valid_search) {
+                gint start = sj->first_position + word.replace_pos;
+                gint len = sj->replace_len + clipboard_text_len;
 
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, start, len);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, start, len);
+            }
         }
-    }
 
-    sj->cursor_moved_to_eol += c;
+        sj->cursor_moved_to_eol += c;
+    }
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->cursor_moved_to_eol, 0);
 
     g_string_append(sj->replace_query, sj->clipboard_text);
     sj->replace_len += clipboard_text_len;
     sj->search_change_made = TRUE;
+
+    if (sj->config_settings->disable_live_replace) {
+        annotation_display_replace_string(sj);
+    }
 }
 
 gboolean on_paste_key_release_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {

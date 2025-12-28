@@ -202,3 +202,30 @@ void annotation_display_shortcut_char(ShortcutJump *sj) {
     g_string_printf(sj->eol_message, "Waiting for character input");
     annotation_show(sj);
 }
+
+void annotation_display_replace_string(ShortcutJump *sj) {
+    if (!sj->config_settings->show_annotations) {
+        return;
+    }
+
+    gchar *s = "Inserting: \"%s\"";
+
+    if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+        annotation_clear(sj->sci, sj->multicusor_eol_message_line);
+
+        g_string_printf(sj->multicursor_eol_message, s, sj->replace_query->str);
+
+        gint text_color = sj->config_settings->text_color;
+        gint search_annotation_bg_color = sj->config_settings->search_annotation_bg_color;
+        gint line = sj->multicusor_eol_message_line;
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETVISIBLE, EOLANNOTATION_STADIUM, 0);
+        scintilla_send_message(sj->sci, SCI_STYLESETFORE, EOLANNOTATION_STADIUM, text_color);
+        scintilla_send_message(sj->sci, SCI_STYLESETBACK, EOLANNOTATION_STADIUM, search_annotation_bg_color);
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETTEXT, line, (sptr_t)sj->multicursor_eol_message->str);
+        scintilla_send_message(sj->sci, SCI_EOLANNOTATIONSETSTYLEOFFSET, EOLANNOTATION_STADIUM, 0);
+    } else {
+        annotation_clear(sj->sci, sj->eol_message_line);
+        g_string_printf(sj->eol_message, s, sj->replace_query->str);
+        annotation_show(sj);
+    }
+}

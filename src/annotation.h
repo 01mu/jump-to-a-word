@@ -34,5 +34,6 @@ void annotation_display_inserting_line_multicursor(ShortcutJump *sj);
 void annotation_display_replace_multicursor(ShortcutJump *sj);
 void annotation_display_replace_char(ShortcutJump *sj);
 void annotation_display_shortcut_char(ShortcutJump *sj);
+void annotation_display_replace_string(ShortcutJump *sj);
 
 #endif

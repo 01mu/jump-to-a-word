@@ -63,6 +63,13 @@ static void line_insert_remove_added_new_lines(ShortcutJump *sj) {
 
 static void line_insert_done_common(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
+
+    if (sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->first_position, 0);
+        scintilla_send_message(sj->sci, SCI_SETTARGETEND, sj->last_position, 0);
+        scintilla_send_message(sj->sci, SCI_REPLACETARGET, -1, (sptr_t)sj->replace_cache->str);
+    }
+
     line_insert_clear_replace_indicators(sj);
     line_insert_delete_blank_lines(sj);
     line_insert_remove_added_new_lines(sj);

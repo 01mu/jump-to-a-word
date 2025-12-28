@@ -34,6 +34,7 @@
 gboolean on_key_press_search_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
     gunichar keychar = gdk_keyval_to_unicode(event->keyval);
+
     annotation_clear(sj->sci, sj->eol_message_line);
     annotation_clear(sj->sci, sj->multicusor_eol_message_line);
 

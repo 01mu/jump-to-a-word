@@ -82,6 +82,7 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
     UPDATE_BOOL(search_smart_case, "search_smart_case", "search");
 
     UPDATE_BOOL(instant_transpose, "instant_transpose", "action");
+    UPDATE_BOOL(disable_live_replace, "disable_live_replace", "action");
 
     UPDATE_INTEGER(text_after, "text_after", "text_after");
     UPDATE_INTEGER(line_after, "line_after", "line_after");

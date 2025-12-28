@@ -18,13 +18,16 @@
 
 #include <plugindata.h>
 
+#include "annotation.h"
 #include "jump_to_a_word.h"
 
 void clear_occurances(ShortcutJump *sj) {
     gint chars_removed = 0;
     gint removed_to_left = 0;
 
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    if (!sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    }
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
@@ -40,10 +43,12 @@ void clear_occurances(ShortcutJump *sj) {
         }
     }
 
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
+    if (!sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
 
-    sj->current_cursor_pos -= removed_to_left;
-    sj->cursor_moved_to_eol -= removed_to_left;
+        sj->current_cursor_pos -= removed_to_left;
+        sj->cursor_moved_to_eol -= removed_to_left;
+    }
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->cursor_moved_to_eol, 0);
 }
@@ -53,7 +58,9 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
     gint c = -1;
     gint prev;
 
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    if (!sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    }
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
@@ -77,30 +84,36 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
         c = chars_added;
     }
 
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
+    if (!sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
 
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
+        for (gint i = 0; i < sj->words->len; i++) {
+            Word word = g_array_index(sj->words, Word, i);
 
-        if (word.valid_search) {
-            gint start = sj->first_position + word.replace_pos;
-            gint len = sj->replace_len + 1;
+            if (word.valid_search) {
+                gint start = sj->first_position + word.replace_pos;
+                gint len = sj->replace_len + 1;
 
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, start, len);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, start, len);
+            }
         }
-    }
 
-    sj->current_cursor_pos += c;
-    sj->cursor_moved_to_eol += c;
+        sj->current_cursor_pos += c;
+        sj->cursor_moved_to_eol += c;
+    }
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->cursor_moved_to_eol, 0);
 
     g_string_insert_c(sj->replace_query, sj->replace_len, keychar);
     sj->replace_len += 1;
     sj->search_change_made = TRUE;
+
+    if (sj->config_settings->disable_live_replace) {
+        annotation_display_replace_string(sj);
+    }
 }
 
 static void remove_character(ShortcutJump *sj) {
@@ -108,7 +121,9 @@ static void remove_character(ShortcutJump *sj) {
     gint c = -1;
     gint prev;
 
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    if (!sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
+    }
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
@@ -132,30 +147,36 @@ static void remove_character(ShortcutJump *sj) {
         c = chars_removed;
     }
 
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
+    if (!sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
 
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word word = g_array_index(sj->words, Word, i);
+        for (gint i = 0; i < sj->words->len; i++) {
+            Word word = g_array_index(sj->words, Word, i);
 
-        if (word.valid_search) {
-            gint start = sj->first_position + word.replace_pos;
-            gint len = sj->replace_len - 1;
+            if (word.valid_search) {
+                gint start = sj->first_position + word.replace_pos;
+                gint len = sj->replace_len - 1;
 
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
-            scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-            scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, start, len);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
+                scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
+                scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, start, len);
+            }
         }
-    }
 
-    sj->current_cursor_pos -= c;
-    sj->cursor_moved_to_eol -= c;
+        sj->current_cursor_pos -= c;
+        sj->cursor_moved_to_eol -= c;
+    }
 
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->cursor_moved_to_eol, 0);
 
     sj->replace_len -= 1;
     g_string_erase(sj->replace_query, sj->replace_len, 1);
     sj->search_change_made = TRUE;
+
+    if (sj->config_settings->disable_live_replace) {
+        annotation_display_replace_string(sj);
+    }
 }
 
 gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar,
@@ -188,24 +209,23 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
             add_character(sj, keychar);
             return TRUE;
         }
-    } else {
-        if (event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R ||
-            event->keyval == GDK_KEY_Caps_Lock || event->keyval == GDK_KEY_Control_L ||
-            event->keyval == GDK_KEY_Control_R) {
-            return TRUE;
-        } else if (event->keyval == GDK_KEY_Return) {
-            complete_func(sj);
-            return TRUE;
-        } else {
-            if (sj->search_change_made) {
-                complete_func(sj);
-            } else {
-                cancel_func(sj);
-            }
-
-            return TRUE;
-        }
-
-        return FALSE;
     }
+
+    if (event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R || event->keyval == GDK_KEY_Caps_Lock ||
+        event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R) {
+        return TRUE;
+    }
+
+    if (event->keyval == GDK_KEY_Return) {
+        complete_func(sj);
+        return TRUE;
+    }
+
+    if (sj->search_change_made) {
+        complete_func(sj);
+    } else {
+        cancel_func(sj);
+    }
+
+    return FALSE;
 }

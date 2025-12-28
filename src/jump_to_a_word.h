@@ -145,6 +145,7 @@ typedef struct {
     gboolean select_when_shortcut_char;
     gboolean search_smart_case;
     gboolean instant_transpose;
+    gboolean disable_live_replace;
 
     gint tag_color;
     gint text_color;
@@ -184,6 +185,7 @@ typedef struct {
     GtkWidget *select_when_shortcut_char;
     GtkWidget *search_smart_case;
     GtkWidget *instant_transpose;
+    GtkWidget *disable_live_replace;
 } Widgets;
 
 typedef struct {

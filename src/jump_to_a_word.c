@@ -416,6 +416,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(search_smart_case, "search_smart_case", "search", TRUE);
 
     SET_SETTING_BOOL(instant_transpose, "instant_transpose", "action", FALSE);
+    SET_SETTING_BOOL(disable_live_replace, "disable_live_replace", "action", FALSE);
 
     SET_SETTING_INTEGER(text_after, "text_after", "text_after", TX_SELECT_TEXT);
     SET_SETTING_INTEGER(line_after, "line_after", "line_after", LA_SELECT_TO_LINE);
@@ -663,6 +664,9 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
     tt = "A tranpose action will always occur when two strings are selected";
     WIDGET_CONF_BOOL(instant_transpose, "Transpose _when two strings are selected", tt);
+
+    tt = "The strings to be updated will not change while the replacement is being typed";
+    WIDGET_CONF_BOOL(disable_live_replace, "Disable live string replacement", tt);
 
     /*
      * After jumping to a word, character, or substring

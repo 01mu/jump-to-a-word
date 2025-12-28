@@ -130,6 +130,13 @@ void shortcut_char_replacing_cancel(ShortcutJump *sj) {
 void shortcut_char_replacing_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Character replacement completed (%i change%s made)."), sj->words->len,
                      sj->words->len == 1 ? "" : "s");
+
+    if (sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->first_position, 0);
+        scintilla_send_message(sj->sci, SCI_SETTARGETEND, sj->last_position, 0);
+        scintilla_send_message(sj->sci, SCI_REPLACETARGET, -1, (sptr_t)sj->replace_cache->str);
+    }
+
     shortcut_char_replacing_clear_indicators(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);

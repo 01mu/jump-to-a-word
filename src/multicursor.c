@@ -124,6 +124,7 @@ void multicursor_replace_cancel(ShortcutJump *sj) {
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
         scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
     }
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     multicursor_replace_clear_indicators(sj);
@@ -140,6 +141,13 @@ void multicursor_replace_cancel(ShortcutJump *sj) {
 void multicursor_replace_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Multicursor string replacement completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
+
+    if (sj->config_settings->disable_live_replace) {
+        scintilla_send_message(sj->sci, SCI_SETTARGETSTART, sj->multicursor_first_pos, 0);
+        scintilla_send_message(sj->sci, SCI_SETTARGETEND, sj->multicursor_last_pos, 0);
+        scintilla_send_message(sj->sci, SCI_REPLACETARGET, -1, (sptr_t)sj->replace_cache->str);
+    }
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
     multicursor_replace_clear_indicators(sj);
