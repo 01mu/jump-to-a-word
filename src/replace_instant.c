@@ -126,6 +126,7 @@ void multicursor_replace(ShortcutJump *sj) {
 
         if (word->valid_search) {
             word->replace_pos = word->starting_doc - sj->first_position;
+
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
             scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word->starting_doc, word->word->len);
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
@@ -149,8 +150,11 @@ void multicursor_replace(ShortcutJump *sj) {
 
     gint pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
     gint line = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, pos, 0);
+
     sj->multicusor_eol_message_line = line;
     sj->current_cursor_pos = pos;
+
+    move_to_end_of_line(sj);
 
     paste_get_clipboard_text(sj);
     annotation_display_replace_multicursor(sj);
@@ -163,6 +167,8 @@ static void replace_shortcut_char_init(ShortcutJump *sj) {
         return;
     }
 
+    move_to_end_of_line(sj);
+
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
     scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     annotation_display_replace_char(sj);
@@ -173,6 +179,7 @@ static void replace_shortcut_char_init(ShortcutJump *sj) {
         if (!word.valid_search) {
             continue;
         }
+
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
         scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, 1);
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TEXT, 0);
@@ -202,6 +209,8 @@ void replace_substring_init(ShortcutJump *sj) {
         }
     }
 
+    move_to_end_of_line(sj);
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     paste_get_clipboard_text(sj);
     disconnect_key_press_action(sj);
@@ -228,6 +237,8 @@ void replace_word_init(ShortcutJump *sj) {
             }
         }
     }
+
+    move_to_end_of_line(sj);
 
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     paste_get_clipboard_text(sj);

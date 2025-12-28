@@ -152,57 +152,56 @@ static GArray *line_insert_get_unique_lines(ShortcutJump *sj, GArray *lines, GAr
     for (gint i = 0; i < anchors->len; i++) {
         Word word = g_array_index(anchors, Word, i);
 
-        if (!word.valid_search || !(word.line > previous_line)) {
-            continue;
+        if (word.valid_search && (word.line > previous_line)) {
+            gint line_number;
+
+            if (sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
+                line_number = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, word.starting_doc, 0);
+            } else {
+                line_number =
+                    scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, word.starting_doc + word.word->len, 0);
+            }
+
+            gint line_start_pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, line_number, 0);
+            gint line_end_pos = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line_number, 0);
+
+            GString *line_content;
+
+            if (line_start_pos < line_end_pos) {
+                line_content = g_string_new(sci_get_contents_range(sj->sci, line_start_pos, line_end_pos));
+            } else {
+                line_content = g_string_new("");
+            }
+
+            GString *spaces_and_tabs = g_string_new("");
+
+            gint i = 0;
+
+            while (line_content->str[i] == ' ' || line_content->str[i] == '\t') {
+                g_string_append_c(spaces_and_tabs, line_content->str[i]);
+                i++;
+            }
+
+            g_free(line_content);
+
+            LST lst;
+
+            lst.line = line_number;
+            lst.spaces_and_tabs = spaces_and_tabs;
+
+            g_array_append_val(lines, lst);
+            previous_line = line_number;
         }
-
-        gint line_number;
-
-        if (sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
-            line_number = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, word.starting_doc, 0);
-        } else {
-            line_number = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, word.starting_doc + word.word->len, 0);
-        }
-
-        gint line_start_pos = scintilla_send_message(sj->sci, SCI_POSITIONFROMLINE, line_number, 0);
-        gint line_end_pos = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line_number, 0);
-
-        GString *line_content;
-
-        if (line_start_pos < line_end_pos) {
-            line_content = g_string_new(sci_get_contents_range(sj->sci, line_start_pos, line_end_pos));
-        } else {
-            line_content = g_string_new("");
-        }
-
-        GString *spaces_and_tabs = g_string_new("");
-
-        gint i = 0;
-
-        while (line_content->str[i] == ' ' || line_content->str[i] == '\t') {
-            g_string_append_c(spaces_and_tabs, line_content->str[i]);
-            i++;
-        }
-
-        g_free(line_content);
-
-        LST lst;
-
-        lst.line = line_number;
-        lst.spaces_and_tabs = spaces_and_tabs;
-
-        g_array_append_val(lines, lst);
-        previous_line = line_number;
     }
 
     return lines;
 }
 
-static GArray *line_insert_get_dummy_lines(ShortcutJump *sj, GArray *lines, GArray *lines_to_insert) {
+static GArray *line_insert_get_dummy_lines(ShortcutJump *sj, GArray *unique_lines, GArray *lines_to_insert) {
     gint lines_added = 0;
 
-    for (gint i = 0; i < lines->len; i++) {
-        LST line = g_array_index(lines, LST, i);
+    for (gint i = 0; i < unique_lines->len; i++) {
+        LST line = g_array_index(unique_lines, LST, i);
         gint dummy_string_pos;
 
         if (sj->config_settings->replace_action == RA_INSERT_PREVIOUS_LINE) {
@@ -329,16 +328,29 @@ void insert_newline_chars(ShortcutJump *sj, GArray *anchors) {
 }
 
 void line_insert_common(ShortcutJump *sj, GArray *unique_lines, GArray *dummy_lines, GArray *anchors) {
+    gint current_line_number = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+
     clear_anchor_annotations(sj->sci, anchors);
+
     g_array_sort(anchors, sort_words_by_starting_doc);
+
     unique_lines = line_insert_get_unique_lines(sj, unique_lines, anchors);
+
     insert_newline_chars(sj, anchors);
+
     dummy_lines = line_insert_get_dummy_lines(sj, unique_lines, dummy_lines);
+
     line_insert_set_positions(sj, dummy_lines);
 
     for (gint i = 0; i < unique_lines->len; i++) {
         LST line = g_array_index(unique_lines, LST, i);
+        if (line.line < current_line_number) {
+            sj->cursor_moved_to_eol += 1;
+        }
+    }
 
+    for (gint i = 0; i < unique_lines->len; i++) {
+        LST line = g_array_index(unique_lines, LST, i);
         g_free(line.spaces_and_tabs);
     }
 
@@ -353,6 +365,8 @@ void line_insert_common(ShortcutJump *sj, GArray *unique_lines, GArray *dummy_li
 }
 
 void line_insert_from_multicursor(ShortcutJump *sj) {
+    move_to_end_of_line(sj);
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
 
@@ -399,6 +413,8 @@ void line_insert_from_multicursor(ShortcutJump *sj) {
 }
 
 void line_insert_from_search(ShortcutJump *sj) {
+    move_to_end_of_line(sj);
+
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_BEGINUNDOACTION, 0, 0);
 

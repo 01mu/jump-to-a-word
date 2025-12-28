@@ -236,6 +236,7 @@ typedef struct {
     gint first_position;
     gint last_position;
 
+    gint cursor_moved_to_eol;
     gint current_cursor_pos;
     gint previous_cursor_pos;
 

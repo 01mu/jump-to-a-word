@@ -74,6 +74,7 @@ void search_word_end(ShortcutJump *sj) {
 void search_word_replace_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Word replacement completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     search_word_clear_replace_indicators(sj);
     search_word_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
@@ -98,6 +99,7 @@ void search_word_replace_complete(ShortcutJump *sj) {
 }
 
 void search_word_replace_cancel(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     search_word_clear_replace_indicators(sj);
     search_word_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
@@ -470,6 +472,8 @@ void search_word_init(ShortcutJump *sj, gboolean instant_replace) {
     init_sj_values(sj);
     search_word_get_words(sj);
     search_word_set_query(sj, instant_replace);
+
+    attempt_line_end_for_char(sj);
     paste_get_clipboard_text(sj);
     connect_key_press_action(sj, on_key_press_search_word);
     connect_click_action(sj, on_click_event_search);

@@ -209,6 +209,7 @@ void get_view_positions(ShortcutJump *sj) {
     sj->first_position = first_position;
     sj->last_position = last_position;
     sj->current_cursor_pos = current_cursor_pos;
+    sj->cursor_moved_to_eol = current_cursor_pos;
 }
 
 static void set_common_vals(ShortcutJump *sj) {

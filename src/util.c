@@ -28,6 +28,25 @@
 #include "shortcut_line.h"
 #include "shortcut_word.h"
 
+void attempt_line_end_for_char(ShortcutJump *sj) {
+    gint line_number = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+    gint line_end_pos = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line_number, 0);
+
+    gchar c = scintilla_send_message(sj->sci, SCI_GETCHARAT, sj->current_cursor_pos, 0);
+
+    if (c == '"' || c == ']' || c == ')' || c == '}' || c == '>' || c == '\'' || c == '`') {
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, line_end_pos, 0);
+    }
+}
+
+void move_to_end_of_line(ShortcutJump *sj) {
+    gint line_number = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
+    gint line_end_pos = scintilla_send_message(sj->sci, SCI_GETLINEENDPOSITION, line_number, 0);
+
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, line_end_pos, 0);
+    sj->cursor_moved_to_eol = line_end_pos;
+}
+
 gint get_lfs(ShortcutJump *sj, gint current_line) {
     if (sj->in_selection && sj->selection_is_within_a_line) {
         return 0;

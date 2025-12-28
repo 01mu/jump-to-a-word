@@ -70,6 +70,7 @@ void search_substring_end(ShortcutJump *sj) {
 void search_substring_replace_complete(ShortcutJump *sj) {
     ui_set_statusbar(TRUE, _("Substring replacement completed (%i change%s made)."), sj->search_results_count,
                      sj->search_results_count == 1 ? "" : "s");
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     search_substring_clear_replace_indicators(sj);
     search_substring_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
@@ -93,6 +94,7 @@ void search_substring_replace_complete(ShortcutJump *sj) {
 }
 
 void search_substring_replace_cancel(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
     search_substring_clear_replace_indicators(sj);
     search_substring_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
@@ -432,6 +434,7 @@ void serach_substring_init(ShortcutJump *sj) {
         init_sj_values(sj);
     }
 
+    attempt_line_end_for_char(sj);
     paste_get_clipboard_text(sj);
     connect_key_press_action(sj, on_key_press_search_substring);
     connect_click_action(sj, on_click_event_search);

@@ -38,5 +38,7 @@ void end_actions(ShortcutJump *sj);
 gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b);
 void multicursor_menu_toggled(GtkMenuItem *menuitem, gpointer data);
 void toggle_multicursor_menu(ShortcutJump *sj, gboolean type);
+void attempt_line_end_for_char(ShortcutJump *sj);
+void move_to_end_of_line(ShortcutJump *sj);
 
 #endif

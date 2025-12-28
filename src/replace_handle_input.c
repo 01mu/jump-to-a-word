@@ -20,103 +20,72 @@
 
 #include "jump_to_a_word.h"
 
-static void handle_single_backspace(ShortcutJump *sj) {
-    gint chars_removed = 0;
-    gint rem_to_left = 0;
-
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
-    scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
-
-    for (gint i = 0; i < sj->words->len; i++) {
-        Word *word = &g_array_index(sj->words, Word, i);
-
-        if (word->valid_search) {
-            word->replace_pos -= chars_removed;
-            g_string_erase(sj->replace_cache, word->replace_pos, word->word->len);
-            chars_removed += word->word->len;
-
-            if (word->starting < sj->current_cursor_pos) {
-                rem_to_left += word->word->len;
-            }
-        }
-    }
-
-    scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
-
-    sj->search_change_made = TRUE;
-    sj->current_cursor_pos -= rem_to_left;
-
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-}
-
 void clear_occurances(ShortcutJump *sj) {
     gint chars_removed = 0;
     gint removed_to_left = 0;
-    gint into = 0;
 
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
 
         if (word->valid_search) {
-            if (sj->current_cursor_pos >= word->starting_doc &&
-                sj->current_cursor_pos < word->starting_doc + word->word->len) {
-                sj->cursor_in_word = TRUE;
-            }
-
             word->replace_pos -= chars_removed;
             g_string_erase(sj->replace_cache, word->replace_pos, word->word->len);
             chars_removed += word->word->len;
 
-            if (word->starting_doc < sj->current_cursor_pos) {
-                if (sj->cursor_in_word) {
-                    into = word->word->len - (sj->current_cursor_pos - word->starting_doc);
-                }
-
+            if (word->starting_doc < sj->cursor_moved_to_eol) {
                 removed_to_left = chars_removed;
             }
         }
     }
 
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
-    sj->current_cursor_pos -= removed_to_left - into;
-    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
+
+    sj->current_cursor_pos -= removed_to_left;
+    sj->cursor_moved_to_eol -= removed_to_left;
+
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->cursor_moved_to_eol, 0);
 }
 
 static void add_character(ShortcutJump *sj, gunichar keychar) {
     gint chars_added = 0;
-    gint c = 0;
+    gint c = -1;
+    gint prev;
 
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
 
         if (word->valid_search) {
-            gint t = word->replace_pos;
+            gint v = chars_added + sj->cursor_moved_to_eol;
 
             word->replace_pos += chars_added;
-
-            gint insert_pos = word->replace_pos + sj->replace_len;
-            g_string_insert_c(sj->replace_cache, insert_pos, keychar);
+            g_string_insert_c(sj->replace_cache, word->replace_pos + sj->replace_len, keychar);
             chars_added += 1;
 
-            if (t + sj->first_position < sj->current_cursor_pos) {
-                c = chars_added;
+            if (c == -1 && word->replace_pos + sj->first_position > v) {
+                c = prev;
+            } else {
+                prev = chars_added;
             }
         }
+    }
+
+    if (c == -1) {
+        c = chars_added;
     }
 
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word word = g_array_index(sj->words, Word, i);
+
         if (word.valid_search) {
             gint start = sj->first_position + word.replace_pos;
             gint len = sj->replace_len + 1;
+
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
             scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, start, len);
             scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
@@ -125,40 +94,42 @@ static void add_character(ShortcutJump *sj, gunichar keychar) {
     }
 
     sj->current_cursor_pos += c;
+    sj->cursor_moved_to_eol += c;
 
-    if (sj->cursor_in_word) {
-        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos + sj->replace_len + 1, 0);
-    } else {
-        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-    }
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->cursor_moved_to_eol, 0);
 
     g_string_insert_c(sj->replace_query, sj->replace_len, keychar);
     sj->replace_len += 1;
     sj->search_change_made = TRUE;
-    // scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }
 
 static void remove_character(ShortcutJump *sj) {
     gint chars_removed = 0;
-    gint c = 0;
+    gint c = -1;
+    gint prev;
 
-    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_DELETERANGE, sj->first_position, sj->replace_cache->len);
 
     for (gint i = 0; i < sj->words->len; i++) {
         Word *word = &g_array_index(sj->words, Word, i);
 
         if (word->valid_search) {
-            gint t = word->replace_pos;
+            gint v = sj->cursor_moved_to_eol - chars_removed;
 
             g_string_erase(sj->replace_cache, word->replace_pos - chars_removed + sj->replace_len - 1, 1);
             word->replace_pos -= chars_removed;
             chars_removed += 1;
 
-            if (t + sj->first_position < sj->current_cursor_pos) {
-                c = chars_removed;
+            if (c == -1 && word->replace_pos + sj->first_position > v) {
+                c = prev;
+            } else {
+                prev = chars_removed;
             }
         }
+    }
+
+    if (c == -1) {
+        c = chars_removed;
     }
 
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
@@ -178,78 +149,63 @@ static void remove_character(ShortcutJump *sj) {
     }
 
     sj->current_cursor_pos -= c;
+    sj->cursor_moved_to_eol -= c;
 
-    if (sj->cursor_in_word) {
-        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos + sj->replace_len - 1, 0);
-    } else {
-        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-    }
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->cursor_moved_to_eol, 0);
 
     sj->replace_len -= 1;
     g_string_erase(sj->replace_query, sj->replace_len, 1);
     sj->search_change_made = TRUE;
-    // scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
 }
 
 gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar,
                               void complete_func(ShortcutJump *), void cancel_func(ShortcutJump *)) {
-    gint pos_cache = sj->current_cursor_pos;
+    if (keychar != 0) {
+        if ((event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete)) {
+            if (sj->search_change_made) {
+                if (sj->replace_len == 0) {
+                    complete_func(sj);
+                    return TRUE;
+                }
 
-    gboolean is_other_char =
-        strchr("[]\\;'.,/-=_+{`_+|}:<>?\"~)(*&^%$#@!) ", (gchar)gdk_keyval_to_unicode(event->keyval)) ||
-        (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9);
+                remove_character(sj);
+            } else {
+                clear_occurances(sj);
+                complete_func(sj);
+            }
 
-    // scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
-    scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_TAG, 0);
-
-    if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&
-        !sj->search_change_made) {
-        handle_single_backspace(sj);
-        complete_func(sj);
-        return TRUE;
-    }
-
-    if (keychar != 0 && (g_unichar_isalpha(keychar) || is_other_char) && sj->replace_len >= 0) {
-        if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
-            clear_occurances(sj);
-        }
-
-        add_character(sj, keychar);
-        return TRUE;
-    }
-
-    if (keychar != 0 && (event->keyval == GDK_KEY_BackSpace || event->keyval == GDK_KEY_Delete) &&
-        sj->replace_len >= 0) {
-        if (sj->replace_len == 0) {
-            complete_func(sj);
             return TRUE;
         }
 
-        remove_character(sj);
-        return TRUE;
-    }
+        if ((g_unichar_isalpha(keychar) ||
+             (strchr("[]\\;'.,/-=_+{`_+|}:<>?\"~)(*&^%$#@!) ", (gchar)gdk_keyval_to_unicode(event->keyval)) ||
+              (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9))) &&
+            sj->replace_len >= 0) {
+            if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
+                clear_occurances(sj);
+            }
 
-    if (event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R || event->keyval == GDK_KEY_Caps_Lock ||
-        event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R) {
-        return TRUE;
-    }
-
-    if (event->keyval == GDK_KEY_Return) {
-        complete_func(sj);
-        return TRUE;
-    }
-
-    if (sj->replace_len > 0) {
-        sj->current_cursor_pos = scintilla_send_message(sj->sci, SCI_GETCURRENTPOS, 0, 0);
+            add_character(sj, keychar);
+            return TRUE;
+        }
     } else {
-        sj->current_cursor_pos = pos_cache;
-    }
+        if (event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R ||
+            event->keyval == GDK_KEY_Caps_Lock || event->keyval == GDK_KEY_Control_L ||
+            event->keyval == GDK_KEY_Control_R) {
+            return TRUE;
+        } else if (event->keyval == GDK_KEY_Return) {
+            complete_func(sj);
+            return TRUE;
+        } else {
+            if (sj->search_change_made) {
+                complete_func(sj);
+            } else {
+                cancel_func(sj);
+            }
 
-    if (sj->search_change_made) {
-        complete_func(sj);
-    } else {
-        cancel_func(sj);
-    }
+            return TRUE;
+        }
 
-    return FALSE;
+        return FALSE;
+    }
 }
