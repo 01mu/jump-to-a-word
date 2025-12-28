@@ -220,7 +220,12 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         return TRUE;
     }
 
-    if (sj->multicursor_mode == MC_DISABLED && sj->current_mode != JM_NONE &&
+    if ((sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING ||
+         sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH ||
+         sj->current_mode == JM_REPLACE_MULTICURSOR || sj->current_mode == JM_INSERTING_LINE ||
+         sj->current_mode == JM_INSERTING_LINE_MULTICURSOR || sj->current_mode == JM_SHORTCUT_CHAR_REPLACING ||
+         sj->current_mode == JM_REPLACE_SUBSTRING) &&
+        sj->multicursor_mode == MC_DISABLED &&
         (nt->modificationType & (SC_PERFORMED_UNDO) || nt->modificationType & (SC_PERFORMED_REDO))) {
         if (sj->current_mode == JM_SUBSTRING) {
             cancel_actions(sj);
