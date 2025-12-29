@@ -397,7 +397,6 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
                 annotation_clear(sj->sci, sj->eol_message_line);
                 sj->waiting_after_single_instance = TRUE;
                 scintilla_send_message(sj->sci, SCI_SETREADONLY, 1, 0);
-                // TODO add settings option for interval
                 return g_timeout_add(500, timer_callback, sj);
             }
         }

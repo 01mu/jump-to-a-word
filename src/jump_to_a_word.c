@@ -18,6 +18,7 @@
 
 #include <plugindata.h>
 
+#include "duplicate_string.h"
 #include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "line_options.h"
@@ -57,16 +58,16 @@ const struct {
                  {"Select to text", TX_SELECT_TO_TEXT},
                  {"Select text range", TX_SELECT_TEXT_RANGE}};
 
-// TODO add option to duplicate selection
 const struct {
     gchar *label;
     ReplaceAction type;
-} replace_conf[] = {{"Replace string", RA_REPLACE},
-                    {"Insert at start of string", RA_INSERT_START},
-                    {"Insert at end of string", RA_INSERT_END},
+} replace_conf[] = {{"Replace selection", RA_REPLACE},
+                    {"Insert at start of selection", RA_INSERT_START},
+                    {"Insert at end of selection", RA_INSERT_END},
                     {"Insert at previous line", RA_INSERT_PREVIOUS_LINE},
                     {"Insert at next line", RA_INSERT_NEXT_LINE},
-                    {"Transpose 2 strings", RA_TRANSPOSE_STRING}};
+                    {"Transpose selection", RA_TRANSPOSE_STRING},
+                    {"Duplicate selection", RA_DUPLICATE}};
 
 void handle_action(gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
@@ -150,6 +151,13 @@ void handle_action(gpointer user_data) {
                 return;
             }
         }
+    } else if (ra == RA_DUPLICATE) {
+        if (mm == MC_ACCEPTING) {
+            if (jm == JM_NONE) {
+                duplicate_string(sj);
+                return;
+            }
+        }
     }
 
     ui_set_statusbar(TRUE, _("Nothing to do. | Text option: %s | Line option: %s | Action: %s | Multicursor mode %s"),
@@ -183,7 +191,6 @@ static void on_cancel(GObject *obj, GeanyDocument *doc, gpointer user_data) {
 static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNotification *nt, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    // TODO add multicursor selection using alt key
     if (sj->multicursor_mode == MC_ACCEPTING && nt->nmhdr.code == SCN_UPDATEUI && nt->updated == SC_UPDATE_SELECTION) {
         sj->sci = get_scintilla_object();
         gint selection_start = scintilla_send_message(sj->sci, SCI_GETSELECTIONSTART, 0, 0);
@@ -351,7 +358,6 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
                           (GCallback)on_previous_action_show, pa_menu_sensitivity);
     sj->pa_menu_sensitivity = pa_menu_sensitivity;
 
-    // TODO add checkbox menu groups for option selection
     SET_MENU_SEPERATOR();
 
     SET_MENU_ITEM("Open _Text Options Window", open_text_options_cb, sj);
