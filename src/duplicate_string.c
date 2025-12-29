@@ -23,7 +23,7 @@
 #include "multicursor.h"
 #include "util.h"
 
-void multicursor_transpose_cancel(ShortcutJump *sj) {
+void multicursor_duplicate_cancel(ShortcutJump *sj) {
     multicursor_replace_clear_indicators(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
 

@@ -19,6 +19,7 @@
 #include <plugindata.h>
 
 #include "annotation.h"
+#include "duplicate_string.h"
 #include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "transpose_string.h"
@@ -291,7 +292,7 @@ void multicursor_toggle(ShortcutJump *sj) {
         } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
             multicursor_line_insert_cancel(sj);
         } else if (sj->current_mode == JM_DUPLICATE_MULTICURSOR) {
-            multicursor_transpose_cancel(sj);
+            multicursor_duplicate_cancel(sj);
         } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
             multicursor_replace_cancel(sj);
         } else if (sj->current_mode == JM_NONE) {
