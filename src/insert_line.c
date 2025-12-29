@@ -24,6 +24,7 @@
 #include "paste.h"
 #include "replace_instant.h"
 #include "util.h"
+#include "values.h"
 
 typedef struct {
     gint line;
@@ -90,14 +91,7 @@ void line_insert_end(ShortcutJump *sj) {
         g_string_free(word.word, TRUE);
     }
 
-    g_string_free(sj->replace_query, TRUE);
-
-    g_array_free(sj->searched_words_for_line_insert, TRUE);
-    g_array_free(sj->words, TRUE);
-    g_string_free(sj->cache, TRUE);
-    g_string_free(sj->buffer, TRUE);
-    g_string_free(sj->replace_cache, TRUE);
-
+    free_sj_values(sj);
     sj->current_mode = JM_NONE;
 }
 
