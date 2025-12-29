@@ -258,6 +258,10 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
 
             return TRUE;
         } else if (event->keyval == GDK_KEY_Return || event->keyval == GDK_KEY_Tab) {
+            if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
+                clear_occurances(sj);
+            }
+
             add_character(sj, keychar);
             return TRUE;
         } else if (event->keyval == GDK_KEY_Delete) {
