@@ -21,6 +21,7 @@
 
 #include "jump_to_a_word.h"
 
+void multicursor_transpose_cancel(ShortcutJump *sj);
 void duplicate_string(ShortcutJump *sj);
 
 #endif

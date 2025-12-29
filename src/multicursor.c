@@ -290,6 +290,8 @@ void multicursor_toggle(ShortcutJump *sj) {
             multicursor_transpose_cancel(sj);
         } else if (sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
             multicursor_line_insert_cancel(sj);
+        } else if (sj->current_mode == JM_DUPLICATE_MULTICURSOR) {
+            multicursor_transpose_cancel(sj);
         } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
             multicursor_replace_cancel(sj);
         } else if (sj->current_mode == JM_NONE) {

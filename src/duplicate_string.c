@@ -23,7 +23,24 @@
 #include "multicursor.h"
 #include "util.h"
 
-void duplication_complete(ShortcutJump *sj) {
+void multicursor_transpose_cancel(ShortcutJump *sj) {
+    multicursor_replace_clear_indicators(sj);
+    annotation_clear(sj->sci, sj->eol_message_line);
+
+    for (gint i = 0; i < sj->multicursor_words->len; i++) {
+        Word word = g_array_index(sj->multicursor_words, Word, i);
+
+        scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
+        scintilla_send_message(sj->sci, SCI_INDICATORCLEARRANGE, word.starting, word.word->len);
+    }
+
+    toggle_multicursor_menu(sj, FALSE);
+
+    multicursor_end(sj);
+    ui_set_statusbar(TRUE, _("Multicursor string duplication canceled."));
+}
+
+static void duplication_complete(ShortcutJump *sj) {
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
 
