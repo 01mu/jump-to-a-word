@@ -43,7 +43,6 @@ static void multicursor_start(ShortcutJump *sj) {
     sj->search_word_pos_first = -1;
     sj->search_word_pos_last = -1;
     sj->search_change_made = FALSE;
-    sj->cursor_in_word = FALSE;
     sj->replace_len = 0;
     sj->replace_instant = FALSE;
 

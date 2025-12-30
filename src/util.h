@@ -40,5 +40,6 @@ void multicursor_menu_toggled(GtkMenuItem *menuitem, gpointer data);
 void toggle_multicursor_menu(ShortcutJump *sj, gboolean type);
 void attempt_line_end_for_char(ShortcutJump *sj);
 void move_to_end_of_line(ShortcutJump *sj);
+void get_strings_for_instant_action(ShortcutJump *sj);
 
 #endif

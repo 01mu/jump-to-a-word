@@ -30,7 +30,6 @@
 #include "replace_instant.h"
 #include "search_substring.h"
 #include "search_word.h"
-#include "selection.h"
 #include "shortcut_char.h"
 #include "shortcut_line.h"
 #include "shortcut_word.h"
@@ -112,23 +111,7 @@ void handle_action(gpointer user_data) {
     } else if (ra == RA_INSERT_NEXT_LINE || ra == RA_INSERT_PREVIOUS_LINE) {
         if (mm == MC_DISABLED) {
             if (jm == JM_NONE) {
-                sj->sci = get_scintilla_object();
-                set_selection_info(sj);
-
-                if (sj->in_selection) {
-                    sj->in_selection = FALSE;
-                    init_sj_values(sj);
-                    search_substring_set_query(sj);
-                    search_substring_get_substrings(sj);
-                } else {
-                    init_sj_values(sj);
-                    search_word_get_words(sj);
-                    search_word_set_query(sj, TRUE);
-                }
-
-                define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
-                                  sj->config_settings->text_color);
-
+                get_strings_for_instant_action(sj);
                 line_insert_from_search(sj);
                 return;
             } else if (jm == JM_SUBSTRING) {
@@ -152,9 +135,21 @@ void handle_action(gpointer user_data) {
             }
         }
     } else if (ra == RA_DUPLICATE) {
-        if (mm == MC_ACCEPTING) {
+        if (mm == MC_DISABLED) {
             if (jm == JM_NONE) {
+                get_strings_for_instant_action(sj);
                 duplicate_string(sj);
+                return;
+            } else if (jm == JM_SUBSTRING) {
+                duplicate_string(sj);
+                return;
+            } else if (jm == JM_SEARCH) {
+                duplicate_string(sj);
+                return;
+            }
+        } else if (mm == MC_ACCEPTING) {
+            if (jm == JM_NONE) {
+                duplicate_string_for_multicursor(sj);
                 return;
             }
         }

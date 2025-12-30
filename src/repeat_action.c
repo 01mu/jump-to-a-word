@@ -56,11 +56,8 @@ static void replace(ShortcutJump *sj) {
     }
     scintilla_send_message(sj->sci, SCI_INSERTTEXT, sj->first_position, (sptr_t)sj->replace_cache->str);
     sj->current_cursor_pos += c;
-    if (sj->cursor_in_word) {
-        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos + chars_added, 0);
-    } else {
-        scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
-    }
+
+    scintilla_send_message(sj->sci, SCI_GOTOPOS, sj->current_cursor_pos, 0);
 }
 
 static void repeat_action(gpointer user_data) {

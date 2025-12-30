@@ -73,6 +73,7 @@ typedef enum {
     JM_INSERTING_LINE_MULTICURSOR,
     JM_REPLACE_MULTICURSOR,
     JM_TRANSPOSE_MULTICURSOR,
+    JM_DUPLICATE,
     JM_DUPLICATE_MULTICURSOR,
     JM_NONE,
 } JumpMode;
@@ -272,7 +273,6 @@ typedef struct {
     gint search_word_pos_first;
     gint search_word_pos_last;
 
-    gboolean cursor_in_word;
     gboolean search_change_made;
     gint replace_len;
 

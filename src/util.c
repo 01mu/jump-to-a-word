@@ -18,15 +18,18 @@
 
 #include <plugindata.h>
 
+#include "duplicate_string.h"
 #include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
 #include "search_substring.h"
 #include "search_word.h"
+#include "selection.h"
 #include "shortcut_char.h"
 #include "shortcut_common.h"
 #include "shortcut_line.h"
 #include "shortcut_word.h"
+#include "values.h"
 
 void attempt_line_end_for_char(ShortcutJump *sj) {
     gint line_number = scintilla_send_message(sj->sci, SCI_LINEFROMPOSITION, sj->current_cursor_pos, 0);
@@ -162,6 +165,10 @@ void cancel_actions(ShortcutJump *sj) {
         multicursor_line_insert_cancel(sj);
     } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
         multicursor_replace_cancel(sj);
+    } else if (sj->current_mode == JM_DUPLICATE) {
+        duplicate_cancel(sj);
+    } else if (sj->current_mode == JM_DUPLICATE_MULTICURSOR) {
+        multicursor_duplicate_cancel(sj);
     }
 
     if (sj->multicursor_mode == MC_ACCEPTING) {
@@ -203,6 +210,10 @@ void end_actions(ShortcutJump *sj) {
         multicursor_end(sj);
     } else if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
         multicursor_end(sj);
+    } else if (sj->current_mode == JM_DUPLICATE) {
+        duplicate_end(sj);
+    } else if (sj->current_mode == JM_DUPLICATE_MULTICURSOR) {
+        multicursor_end(sj);
     }
 
     if (sj->multicursor_mode == MC_ACCEPTING) {
@@ -220,4 +231,23 @@ gint sort_words_by_starting_doc(gconstpointer a, gconstpointer b) {
     } else {
         return 0;
     }
+}
+
+void get_strings_for_instant_action(ShortcutJump *sj) {
+    sj->sci = get_scintilla_object();
+    set_selection_info(sj);
+
+    if (sj->in_selection) {
+        sj->in_selection = FALSE;
+        init_sj_values(sj);
+        search_substring_set_query(sj);
+        search_substring_get_substrings(sj);
+    } else {
+        init_sj_values(sj);
+        search_word_get_words(sj);
+        search_word_set_query(sj, TRUE);
+    }
+
+    define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
+                      sj->config_settings->text_color);
 }
