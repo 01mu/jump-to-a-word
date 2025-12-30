@@ -179,7 +179,7 @@ static void backspace_character(ShortcutJump *sj) {
     }
 }
 
-static void delete_character(ShortcutJump *sj) {
+static gboolean delete_character(ShortcutJump *sj) {
     gint chars_removed = 0;
     gint c = -1;
     gint prev;
@@ -193,8 +193,14 @@ static void delete_character(ShortcutJump *sj) {
 
         if (word->valid_search) {
             gint v = sj->cursor_moved_to_eol - chars_removed;
+            gint p = word->replace_pos + sj->replace_len - chars_removed;
 
-            g_string_erase(sj->replace_cache, word->replace_pos + sj->replace_len - chars_removed, 1);
+            if (p < sj->replace_cache->len) {
+                g_string_erase(sj->replace_cache, p, 1);
+            } else {
+                return TRUE;
+            }
+
             word->replace_pos -= chars_removed;
             chars_removed += 1;
 
@@ -238,6 +244,8 @@ static void delete_character(ShortcutJump *sj) {
     if (sj->config_settings->disable_live_replace) {
         annotation_display_replace_string(sj);
     }
+
+    return FALSE;
 }
 
 gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar keychar,
@@ -265,7 +273,12 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
             add_character(sj, keychar);
             return TRUE;
         } else if (event->keyval == GDK_KEY_Delete) {
-            delete_character(sj);
+            gboolean aborted = delete_character(sj);
+
+            if (aborted) {
+                complete_func(sj);
+            }
+
             return TRUE;
         }
 
