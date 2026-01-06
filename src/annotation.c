@@ -77,7 +77,7 @@ void annotation_display_char_search(ShortcutJump *sj) {
         return;
     }
 
-    gchar *s = "%i occurance%s";
+    gchar *s = "%i occurrence%s";
     gint count = sj->search_results_count;
     annotation_clear(sj->sci, sj->eol_message_line);
     g_string_printf(sj->eol_message, s, count, count == 1 ? "" : "s");
@@ -186,7 +186,7 @@ void annotation_display_replace_char(ShortcutJump *sj) {
         return;
     }
 
-    gchar *s = "Replacing selection (%i occurance%s";
+    gchar *s = "Replacing selection (%i occurrence%s";
     gint count = sj->search_results_count;
     annotation_clear(sj->sci, sj->eol_message_line);
     g_string_printf(sj->eol_message, s, count, count == 1 ? ")" : "s)");

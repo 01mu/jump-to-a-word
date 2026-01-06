@@ -109,7 +109,7 @@ static void repeat_action(gpointer user_data) {
         replace(sj);
         scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
         g_array_free(sj->lf_positions, TRUE);
-        ui_set_statusbar(TRUE, _("Character replacement action repeated. Occurances of \"%s\" replaced with \"%s\"."),
+        ui_set_statusbar(TRUE, _("Character replacement action repeated. Occurrences of \"%s\" replaced with \"%s\"."),
                          sj->search_query->str, sj->previous_replace_query->str);
     } else if (sj->previous_mode == JM_REPLACE_SEARCH) {
         search_word_get_words(sj);

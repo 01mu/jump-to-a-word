@@ -105,7 +105,7 @@ gboolean on_paste_key_release_replace(GtkWidget *widget, GdkEventKey *event, gpo
 
     if (sj->inserting_clipboard) {
         if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
-            clear_occurances(sj);
+            clear_occurrences(sj);
         }
 
         paste_insert_clipboard_text(sj);

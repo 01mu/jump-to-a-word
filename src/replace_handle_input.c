@@ -21,7 +21,7 @@
 #include "annotation.h"
 #include "jump_to_a_word.h"
 
-void clear_occurances(ShortcutJump *sj) {
+void clear_occurrences(ShortcutJump *sj) {
     gint chars_removed = 0;
     gint removed_to_left = 0;
 
@@ -260,14 +260,14 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
 
                 backspace_character(sj);
             } else {
-                clear_occurances(sj);
+                clear_occurrences(sj);
                 complete_func(sj);
             }
 
             return TRUE;
         } else if (event->keyval == GDK_KEY_Return || event->keyval == GDK_KEY_Tab) {
             if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
-                clear_occurances(sj);
+                clear_occurrences(sj);
             }
 
             add_character(sj, keychar);
@@ -287,7 +287,7 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
               (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9))) &&
             sj->replace_len >= 0) {
             if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
-                clear_occurances(sj);
+                clear_occurrences(sj);
             }
 
             add_character(sj, keychar);

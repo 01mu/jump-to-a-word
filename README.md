@@ -8,7 +8,7 @@ The plugin allows the user to:
 <ul>
   <li>Use shortcuts to jump to a word, character, or line</li>
   <li>Use a search term to jump to a word or substring</li>
-  <li>Edit all occurances of a selected word, character, or substring</li>
+  <li>Edit all occurrences of a selected word, character, or substring</li>
   <li>Perform an action or selection after jumping to a word, character, substring, or line</li>
 </ul>
 These actions can be triggered from the menu, the command panel, or a keybinding.
@@ -38,8 +38,8 @@ Highlights every substring on the screen that matches the provided search term.
 
 ![Jumping to a substring using a search term](https://github.com/user-attachments/assets/d7fbeaa0-23c2-4c53-bdf0-626de53da39e)
 
-### Editing all occurances of a selected word, character, or substring
-You can replace the selected text by using the "Replace selected text" function during a character shortcut jump, a word search, or a substring search. All occurances of a selected character, the word under the cursor, or a selected substring will be instantly tagged if you are not in shortcut or search mode.
+### Editing all occurrences of a selected word, character, or substring
+You can replace the selected text by using the "Replace selected text" function during a character shortcut jump, a word search, or a substring search. All occurrences of a selected character, the word under the cursor, or a selected substring will be instantly tagged if you are not in shortcut or search mode.
 
 ### Performing an action after jumping to a word, character, substring, or line
 You can either select the text or select to the position of the text after jumping to a word, character, or substring. You may also select the text contained in the range between two positions. The action that occurs can be changed in the plugin preferences.
