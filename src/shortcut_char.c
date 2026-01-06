@@ -90,6 +90,7 @@ void shortcut_char_jumping_complete(ShortcutJump *sj, gint pos, gint word_length
 }
 
 void shortcut_char_waiting_cancel(ShortcutJump *sj) {
+    scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     margin_markers_reset(sj);
     disconnect_key_press_action(sj);
@@ -291,8 +292,7 @@ static gboolean shortcut_char_on_key_press(GtkWidget *widget, GdkEventKey *event
 
         if (sj->words->len == 0) {
             shortcut_char_waiting_cancel(sj);
-            annotation_clear(sj->sci, sj->eol_message_line);
-            return FALSE;
+            return TRUE;
         }
 
         sj->buffer = shortcut_mask_bytes(sj->words, sj->buffer, sj->first_position);
