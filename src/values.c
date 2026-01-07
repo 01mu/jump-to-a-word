@@ -194,8 +194,18 @@ static gint get_wrapped_lines(ScintillaObject *sci, gint first_line_on_screen) {
 }
 
 void get_view_positions(ShortcutJump *sj) {
-    gint first_line_on_screen = get_first_line_on_screen(sj);
-    gint lines_on_screen = get_number_of_lines_on_screen(sj);
+    gint first_line_on_screen;
+    gint lines_on_screen;
+
+    if (sj->current_mode != JM_SHORTCUT_WORD && sj->current_mode != JM_SHORTCUT_CHAR_ACCEPTING &&
+        sj->current_mode != JM_LINE && sj->config_settings->whole_document) {
+        first_line_on_screen = 0;
+        lines_on_screen = scintilla_send_message(sj->sci, SCI_GETLINECOUNT, 0, 0);
+    } else {
+        first_line_on_screen = get_first_line_on_screen(sj);
+        lines_on_screen = get_number_of_lines_on_screen(sj);
+    }
+
     gint last_line_on_screen = first_line_on_screen + lines_on_screen;
     gint first_position = get_first_position(sj, first_line_on_screen);
     gint last_position = get_last_position(sj, last_line_on_screen);

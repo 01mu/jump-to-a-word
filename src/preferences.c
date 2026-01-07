@@ -84,6 +84,11 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
     UPDATE_BOOL(instant_transpose, "instant_transpose", "action");
     UPDATE_BOOL(disable_live_replace, "disable_live_replace", "action");
 
+    sj->config_settings->whole_document =
+        gtk_check_menu_item_get_active(GTK_CHECK_MENU_ITEM(sj->whole_document_menu_checkbox));
+
+    g_key_file_set_boolean(config, "document", "search_whole_document", sj->config_settings->whole_document);
+
     UPDATE_INTEGER(text_after, "text_after", "text_after");
     UPDATE_INTEGER(line_after, "line_after", "line_after");
     UPDATE_INTEGER(replace_action, "replace_action", "replace_action");

@@ -376,6 +376,15 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 
     SET_KEYBINDING("Toggle multicursor mode", "multicursor", multicursor_kb, KB_MULTICURSOR, sj, item);
 
+    item = gtk_check_menu_item_new_with_mnemonic(_("_Search Whole Document"));
+    sj->whole_document_menu_checkbox = GTK_CHECK_MENU_ITEM(item);
+    sj->full_document_menu_checkbox_signal_id =
+        g_signal_connect(sj->whole_document_menu_checkbox, "toggled", G_CALLBACK(whole_document_menu_toggled), sj);
+    gtk_widget_show(item);
+    gtk_menu_shell_append(GTK_MENU_SHELL(submenu), item);
+
+    SET_KEYBINDING("Search whole document", "document", whole_document_kb, KB_FULL_DOCUMENT, sj, item);
+
     gtk_menu_item_set_submenu(GTK_MENU_ITEM(sj->main_menu_item), submenu);
     gtk_container_add(GTK_CONTAINER(sj->geany_data->main_widgets->tools_menu), sj->main_menu_item);
 }
@@ -424,6 +433,8 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(instant_transpose, "instant_transpose", "action", FALSE);
     SET_SETTING_BOOL(disable_live_replace, "disable_live_replace", "action", FALSE);
 
+    SET_SETTING_BOOL(whole_document, "search_whole_document", "document", TRUE);
+
     SET_SETTING_INTEGER(text_after, "text_after", "text_after", TX_SELECT_TEXT);
     SET_SETTING_INTEGER(line_after, "line_after", "line_after", LA_SELECT_TO_LINE);
     SET_SETTING_INTEGER(replace_action, "replace_action", "replace_action", RA_REPLACE);
@@ -443,6 +454,8 @@ static gboolean init(GeanyPlugin *plugin, gpointer pdata) {
 
     setup_menu_and_keybindings(plugin, sj);
     setup_config_settings(plugin, pdata, sj);
+
+    gtk_check_menu_item_set_active(sj->whole_document_menu_checkbox, sj->config_settings->whole_document);
 
     return TRUE;
 }

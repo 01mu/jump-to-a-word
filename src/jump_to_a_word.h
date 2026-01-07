@@ -56,6 +56,7 @@ typedef enum {
     KB_JUMP_TO_A_SUBSTRING,
     KB_MULTICURSOR,
     KB_REPEAT_ACTION,
+    KB_FULL_DOCUMENT,
     KB_COUNT,
 } KB;
 
@@ -149,6 +150,7 @@ typedef struct {
     gboolean search_smart_case;
     gboolean instant_transpose;
     gboolean disable_live_replace;
+    gboolean whole_document;
 
     gint tag_color;
     gint text_color;
@@ -230,6 +232,9 @@ typedef struct {
 
     GtkCheckMenuItem *multicursor_menu_checkbox;
     gulong multicursor_menu_checkbox_signal_id;
+
+    GtkCheckMenuItem *whole_document_menu_checkbox;
+    gulong full_document_menu_checkbox_signal_id;
 
     PCMenuSensitivity *pc_menu_sensitivity;
     PAMenuSensitivity *pa_menu_sensitivity;

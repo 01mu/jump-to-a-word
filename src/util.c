@@ -22,6 +22,7 @@
 #include "insert_line.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
+#include "preferences.h"
 #include "search_substring.h"
 #include "search_word.h"
 #include "selection.h"
@@ -117,6 +118,23 @@ void multicursor_menu_toggled(GtkMenuItem *menuitem, gpointer data) {
     if (!sj->waiting_after_single_instance) {
         multicursor_toggle(sj);
     }
+}
+
+void whole_document_menu_toggled(GtkMenuItem *menuitem, gpointer data) {
+    ShortcutJump *sj = (ShortcutJump *)data;
+
+    ui_set_statusbar(TRUE, _("Whole document search %sabled."), sj->config_settings->whole_document ? "dis" : "en");
+    sj->config_settings->whole_document = !sj->config_settings->whole_document;
+
+    update_settings(SOURCE_OPTION_MENU, sj);
+}
+
+gboolean whole_document_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data) {
+    ShortcutJump *sj = (ShortcutJump *)user_data;
+
+    gtk_check_menu_item_set_active(sj->whole_document_menu_checkbox, !sj->config_settings->whole_document);
+
+    return TRUE;
 }
 
 void toggle_multicursor_menu(ShortcutJump *sj, gboolean type) {
