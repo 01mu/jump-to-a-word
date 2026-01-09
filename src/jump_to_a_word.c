@@ -634,7 +634,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     WIDGET_CONF_BOOL(select_when_shortcut_char, "S_elect to text during a character jump", tt);
 
     tt = "Automatically jump to a string if only one instance of it exists";
-    WIDGET_CONF_BOOL(jump_on_single_instance, "Jump for a single instance", tt);
+    WIDGET_CONF_BOOL(jump_on_single_instance, "Jump to a single instance", tt);
 
     tt = "Display the shortcuts in all caps for visibility";
     WIDGET_CONF_BOOL(shortcut_all_caps, "D_isplay shortcuts in all caps", tt);

@@ -295,8 +295,9 @@ gboolean replace_handle_input(ShortcutJump *sj, GdkEventKey *event, gunichar key
         }
     }
 
-    if (event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R || event->keyval == GDK_KEY_Caps_Lock ||
-        event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R) {
+    if (sj->config_settings->disable_live_replace &&
+        (event->keyval == GDK_KEY_Shift_L || event->keyval == GDK_KEY_Shift_R || event->keyval == GDK_KEY_Caps_Lock ||
+         event->keyval == GDK_KEY_Control_L || event->keyval == GDK_KEY_Control_R)) {
         annotation_display_replace_string(sj);
         return TRUE;
     }
