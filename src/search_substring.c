@@ -326,7 +326,7 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
 
     gboolean is_other_char =
         strchr("[]\\;'.,/-=_+{`_+|}:<>?\"~)(*&^% $#@!)", (gchar)gdk_keyval_to_unicode(event->keyval)) ||
-        (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9);
+        (event->keyval >= GDK_KEY_0 && event->keyval <= GDK_KEY_9) || event->keyval == GDK_KEY_Tab;
 
     if (sj->waiting_after_single_instance) {
         return FALSE;
