@@ -419,6 +419,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(search_selection_if_line, "search_selection_if_line", "general", TRUE);
 
     SET_SETTING_BOOL(select_when_shortcut_char, "select_when_shortcut_char", "shortcut", TRUE);
+    SET_SETTING_BOOL(jump_on_single_instance, "jump_on_single_instance", "shortcut", FALSE);
     SET_SETTING_BOOL(shortcut_all_caps, "shortcut_all_caps", "shortcut", FALSE);
     SET_SETTING_BOOL(shortcuts_include_single_char, "shortcuts_include_single_char", "shortcut", FALSE);
     SET_SETTING_BOOL(hide_word_shortcut_jump, "hide_word_shortcut_jump", "shortcut", FALSE);
@@ -631,6 +632,9 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
     tt = "Always select the text between the cursor and the character being jumped to";
     WIDGET_CONF_BOOL(select_when_shortcut_char, "S_elect to text during a character jump", tt);
+
+    tt = "Automatically jump to a string if only one instance of it exists";
+    WIDGET_CONF_BOOL(jump_on_single_instance, "Jump for a single instance", tt);
 
     tt = "Display the shortcuts in all caps for visibility";
     WIDGET_CONF_BOOL(shortcut_all_caps, "D_isplay shortcuts in all caps", tt);

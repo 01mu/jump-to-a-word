@@ -70,6 +70,7 @@ void update_settings(SettingSource source, ShortcutJump *sj) {
     UPDATE_BOOL(search_selection_if_line, "search_selection_if_line", "general");
 
     UPDATE_BOOL(select_when_shortcut_char, "select_when_shortcut_char", "shortcut");
+    UPDATE_BOOL(jump_on_single_instance, "jump_on_single_instance", "shortcut");
     UPDATE_BOOL(shortcut_all_caps, "shortcut_all_caps", "shortcut");
     UPDATE_BOOL(shortcuts_include_single_char, "shortcuts_include_single_char", "shortcut");
     UPDATE_BOOL(hide_word_shortcut_jump, "hide_word_shortcut_jump", "shortcut");

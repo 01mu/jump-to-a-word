@@ -375,7 +375,8 @@ static gboolean on_key_press_search_substring(GtkWidget *widget, GdkEventKey *ev
         search_substring_get_substrings(sj);
         annotation_display_substring(sj);
 
-        if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
+        if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter &&
+            sj->config_settings->jump_on_single_instance) {
             if (sj->multicursor_mode == MC_ACCEPTING) {
                 search_substring_jump_complete(sj);
             } else {

@@ -388,7 +388,8 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
         search_word_mark_words(sj, FALSE);
         annotation_display_search(sj);
 
-        if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter) {
+        if (sj->search_results_count == 1 && !sj->config_settings->wait_for_enter &&
+            sj->config_settings->jump_on_single_instance) {
             if (sj->multicursor_mode == MC_ACCEPTING) {
                 search_word_jump_complete(sj);
             } else {

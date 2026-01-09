@@ -151,6 +151,7 @@ typedef struct {
     gboolean instant_transpose;
     gboolean disable_live_replace;
     gboolean whole_document;
+    gboolean jump_on_single_instance;
 
     gint tag_color;
     gint text_color;
@@ -191,6 +192,7 @@ typedef struct {
     GtkWidget *search_smart_case;
     GtkWidget *instant_transpose;
     GtkWidget *disable_live_replace;
+    GtkWidget *jump_on_single_instance;
 } Widgets;
 
 typedef struct {
