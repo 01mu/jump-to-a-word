@@ -110,7 +110,6 @@ void search_word_replace_cancel(ShortcutJump *sj) {
     search_word_clear_replace_indicators(sj);
     search_word_clear_jump_indicators(sj);
     scintilla_send_message(sj->sci, SCI_ENDUNDOACTION, 0, 0);
-    margin_markers_reset(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
@@ -187,7 +186,6 @@ void search_word_jump_cancel(ShortcutJump *sj) {
     }
 
     search_word_clear_jump_indicators(sj);
-    margin_markers_reset(sj);
     scintilla_send_message(sj->sci, SCI_SETREADONLY, 0, 0);
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);

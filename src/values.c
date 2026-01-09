@@ -176,7 +176,6 @@ void margin_markers_reset(ShortcutJump *sj) {
             scintilla_send_message(sj->sci, SCI_MARKERADDSET, i + sj->first_line_on_screen, marker);
         }
 
-        scintilla_send_message(sj->sci, SCI_MARKERDELETE, last_line_in_doc - 1, -1);
         scintilla_send_message(sj->sci, SCI_MARKERADDSET, last_line_in_doc, ll_markers);
     } else {
         scintilla_send_message(sj->sci, SCI_MARKERDELETE, sj->last_line_on_screen, -1);
