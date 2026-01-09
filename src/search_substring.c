@@ -442,6 +442,7 @@ void serach_substring_init(ShortcutJump *sj) {
     }
 
     attempt_line_end_for_char(sj);
+    move_to_end_of_line(sj);
     paste_get_clipboard_text(sj);
     connect_key_press_action(sj, on_key_press_search_substring);
     connect_click_action(sj, on_click_event_search);

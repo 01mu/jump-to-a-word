@@ -480,6 +480,7 @@ void search_word_init(ShortcutJump *sj, gboolean instant_replace) {
     search_word_set_query(sj, instant_replace);
 
     attempt_line_end_for_char(sj);
+    move_to_end_of_line(sj);
     paste_get_clipboard_text(sj);
     connect_key_press_action(sj, on_key_press_search_word);
     connect_click_action(sj, on_click_event_search);
