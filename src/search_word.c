@@ -312,14 +312,27 @@ void search_word_mark_words(ShortcutJump *sj, gboolean instant_replace) {
         }
     }
 
-    gint search_word_pos = get_search_word_pos(sj);
-    sj->search_word_pos_first = get_search_word_pos_first(sj);
-    sj->search_word_pos = search_word_pos == -1 ? sj->search_word_pos_first : search_word_pos;
+    gint search_word_pos = 0;
+
+    if (sj->config_settings->whole_document) {
+        search_word_pos = 0;
+        sj->search_word_pos_first = get_search_word_pos_first(sj);
+        sj->search_word_pos = sj->search_word_pos_first;
+
+        Word word = g_array_index(sj->words, Word, sj->search_word_pos);
+        scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);
+    } else {
+        search_word_pos = get_search_word_pos(sj);
+        sj->search_word_pos_first = get_search_word_pos_first(sj);
+        sj->search_word_pos = search_word_pos == -1 ? sj->search_word_pos_first : search_word_pos;
+    }
+
     if (sj->search_results_count > 0) {
         Word word = g_array_index(sj->words, Word, sj->search_word_pos);
         scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_HIGHLIGHT, 0);
         scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting, word.word->len);
     }
+
     sj->search_word_pos_last = get_search_word_pos_last(sj);
 
     ui_set_statusbar(TRUE, _("%i word%s in view."), sj->search_results_count, sj->search_results_count == 1 ? "" : "s");
@@ -412,12 +425,22 @@ static gboolean on_key_press_search_word(GtkWidget *widget, GdkEventKey *event, 
 
     if (event->keyval == GDK_KEY_Left && sj->search_query->len > 0) {
         if (set_search_word_pos_left_key(sj)) {
+            if (sj->config_settings->whole_document) {
+                Word word = g_array_index(sj->words, Word, sj->search_word_pos);
+                scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);
+            }
+
             return TRUE;
         }
     }
 
     if (event->keyval == GDK_KEY_Right && sj->search_query->len > 0) {
         if (set_search_word_pos_right_key(sj)) {
+            if (sj->config_settings->whole_document) {
+                Word word = g_array_index(sj->words, Word, sj->search_word_pos);
+                scintilla_send_message(sj->sci, SCI_GOTOPOS, word.starting, 0);
+            }
+
             return TRUE;
         }
     }
