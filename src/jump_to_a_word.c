@@ -353,15 +353,15 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 
     SET_MENU_SEPERATOR();
 
-    SET_MENU_ITEM("Open _Text Options Window", open_text_options_cb, sj);
+    SET_MENU_ITEM("Open _Text Options Window...", open_text_options_cb, sj);
     SET_KEYBINDING("Open text options window", "open_text_options", open_text_options_kb, KB_OPEN_TEXT_OPTIONS, sj,
                    item);
 
-    SET_MENU_ITEM("Open _Line Options Window", open_line_options_cb, sj);
+    SET_MENU_ITEM("Open _Line Options Window...", open_line_options_cb, sj);
     SET_KEYBINDING("Open line options window", "open_line_options", open_line_options_kb, KB_OPEN_LINE_OPTIONS, sj,
                    item);
 
-    SET_MENU_ITEM("Open R_eplacement Options Window", open_replace_options_cb, sj);
+    SET_MENU_ITEM("Open R_eplacement Options Window...", open_replace_options_cb, sj);
     SET_KEYBINDING("Open replacement options window", "open_replace_options", open_replace_options_kb,
                    KB_OPEN_REPLACE_OPTIONS, sj, item);
 
@@ -431,8 +431,8 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_BOOL(search_case_sensitive, "search_case_sensitive", "search", TRUE);
     SET_SETTING_BOOL(search_smart_case, "search_smart_case", "search", TRUE);
 
+    SET_SETTING_BOOL(disable_live_replace, "disable_live_replace", "action", TRUE);
     SET_SETTING_BOOL(instant_transpose, "instant_transpose", "action", FALSE);
-    SET_SETTING_BOOL(disable_live_replace, "disable_live_replace", "action", FALSE);
 
     SET_SETTING_BOOL(whole_document, "search_whole_document", "document", TRUE);
 
@@ -685,11 +685,11 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
 
     WIDGET_FRAME("Replace action", GTK_ORIENTATION_VERTICAL);
 
-    tt = "A tranpose action will always occur when two strings are selected";
-    WIDGET_CONF_BOOL(instant_transpose, "Transpose _when two strings are selected", tt);
-
     tt = "The strings to be updated will not change while the replacement is being typed";
     WIDGET_CONF_BOOL(disable_live_replace, "Disable live string replacement", tt);
+
+    tt = "A tranpose action will always occur when two strings are selected";
+    WIDGET_CONF_BOOL(instant_transpose, "Transpose _when two strings are selected", tt);
 
     /*
      * After jumping to a word, character, or substring
