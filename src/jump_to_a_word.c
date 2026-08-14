@@ -177,62 +177,43 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
         }
 
         multicursor_add_word_from_selection(sj, selection_start, selection_end);
-
         return TRUE;
     }
 
-    if ((sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING ||
-         sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH ||
-         sj->current_mode == JM_REPLACE_MULTICURSOR || sj->current_mode == JM_INSERTING_LINE ||
-         sj->current_mode == JM_INSERTING_LINE_MULTICURSOR || sj->current_mode == JM_SHORTCUT_CHAR_REPLACING ||
-         sj->current_mode == JM_REPLACE_SUBSTRING) &&
-        nt->modificationType & (SC_MOD_INSERTCHECK) && strcmp(nt->text, sj->clipboard_text) == 0) {
-        scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
-        sj->inserting_clipboard = TRUE;
+    JumpMode cm = sj->current_mode;
+    gboolean search_or_replace_input = cm == JM_SUBSTRING || cm == JM_SEARCH || cm == JM_REPLACE_SEARCH ||
+                                       cm == JM_REPLACE_MULTICURSOR || cm == JM_INSERTING_LINE ||
+                                       cm == JM_INSERTING_LINE_MULTICURSOR || cm == JM_SHORTCUT_CHAR_REPLACING ||
+                                       cm == JM_REPLACE_SUBSTRING;
 
-        if (sj->current_mode == JM_SUBSTRING) {
-            sj->paste_key_release_id =
-                g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(on_paste_key_release_substring_search), sj);
-        } else if (sj->current_mode == JM_SEARCH) {
-            sj->paste_key_release_id =
-                g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(on_paste_key_release_word_search), sj);
-        } else if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_MULTICURSOR ||
-                   sj->current_mode == JM_INSERTING_LINE || sj->current_mode == JM_INSERTING_LINE_MULTICURSOR ||
-                   sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_REPLACE_SUBSTRING) {
-            sj->paste_key_release_id =
-                g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(on_paste_key_release_replace), sj);
+    if (search_or_replace_input) {
+        if (nt->modificationType & (SC_MOD_INSERTCHECK) && strcmp(nt->text, sj->clipboard_text) == 0) {
+            scintilla_send_message(sj->sci, SCI_CHANGEINSERTION, 0, (sptr_t) "");
+            sj->inserting_clipboard = TRUE;
+
+            gboolean (*callback)(GtkWidget *, GdkEventKey *, gpointer);
+
+            if (cm == JM_SUBSTRING) {
+                callback = on_paste_key_release_substring_search;
+            } else if (cm == JM_SEARCH) {
+                callback = on_paste_key_release_word_search;
+            } else {
+                callback = on_paste_key_release_replace;
+            }
+
+            sj->paste_key_release_id = g_signal_connect(sj->sci, "key-release-event", G_CALLBACK(callback), sj);
+            return TRUE;
         }
-
-        return TRUE;
     }
 
-    if ((sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING ||
-         sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH ||
-         sj->current_mode == JM_REPLACE_MULTICURSOR || sj->current_mode == JM_INSERTING_LINE ||
-         sj->current_mode == JM_INSERTING_LINE_MULTICURSOR || sj->current_mode == JM_SHORTCUT_CHAR_REPLACING ||
-         sj->current_mode == JM_REPLACE_SUBSTRING) &&
-        sj->multicursor_mode == MC_DISABLED &&
-        (nt->modificationType & (SC_PERFORMED_UNDO) || nt->modificationType & (SC_PERFORMED_REDO))) {
-        if (sj->current_mode == JM_SUBSTRING) {
+    if (search_or_replace_input && sj->multicursor_mode == MC_DISABLED) {
+        if ((nt->modificationType & (SC_PERFORMED_UNDO) || nt->modificationType & (SC_PERFORMED_REDO))) {
             cancel_actions(sj);
-        } else if (sj->current_mode == JM_SEARCH) {
-            cancel_actions(sj);
-        } else if (sj->current_mode == JM_REPLACE_SEARCH || sj->current_mode == JM_REPLACE_MULTICURSOR ||
-                   sj->current_mode == JM_INSERTING_LINE || sj->current_mode == JM_INSERTING_LINE_MULTICURSOR ||
-                   sj->current_mode == JM_SHORTCUT_CHAR_REPLACING || sj->current_mode == JM_REPLACE_SUBSTRING) {
-            cancel_actions(sj);
+            return TRUE;
         }
-
-        return TRUE;
     }
 
-    if ((sj->current_mode == JM_SHORTCUT_CHAR_ACCEPTING || sj->current_mode == JM_SUBSTRING ||
-         sj->current_mode == JM_SEARCH || sj->current_mode == JM_REPLACE_SEARCH ||
-         sj->current_mode == JM_REPLACE_MULTICURSOR || sj->current_mode == JM_INSERTING_LINE ||
-         sj->current_mode == JM_INSERTING_LINE_MULTICURSOR || sj->current_mode == JM_SHORTCUT_CHAR_REPLACING ||
-         sj->current_mode == JM_REPLACE_SUBSTRING) &&
-        nt->modificationType & (SC_MOD_INSERTCHECK)) {
-
+    if (search_or_replace_input && nt->modificationType & (SC_MOD_INSERTCHECK)) {
         if (strcmp(nt->text, "}") == 0 || strcmp(nt->text, ">") == 0 || strcmp(nt->text, "]") == 0 ||
             strcmp(nt->text, "\'") == 0 || strcmp(nt->text, "\"") == 0 || strcmp(nt->text, "`") == 0 ||
             strcmp(nt->text, ")") == 0) {
