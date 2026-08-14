@@ -1,5 +1,3 @@
-#include <plugindata.h>
-
 #include "action_line_after.h"
 #include "jump_to_a_word.h"
 #include "selection.h"

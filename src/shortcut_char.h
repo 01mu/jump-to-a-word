@@ -1,8 +1,6 @@
 #ifndef SHORTCUT_CHAR_H_
 #define SHORTCUT_CHAR_H_
 
-#include <geanyplugin.h>
-
 #include "jump_to_a_word.h"
 
 void shortcut_char_get_chars(ShortcutJump *sj, gchar query);

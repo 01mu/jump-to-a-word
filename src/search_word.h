@@ -1,8 +1,6 @@
 #ifndef SEARCH_WORD_H
 #define SEARCH_WORD_H
 
-#include <geanyplugin.h>
-
 #include "jump_to_a_word.h"
 
 void search_word_mark_words(ShortcutJump *sj, gboolean instant_replace);

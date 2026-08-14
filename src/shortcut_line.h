@@ -1,8 +1,6 @@
 #ifndef SHORTCUT_LINE_H_
 #define SHORTCUT_LINE_H_
 
-#include <geanyplugin.h>
-
 #include "jump_to_a_word.h"
 
 void shortcut_line_complete(ShortcutJump *sj, gint pos, gint word_length, gint line);

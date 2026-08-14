@@ -1,5 +1,4 @@
 #include <math.h>
-#include <plugindata.h>
 
 #include "jump_to_a_word.h"
 #include "multicursor.h"

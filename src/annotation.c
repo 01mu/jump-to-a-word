@@ -1,5 +1,3 @@
-#include <plugindata.h>
-
 #include "jump_to_a_word.h"
 #include "util.h"
 

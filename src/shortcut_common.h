@@ -1,8 +1,6 @@
 #ifndef SHORTCUT_COMMON_H_
 #define SHORTCUT_COMMON_H_
 
-#include <geanyplugin.h>
-
 #include "jump_to_a_word.h"
 
 void shortcut_end(ShortcutJump *sj, gboolean was_canceled);

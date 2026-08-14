@@ -1,8 +1,6 @@
 #ifndef SEARCH_SUBSTRING_H_
 #define SEARCH_SUBSTRING_H_
 
-#include <geanyplugin.h>
-
 #include "jump_to_a_word.h"
 
 void search_substring_end(ShortcutJump *sj);

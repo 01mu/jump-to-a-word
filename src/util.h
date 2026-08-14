@@ -1,8 +1,6 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 
-#include <geanyplugin.h>
-
 #include "jump_to_a_word.h"
 
 void connect_key_press_action(ShortcutJump *sj, KeyPressCallback function);

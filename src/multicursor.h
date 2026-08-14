@@ -2,7 +2,6 @@
 #define MULTICURSOR_H_
 
 #include "jump_to_a_word.h"
-#include <geanyplugin.h>
 
 void multicursor_accepting_cancel(ShortcutJump *sj);
 void multicursor_cb(GtkMenuItem *menu_item, gpointer user_data);

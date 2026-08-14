@@ -1,5 +1,3 @@
-#include <plugindata.h>
-
 #include "annotation.h"
 #include "duplicate_string.h"
 #include "insert_line.h"

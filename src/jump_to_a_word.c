@@ -1,7 +1,5 @@
-#include <plugindata.h>
-
-#include "handle_action.h"
 #include "jump_to_a_word.h"
+#include "handle_action.h"
 #include "line_options.h"
 #include "multicursor.h"
 #include "paste.h"

@@ -1,8 +1,6 @@
 #ifndef SEARCH_COMMON_H_
 #define SEARCH_COMMON_H_
 
-#include <geanyplugin.h>
-
 #include "jump_to_a_word.h"
 
 gint get_search_word_pos(ShortcutJump *sj);

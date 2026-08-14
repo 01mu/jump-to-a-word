@@ -1,7 +1,5 @@
 // sourced from the commander plugin
 
-#include <plugindata.h>
-
 #include "jump_to_a_word.h"
 #include "line_options.h"
 #include "preferences.h"

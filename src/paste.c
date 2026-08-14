@@ -1,5 +1,3 @@
-#include <plugindata.h>
-
 #include "annotation.h"
 #include "jump_to_a_word.h"
 #include "replace_handle_input.h"

@@ -1,5 +1,3 @@
-#include <plugindata.h>
-
 #include "jump_to_a_word.h"
 
 static guint32 configure_color_to_int(const GdkColor *color) {

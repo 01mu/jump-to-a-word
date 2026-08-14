@@ -1,5 +1,3 @@
-#include <plugindata.h>
-
 #include "jump_to_a_word.h"
 
 static gboolean selection_is_a_word(ScintillaObject *sci, gint selection_start, gint selection_end) {
