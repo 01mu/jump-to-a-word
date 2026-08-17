@@ -4,6 +4,11 @@
 #include <geanyplugin.h>
 
 typedef struct {
+    gint line;
+    GString *spaces_and_tabs;
+} LST;
+
+typedef struct {
     gint starting;
     gint starting_doc;
     GString *word;
@@ -39,6 +44,13 @@ typedef enum {
     KB_MULTICURSOR,
     KB_REPEAT_ACTION,
     KB_FULL_DOCUMENT,
+    KB_RA_REPLACE,
+    KB_RA_INSERT_START,
+    KB_RA_INSERT_END,
+    KB_RA_INSERT_PREVIOUS_LINE,
+    KB_RA_INSERT_NEXT_LINE,
+    KB_RA_TRANSPOSE_STRING,
+    KB_RA_DUPLICATE,
     KB_COUNT,
 } KB;
 
@@ -290,8 +302,12 @@ typedef struct {
     GString *previous_search_query;
     GString *previous_replace_query;
     JumpMode previous_mode;
+
     ReplaceAction previous_replace_action;
     gboolean has_previous_action;
+
+    ReplaceAction cached_replace_action;
+    gboolean has_cached_replace_action;
 
     gint added_new_line_insert;
 

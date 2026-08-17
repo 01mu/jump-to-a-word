@@ -1,7 +1,7 @@
 #include "action_text_after.h"
 #include "annotation.h"
 #include "jump_to_a_word.h"
-#include "multicursor.h"
+#include "multicursor_add_text.h"
 #include "paste.h"
 #include "search_common.h"
 #include "selection.h"
@@ -77,6 +77,7 @@ void search_substring_replace_complete(ShortcutJump *sj) {
     sj->previous_mode = sj->current_mode;
     sj->has_previous_action = TRUE;
 
+    reset_cached_replace_action(sj);
     search_substring_end(sj);
 }
 
@@ -89,6 +90,7 @@ void search_substring_replace_cancel(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
+    reset_cached_replace_action(sj);
     search_substring_end(sj);
     ui_set_statusbar(TRUE, _("Substring replacement canceled."));
 }
@@ -102,7 +104,7 @@ static void search_substring_jump_complete(ShortcutJump *sj) {
             if (word.valid_search) {
                 scintilla_send_message(sj->sci, SCI_SETINDICATORCURRENT, INDICATOR_MULTICURSOR, 0);
                 scintilla_send_message(sj->sci, SCI_INDICATORFILLRANGE, word.starting_doc, word.word->len);
-                multicursor_add_word(sj, word);
+                multicursor_add_text_from_search(sj, word);
             }
         }
     }

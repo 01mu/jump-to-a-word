@@ -26,6 +26,7 @@ void duplicate_cancel(ShortcutJump *sj) {
         disconnect_click_action(sj);
     }
 
+    reset_cached_replace_action(sj);
     duplicate_end(sj);
 }
 
@@ -36,11 +37,11 @@ static void duplicate_complete(ShortcutJump *sj) {
 
     annotation_clear(sj->sci, sj->eol_message_line);
 
+    reset_cached_replace_action(sj);
     duplicate_end(sj);
 }
 
 void multicursor_duplicate_cancel(ShortcutJump *sj) {
-    multicursor_replace_clear_indicators(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {

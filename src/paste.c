@@ -6,13 +6,11 @@
 
 void paste_get_clipboard_text(ShortcutJump *sj) {
     GtkClipboard *clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+    gchar *clipboard_text = gtk_clipboard_wait_for_text(clipboard);
 
-    sj->clipboard_text = gtk_clipboard_wait_for_text(clipboard);
-
-    if (sj->clipboard_text == NULL) {
-        sj->clipboard_text = g_strdup("");
-        sj->inserting_clipboard = FALSE;
-    } else {
+    if (clipboard_text) {
+        g_free(sj->clipboard_text);
+        sj->clipboard_text = clipboard_text;
         sj->inserting_clipboard = TRUE;
     }
 }
@@ -83,47 +81,32 @@ static void paste_insert_clipboard_text(ShortcutJump *sj) {
 gboolean on_paste_key_release_replace(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
 
-    if (sj->inserting_clipboard) {
-        if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
-            clear_occurrences(sj);
-        }
-
-        paste_insert_clipboard_text(sj);
-        sj->inserting_clipboard = FALSE;
-        g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
+    if (sj->config_settings->replace_action == RA_REPLACE && !sj->search_change_made) {
+        clear_occurrences(sj);
     }
 
+    paste_insert_clipboard_text(sj);
+    sj->inserting_clipboard = FALSE;
+    g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
     return TRUE;
 }
 
 gboolean on_paste_key_release_word_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
-    if (sj->inserting_clipboard) {
-        g_string_append(sj->search_query, sj->clipboard_text);
-
-        search_word_mark_words(sj, FALSE);
-        annotation_display_search(sj);
-
-        sj->inserting_clipboard = FALSE;
-        g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
-    }
-
+    g_string_append(sj->search_query, sj->clipboard_text);
+    search_word_mark_words(sj, FALSE);
+    annotation_display_search(sj);
+    sj->inserting_clipboard = FALSE;
+    g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
     return TRUE;
 }
 
 gboolean on_paste_key_release_substring_search(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
     ShortcutJump *sj = (ShortcutJump *)user_data;
-
-    if (sj->inserting_clipboard) {
-        g_string_append(sj->search_query, sj->clipboard_text);
-
-        search_substring_get_substrings(sj);
-        annotation_display_substring(sj);
-
-        sj->inserting_clipboard = FALSE;
-        g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
-    }
-
+    g_string_append(sj->search_query, sj->clipboard_text);
+    search_substring_get_substrings(sj);
+    annotation_display_substring(sj);
+    sj->inserting_clipboard = FALSE;
+    g_signal_handler_disconnect(sj->sci, sj->paste_key_release_id);
     return TRUE;
 }

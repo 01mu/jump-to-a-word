@@ -1,7 +1,9 @@
 #include "duplicate_string.h"
-#include "insert_line.h"
+#include "insert_line_multicursor.h"
+#include "insert_line_search.h"
 #include "jump_to_a_word.h"
 #include "multicursor.h"
+#include "multicursor_replace.h"
 #include "preferences.h"
 #include "search_substring.h"
 #include "search_word.h"
@@ -170,7 +172,7 @@ void cancel_actions(ShortcutJump *sj) {
     }
 
     if (sj->multicursor_mode == MC_ACCEPTING) {
-        multicursor_accepting_cancel(sj);
+        multicursor_cancel(sj);
     }
 }
 
@@ -248,4 +250,11 @@ void get_strings_for_instant_action(ShortcutJump *sj) {
 
     define_indicators(sj->sci, sj->config_settings->tag_color, sj->config_settings->highlight_color,
                       sj->config_settings->text_color);
+}
+
+void reset_cached_replace_action(ShortcutJump *sj) {
+    if (sj->has_cached_replace_action) {
+        sj->config_settings->replace_action = sj->cached_replace_action;
+        sj->has_cached_replace_action = FALSE;
+    }
 }

@@ -102,6 +102,7 @@ void shortcut_char_replacing_cancel(ShortcutJump *sj) {
     annotation_clear(sj->sci, sj->eol_message_line);
     disconnect_key_press_action(sj);
     disconnect_click_action(sj);
+    reset_cached_replace_action(sj);
     shortcut_end(sj, FALSE);
     ui_set_statusbar(TRUE, _("Character replacement canceled."));
 }
@@ -136,6 +137,7 @@ void shortcut_char_replacing_complete(ShortcutJump *sj) {
     sj->previous_replace_action = sj->config_settings->replace_action;
     sj->has_previous_action = TRUE;
 
+    reset_cached_replace_action(sj);
     shortcut_end(sj, FALSE);
 }
 

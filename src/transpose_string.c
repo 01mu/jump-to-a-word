@@ -4,7 +4,6 @@
 #include "util.h"
 
 void multicursor_transpose_cancel(ShortcutJump *sj) {
-    multicursor_replace_clear_indicators(sj);
     annotation_clear(sj->sci, sj->eol_message_line);
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
@@ -16,6 +15,7 @@ void multicursor_transpose_cancel(ShortcutJump *sj) {
 
     toggle_multicursor_menu(sj, FALSE);
 
+    reset_cached_replace_action(sj);
     multicursor_end(sj);
     ui_set_statusbar(TRUE, _("Multicursor string transposition canceled."));
 }
@@ -28,6 +28,7 @@ void multicursor_transpose_complete(ShortcutJump *sj) {
 
     toggle_multicursor_menu(sj, FALSE);
 
+    reset_cached_replace_action(sj);
     multicursor_end(sj);
     ui_set_statusbar(TRUE, _("Multicursor string transposition completed."));
 }
@@ -35,7 +36,6 @@ void multicursor_transpose_complete(ShortcutJump *sj) {
 void transpose_string(ShortcutJump *sj, gboolean is_instant_transpose) {
     sj->current_mode = JM_TRANSPOSE_MULTICURSOR;
 
-    // if (!is_instant_transpose) {
     gint valid_count = 0;
 
     for (gint i = 0; i < sj->multicursor_words->len; i++) {
@@ -47,7 +47,6 @@ void transpose_string(ShortcutJump *sj, gboolean is_instant_transpose) {
         multicursor_transpose_cancel(sj);
         return;
     }
-    //}
 
     gint first_valid = -1;
     gint second_valid = -1;

@@ -1,7 +1,9 @@
 #include "jump_to_a_word.h"
 #include "handle_action.h"
+#include "jump_to_a_word.h"
 #include "line_options.h"
 #include "multicursor.h"
+#include "multicursor_add_text.h"
 #include "paste.h"
 #include "preferences.h"
 #include "previous_cursor.h"
@@ -63,7 +65,7 @@ static gboolean on_editor_notify(GObject *obj, GeanyEditor *editor, const SCNoti
             return TRUE;
         }
 
-        multicursor_add_word_from_selection(sj, selection_start, selection_end);
+        multicursor_add_text_from_selection(sj, selection_start, selection_end);
         return TRUE;
     }
 
@@ -221,6 +223,34 @@ static void setup_menu_and_keybindings(GeanyPlugin *plugin, ShortcutJump *sj) {
 
     SET_MENU_SEPERATOR();
 
+    SET_MENU_ITEM("Replace Selection", cb_action_replace, sj);
+    SET_KEYBINDING("Replace selection", "action_replace_selection", action_replace_kb, KB_RA_REPLACE, sj, item);
+
+    SET_MENU_ITEM("Insert at Start of Selection", cb_action_insert_start, sj);
+    SET_KEYBINDING("Insert at start of selection", "action_insert_at_start_of_selection", action_insert_start_kb,
+                   KB_RA_INSERT_START, sj, item);
+
+    SET_MENU_ITEM("Insert at End of Selection", cb_action_insert_end, sj);
+    SET_KEYBINDING("Insert at end of selection", "action_insert_at_end_of_selection", action_insert_end_kb,
+                   KB_RA_INSERT_END, sj, item);
+
+    SET_MENU_ITEM("Insert at Previous Line", cb_action_insert_previous_line, sj);
+    SET_KEYBINDING("Insert at previous line", "action_insert_at_previous_line", action_insert_previous_line_kb,
+                   KB_RA_INSERT_PREVIOUS_LINE, sj, item);
+
+    SET_MENU_ITEM("Insert at Next Line", cb_action_insert_next_line, sj);
+    SET_KEYBINDING("Insert at next line", "action_insert_at_next_line", action_insert_next_line_kb,
+                   KB_RA_INSERT_NEXT_LINE, sj, item);
+
+    SET_MENU_ITEM("Transpose Selection", cb_action_transpose, sj);
+    SET_KEYBINDING("Transpose selection", "action_transpose_selection", action_transpose_kb, KB_RA_TRANSPOSE_STRING, sj,
+                   item);
+
+    SET_MENU_ITEM("Duplicate Selection", cb_action_duplicate, sj);
+    SET_KEYBINDING("Duplicate selection", "action_duplicate_selection", action_duplicate_kb, KB_RA_DUPLICATE, sj, item);
+
+    SET_MENU_SEPERATOR();
+
     item = gtk_check_menu_item_new_with_mnemonic(_("_Enable Multicursor Mode"));
     sj->multicursor_menu_checkbox = GTK_CHECK_MENU_ITEM(item);
     sj->multicursor_menu_checkbox_signal_id =
@@ -295,7 +325,7 @@ static gboolean setup_config_settings(GeanyPlugin *plugin, gpointer pdata, Short
     SET_SETTING_INTEGER(replace_action, "replace_action", "replace_action", RA_REPLACE);
 
     SET_SETTING_COLOR(text_color, "text_color", 0xFFFFFF);
-    SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0x46383D);
+    SET_SETTING_COLOR(search_annotation_bg_color, "search_annotation_bg_color", 0x000000);
     SET_SETTING_COLOR(tag_color, "tag_color", 0xFFFFFF);
     SET_SETTING_COLOR(highlight_color, "highlight_color", 0x00FF00);
 
@@ -477,7 +507,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     frame = gtk_frame_new(NULL);
     gtk_frame_set_label_widget(GTK_FRAME(frame), sj->config_widgets->search_from_selection);
     gtk_container_add(GTK_CONTAINER(frame), sj->config_widgets->search_selection_if_line);
-    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 3);
 
     /*
      * Jumping to a word, character, or line using shortcuts
@@ -532,7 +562,7 @@ static GtkWidget *configure(GeanyPlugin *plugin, GtkDialog *dialog, gpointer pda
     frame = gtk_frame_new(NULL);
     gtk_frame_set_label_widget(GTK_FRAME(frame), sj->config_widgets->search_case_sensitive);
     gtk_container_add(GTK_CONTAINER(frame), sj->config_widgets->search_smart_case);
-    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 0);
+    gtk_box_pack_start(GTK_BOX(container), frame, FALSE, FALSE, 3);
 
     /*
      * Replace action
@@ -652,6 +682,8 @@ ShortcutJump *init_data(const GeanyPlugin *plugin) {
     sj->range_is_set = FALSE;
     sj->previous_cursor_pos = -1;
     sj->current_mode = JM_NONE;
+
+    sj->has_cached_replace_action = FALSE;
 
     return sj;
 }

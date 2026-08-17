@@ -190,7 +190,7 @@ void annotation_display_replace_string(ShortcutJump *sj) {
 
     gchar *s = "Inserting: \"%s\"";
 
-    if (sj->current_mode == JM_REPLACE_MULTICURSOR) {
+    if (sj->current_mode == JM_REPLACE_MULTICURSOR || sj->current_mode == JM_INSERTING_LINE_MULTICURSOR) {
         annotation_clear(sj->sci, sj->multicusor_eol_message_line);
 
         g_string_printf(sj->multicursor_eol_message, s, sj->replace_query->str);

@@ -23,5 +23,6 @@ void attempt_line_end_for_char(ShortcutJump *sj);
 void move_to_end_of_line(ShortcutJump *sj);
 void get_strings_for_instant_action(ShortcutJump *sj);
 gboolean whole_document_kb(GeanyKeyBinding *kb, guint key_id, gpointer user_data);
+void reset_cached_replace_action(ShortcutJump *sj);
 
 #endif

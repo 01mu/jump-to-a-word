@@ -1,7 +1,7 @@
 #include <math.h>
 
 #include "jump_to_a_word.h"
-#include "multicursor.h"
+#include "multicursor_add_text.h"
 #include "search_substring.h"
 #include "search_word.h"
 #include "shortcut_char.h"
@@ -300,7 +300,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
         }
 
         if (sj->multicursor_mode == MC_ACCEPTING && sj->current_mode != JM_LINE) {
-            multicursor_add_word(sj, word);
+            multicursor_add_text_from_search(sj, word);
         }
 
         if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
@@ -346,7 +346,7 @@ gint shortcut_on_key_press_action(GdkEventKey *event, gpointer user_data) {
             Word word = g_array_index(sj->words, Word, sj->shortcut_single_pos);
 
             if (sj->multicursor_mode == MC_ACCEPTING && sj->current_mode != JM_LINE) {
-                multicursor_add_word(sj, word);
+                multicursor_add_text_from_search(sj, word);
             }
 
             if (sj->current_mode == JM_SHORTCUT_CHAR_JUMPING) {
